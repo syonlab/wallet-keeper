@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>지갑지킴이</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         로그인 화면
+    ========================= -->
+    <div id="login-screen" class="login-screen">
+
+        <div class="login-card">
+
+            <h1>💳 지갑지킴이</h1>
+
+            <p class="login-description">
+                우리 둘의 생활비를 함께 관리해요
+            </p>
+
+            <div class="form-group">
+
+                <label for="login-email">
+                    이메일
+                </label>
+
+                <input
+                    type="email"
+                    id="login-email"
+                    placeholder="이메일을 입력하세요"
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="login-password">
+                    비밀번호
+                </label>
+
+                <input
+                    type="password"
+                    id="login-password"
+                    placeholder="비밀번호를 입력하세요"
+                >
+
+            </div>
+
+            <button
+                id="login-btn"
+                class="login-main-btn"
+            >
+                로그인
+            </button>
+
+            <p
+                id="login-error"
+                class="login-error"
+            ></p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         로그인 후 앱 화면
+    ========================= -->
+    <div id="app-screen" class="app-screen">
+
+
+        <!-- =========================
+             헤더
+        ========================= -->
+        <header class="header">
+
+            <div class="header-inner">
+
+                <div>
+
+                    <h1>
+                        💳 지갑지킴이 💵
+                    </h1>
+
+                    <p>
+                        우리의 생활비를 지켜요
+                    </p>
+
+                </div>
+
+                <button id="logout-btn">
+                    로그아웃
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- =========================
+             메인
+        ========================= -->
+        <main class="container">
+
+
+            <!-- =========================
+                 월 선택
+            ========================= -->
+            <div class="month-selector">
+
+                <button id="prev-month-btn">
+                    ‹
+                </button>
+
+                <h2 id="current-month-title">
+                    2026년 8월
+                </h2>
+
+                <button id="next-month-btn">
+                    ›
+                </button>
+
+            </div>
+
+
+            <!-- =========================
+                 이번 달 공유 생활비 요약
+            ========================= -->
+            <section class="summary-card">
+
+                <p id="summary-month-title">
+                    8월 공유 생활비
+                </p>
+
+
+                <div class="summary-main">
+
+                    <span class="summary-label">
+                        남은 금액
+                    </span>
+
+                    <h2 id="shared-total-remaining">
+                        0원
+                    </h2>
+
+                </div>
+
+
+                <!-- 전체 사용률 -->
+                <div class="summary-progress">
+
+                    <div class="summary-progress-top">
+
+                        <span>
+                            전체 사용률
+                        </span>
+
+                        <strong id="shared-usage-percent">
+                            0%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress-track">
+
+                        <div
+                            id="shared-progress-bar"
+                            class="progress-bar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- 총 예산 / 사용 금액 -->
+                <div class="summary-stats">
+
+                    <div class="summary-stat">
+
+                        <span>
+                            총 예산
+                        </span>
+
+                        <strong id="shared-total-budget">
+                            0원
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-stat">
+
+                        <span>
+                            사용 금액
+                        </span>
+
+                        <strong id="shared-total-used">
+                            0원
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 같이 쓰는 생활비
+            ========================= -->
+            <section class="budget-section">
+
+                <div class="section-title">
+
+                    <h2>
+                        👩🏻‍❤️‍👨🏻 같이 쓰는 생활비
+                    </h2>
+
+
+                    <div class="section-actions">
+
+                        <button id="category-setting-btn">
+                            카테고리 관리
+                        </button>
+
+                        <button id="budget-setting-btn">
+                            예산 설정
+                        </button>
+
+                        <button id="add-expense-btn">
+                            ＋ 지출 추가
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="budget-list">
+
+
+                    <!-- 식비 -->
+                    <div
+                        class="budget-card"
+                        data-category="식비"
+                        data-budget="0"
+                    >
+
+                        <div class="budget-card-main">
+
+                            <div class="budget-card-top">
+
+                                <h3>
+                                    🍚 식비
+                                </h3>
+
+                                <strong class="budget-remaining">
+                                    0원
+                                </strong>
+
+                            </div>
+
+
+                            <p class="budget-info">
+                                예산을 설정해주세요
+                            </p>
+
+
+                            <div class="category-progress-wrap">
+
+                                <div class="progress-track">
+
+                                    <div
+                                        class="progress-bar category-progress-bar"
+                                    ></div>
+
+                                </div>
+
+                                <span class="category-progress-text">
+                                    0%
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 간식 -->
+                    <div
+                        class="budget-card"
+                        data-category="간식"
+                        data-budget="0"
+                    >
+
+                        <div class="budget-card-main">
+
+                            <div class="budget-card-top">
+
+                                <h3>
+                                    🍪 간식
+                                </h3>
+
+                                <strong class="budget-remaining">
+                                    0원
+                                </strong>
+
+                            </div>
+
+                            <p class="budget-info">
+                                예산을 설정해주세요
+                            </p>
+
+                            <div class="category-progress-wrap">
+
+                                <div class="progress-track">
+
+                                    <div
+                                        class="progress-bar category-progress-bar"
+                                    ></div>
+
+                                </div>
+
+                                <span class="category-progress-text">
+                                    0%
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 데이트 -->
+                    <div
+                        class="budget-card"
+                        data-category="데이트"
+                        data-budget="0"
+                    >
+
+                        <div class="budget-card-main">
+
+                            <div class="budget-card-top">
+
+                                <h3>
+                                    💕 데이트
+                                </h3>
+
+                                <strong class="budget-remaining">
+                                    0원
+                                </strong>
+
+                            </div>
+
+                            <p class="budget-info">
+                                예산을 설정해주세요
+                            </p>
+
+                            <div class="category-progress-wrap">
+
+                                <div class="progress-track">
+
+                                    <div
+                                        class="progress-bar category-progress-bar"
+                                    ></div>
+
+                                </div>
+
+                                <span class="category-progress-text">
+                                    0%
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 생활비 -->
+                    <div
+                        class="budget-card"
+                        data-category="생활비"
+                        data-budget="0"
+                    >
+
+                        <div class="budget-card-main">
+
+                            <div class="budget-card-top">
+
+                                <h3>
+                                    🏠 생활비
+                                </h3>
+
+                                <strong class="budget-remaining">
+                                    0원
+                                </strong>
+
+                            </div>
+
+                            <p class="budget-info">
+                                예산을 설정해주세요
+                            </p>
+
+                            <div class="category-progress-wrap">
+
+                                <div class="progress-track">
+
+                                    <div
+                                        class="progress-bar category-progress-bar"
+                                    ></div>
+
+                                </div>
+
+                                <span class="category-progress-text">
+                                    0%
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FLEX -->
+                    <div
+                        class="budget-card"
+                        data-category="FLEX"
+                        data-budget="0"
+                    >
+
+                        <div class="budget-card-main">
+
+                            <div class="budget-card-top">
+
+                                <h3>
+                                    💸 FLEX
+                                </h3>
+
+                                <strong class="budget-remaining">
+                                    0원
+                                </strong>
+
+                            </div>
+
+                            <p class="budget-info">
+                                예산을 설정해주세요
+                            </p>
+
+                            <div class="category-progress-wrap">
+
+                                <div class="progress-track">
+
+                                    <div
+                                        class="progress-bar category-progress-bar"
+                                    ></div>
+
+                                </div>
+
+                                <span class="category-progress-text">
+                                    0%
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 쇼핑 -->
+                    <div
+                        class="budget-card"
+                        data-category="쇼핑"
+                        data-budget="0"
+                    >
+
+                        <div class="budget-card-main">
+
+                            <div class="budget-card-top">
+
+                                <h3>
+                                    🛍️ 쇼핑
+                                </h3>
+
+                                <strong class="budget-remaining">
+                                    0원
+                                </strong>
+
+                            </div>
+
+                            <p class="budget-info">
+                                예산을 설정해주세요
+                            </p>
+
+                            <div class="category-progress-wrap">
+
+                                <div class="progress-track">
+
+                                    <div
+                                        class="progress-bar category-progress-bar"
+                                    ></div>
+
+                                </div>
+
+                                <span class="category-progress-text">
+                                    0%
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 개인 잔액
+            ========================= -->
+            <section class="personal-section">
+
+                <div class="section-title">
+
+                    <h2>
+                        💰 개인 잔액
+                    </h2>
+
+                    <button id="personal-budget-btn">
+                        개인 예산 설정
+                    </button>
+
+                </div>
+
+
+                <div class="personal-list">
+
+
+                    <!-- 공주 -->
+                    <div
+                        class="personal-card"
+                        data-person="공주"
+                        data-balance="0"
+                    >
+
+                        <span>
+                            🩷 공주
+                        </span>
+
+                        <strong class="personal-balance">
+                            0원
+                        </strong>
+
+                    </div>
+
+
+                    <!-- 왕자 -->
+                    <div
+                        class="personal-card"
+                        data-person="왕자"
+                        data-balance="0"
+                    >
+
+                        <span>
+                            ⭐ 왕자
+                        </span>
+
+                        <strong class="personal-balance">
+                            0원
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 최근 거래내역
+            ========================= -->
+            <section class="transactions-section">
+
+                <div class="section-title">
+
+                    <h2>
+                        최근 거래내역
+                    </h2>
+
+                </div>
+
+
+                <div
+                    id="transaction-list"
+                    class="transaction-list"
+                >
+
+                    <div class="empty-message">
+                        아직 등록된 지출이 없습니다.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+
+        <!-- =====================================================
+             지출 추가 / 수정 모달
+        ====================================================== -->
+        <div
+            id="expense-modal"
+            class="modal"
+        >
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h2>
+                        지출 추가
+                    </h2>
+
+                    <button id="close-modal">
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="expense-date">
+                        날짜
+                    </label>
+
+                    <input
+                        type="date"
+                        id="expense-date"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="expense-amount">
+                        금액
+                    </label>
+
+                    <input
+                        type="number"
+                        id="expense-amount"
+                        placeholder="금액을 입력하세요"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        소비 유형
+                    </label>
+
+
+                    <div class="type-buttons">
+
+                        <button
+                            type="button"
+                            class="type-btn active"
+                        >
+                            🙋 혼자
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="type-btn"
+                        >
+                            👩🏻‍❤️‍👨🏻 같이
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="expense-category">
+                        카테고리
+                    </label>
+
+
+                    <select id="expense-category">
+
+                        <option value="식비">
+                            식비
+                        </option>
+
+                        <option value="간식">
+                            간식
+                        </option>
+
+                        <option value="데이트">
+                            데이트
+                        </option>
+
+                        <option value="생활비">
+                            생활비
+                        </option>
+
+                        <option value="FLEX">
+                            FLEX
+                        </option>
+
+                        <option value="쇼핑">
+                            쇼핑
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="expense-description">
+                        내용
+                    </label>
+
+                    <input
+                        type="text"
+                        id="expense-description"
+                        placeholder="예: 남자친구와 저녁"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        결제자
+                    </label>
+
+
+                    <div class="payer-buttons">
+
+                        <button
+                            type="button"
+                            class="payer-btn active"
+                        >
+                            🩷 공주
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="payer-btn"
+                        >
+                            ⭐ 왕자
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="save-expense"
+                    class="save-btn"
+                >
+                    저장하기
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             공유 예산 설정 모달
+        ====================================================== -->
+        <div
+            id="budget-modal"
+            class="modal"
+        >
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h2>
+                        공유 예산 설정
+                    </h2>
+
+                    <button id="close-budget-modal">
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        🍚 식비
+                    </label>
+
+                    <input
+                        type="number"
+                        class="budget-input"
+                        data-category="식비"
+                        placeholder="예: 500000"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        🍪 간식
+                    </label>
+
+                    <input
+                        type="number"
+                        class="budget-input"
+                        data-category="간식"
+                        placeholder="예: 150000"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        💕 데이트
+                    </label>
+
+                    <input
+                        type="number"
+                        class="budget-input"
+                        data-category="데이트"
+                        placeholder="예: 200000"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        🏠 생활비
+                    </label>
+
+                    <input
+                        type="number"
+                        class="budget-input"
+                        data-category="생활비"
+                        placeholder="예: 100000"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        💸 FLEX
+                    </label>
+
+                    <input
+                        type="number"
+                        class="budget-input"
+                        data-category="FLEX"
+                        placeholder="예: 100000"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        🛍️ 쇼핑
+                    </label>
+
+                    <input
+                        type="number"
+                        class="budget-input"
+                        data-category="쇼핑"
+                        placeholder="예: 100000"
+                    >
+
+                </div>
+
+
+                <button
+                    id="save-budget"
+                    class="save-btn"
+                >
+                    저장하기
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             개인 예산 설정 모달
+        ====================================================== -->
+        <div
+            id="personal-budget-modal"
+            class="modal"
+        >
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h2>
+                        개인 예산 설정
+                    </h2>
+
+                    <button id="close-personal-budget-modal">
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="princess-budget-input">
+                        🩷 공주
+                    </label>
+
+                    <input
+                        type="number"
+                        id="princess-budget-input"
+                        placeholder="이번 달 개인 예산"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="prince-budget-input">
+                        ⭐ 왕자
+                    </label>
+
+                    <input
+                        type="number"
+                        id="prince-budget-input"
+                        placeholder="이번 달 개인 예산"
+                    >
+
+                </div>
+
+
+                <button
+                    id="save-personal-budget"
+                    class="save-btn"
+                >
+                    저장하기
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             카테고리 관리 모달
+        ====================================================== -->
+        <div
+            id="category-modal"
+            class="modal"
+        >
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h2>
+                        카테고리 관리
+                    </h2>
+
+                    <button id="close-category-modal">
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div class="category-setting-section">
+
+                    <p class="category-setting-title">
+                        현재 카테고리
+                    </p>
+
+                    <div id="category-setting-list">
+                    </div>
+
+                </div>
+
+
+                <div class="category-add-section">
+
+                    <p class="category-setting-title">
+                        새 카테고리 추가
+                    </p>
+
+
+                    <div class="category-add-row">
+
+                        <input
+                            type="text"
+                            id="new-category-emoji"
+                            placeholder="이모지"
+                            maxlength="4"
+                        >
+
+                        <input
+                            type="text"
+                            id="new-category-name"
+                            placeholder="카테고리 이름"
+                        >
+
+                    </div>
+
+
+                    <button
+                        id="add-category-btn"
+                        class="save-btn"
+                    >
+                        ＋ 카테고리 추가
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- JavaScript -->
+    <script
+        type="module"
+        src="js/app.js"
+    ></script>
+
+</body>
+</html>
