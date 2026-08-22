@@ -1,6 +1,11 @@
-/* =========================
-   기본 설정
-========================= */
+/* =====================================================
+   지갑지킴이 2.0
+===================================================== */
+
+
+/* =====================================================
+   1. 기본 설정
+===================================================== */
 
 * {
     box-sizing: border-box;
@@ -22,6 +27,7 @@ body {
 
     background: #f5f5f7;
     color: #222;
+
     line-height: 1.5;
 }
 
@@ -36,15 +42,495 @@ button {
     cursor: pointer;
 }
 
+button:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
 
-/* =========================
-   헤더
-========================= */
+input,
+select {
+    outline: none;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+
+/* =====================================================
+   2. 공통 색 / 버튼
+===================================================== */
+
+:root {
+    --primary: #6f50b5;
+    --primary-dark: #5e429c;
+    --primary-light: #f3effa;
+
+    --background: #f5f5f7;
+    --card: #ffffff;
+
+    --border: #e7e7ea;
+    --border-dark: #dcdce2;
+
+    --text: #222;
+    --text-sub: #666;
+    --text-muted: #999;
+
+    --danger: #b84a4a;
+    --warning: #c28a2c;
+}
+
+
+/* 메인 버튼 */
+
+.primary-btn {
+    width: 100%;
+
+    min-height: 46px;
+
+    padding: 0 18px;
+
+    border-radius: 10px;
+
+    background: var(--primary);
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition:
+        background 0.2s,
+        transform 0.1s;
+}
+
+.primary-btn:hover {
+    background: var(--primary-dark);
+}
+
+.primary-btn:active {
+    transform: translateY(1px);
+}
+
+
+/* 보조 버튼 */
+
+.secondary-btn {
+    width: 100%;
+
+    min-height: 44px;
+
+    padding: 0 16px;
+
+    border: 1px solid var(--border-dark);
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #555;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition:
+        background 0.2s,
+        border-color 0.2s;
+}
+
+.secondary-btn:hover {
+    background: #f7f7f9;
+    border-color: #cfcfd6;
+}
+
+
+/* 작은 보조 버튼 */
+
+.subtle-btn,
+.small-setting-btn {
+    padding: 8px 11px;
+
+    border: 1px solid var(--border-dark);
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #666;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.subtle-btn:hover,
+.small-setting-btn:hover {
+    background: #f5f5f7;
+}
+
+
+/* 텍스트 버튼 */
+
+.text-btn {
+    background: none;
+    color: #777;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.text-btn:hover {
+    color: var(--primary);
+}
+
+
+/* 뒤로가기 버튼 - 화살표 아이콘 전용 */
+.back-text-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
+
+    border: 1px solid var(--border);
+    border-radius: 50%;
+
+    background: #ffffff;
+    color: #555;
+
+    font-size: 0;
+
+    transition:
+        background 0.2s,
+        border-color 0.2s,
+        color 0.2s,
+        transform 0.1s;
+}
+
+.back-text-btn::before {
+    content: "‹";
+
+    display: block;
+
+    font-size: 26px;
+    font-weight: 500;
+    line-height: 1;
+
+    transform: translateY(-1px);
+}
+
+.back-text-btn:hover {
+    background: var(--primary-light);
+    border-color: #d9cfea;
+    color: var(--primary);
+}
+
+.back-text-btn:active {
+    transform: scale(0.97);
+}
+
+/* =====================================================
+   3. 로그인 / 회원가입 / 프로필 / 연결 화면
+===================================================== */
+
+.auth-screen {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background: var(--background);
+}
+
+.auth-card {
+    width: min(410px, 100%);
+
+    padding: 34px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 18px;
+
+    box-shadow:
+        0 14px 40px rgba(0, 0, 0, 0.055);
+}
+
+.auth-logo {
+    margin-bottom: 10px;
+
+    text-align: center;
+
+    font-size: 32px;
+}
+
+.auth-card h1 {
+    margin-bottom: 7px;
+
+    text-align: center;
+
+    font-size: 24px;
+    font-weight: 700;
+
+    letter-spacing: -0.5px;
+
+    color: var(--text);
+}
+
+.auth-description {
+    margin-bottom: 28px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    color: #888;
+
+    word-break: keep-all;
+}
+
+.auth-card .primary-btn {
+    margin-top: 4px;
+}
+
+.auth-card .secondary-btn {
+    margin-top: 8px;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 20px 0 10px;
+
+    color: #aaa;
+
+    font-size: 11px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+
+    flex: 1;
+
+    height: 1px;
+
+    background: #eeeeef;
+}
+
+.form-error {
+    min-height: 20px;
+
+    margin-top: 12px;
+
+    text-align: center;
+
+    color: var(--danger);
+
+    font-size: 12px;
+}
+
+
+/* =====================================================
+   4. 입력 폼
+===================================================== */
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #555;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    height: 45px;
+
+    padding: 0 13px;
+
+    border: 1px solid var(--border-dark);
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #333;
+
+    font-size: 14px;
+
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--primary);
+
+    box-shadow:
+        0 0 0 3px rgba(111, 80, 181, 0.08);
+}
+
+.form-group input::placeholder {
+    color: #aaa;
+}
+
+
+/* =====================================================
+   5. 프로필 아이콘
+===================================================== */
+
+.profile-icon-list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 8px;
+}
+
+.profile-icon-btn,
+.settings-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 48px;
+
+    border: 1px solid var(--border-dark);
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    font-size: 20px;
+
+    transition:
+        background 0.2s,
+        border-color 0.2s,
+        transform 0.1s;
+}
+
+.profile-icon-btn:hover,
+.settings-icon-btn:hover {
+    background: #f8f7fa;
+}
+
+.profile-icon-btn.active,
+.settings-icon-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.profile-icon-btn:active,
+.settings-icon-btn:active {
+    transform: scale(0.97);
+}
+
+
+/* =====================================================
+   6. 커플 연결 화면
+===================================================== */
+
+.setup-profile-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    margin-bottom: 18px;
+
+    color: #555;
+
+    font-size: 14px;
+}
+
+.setup-profile-preview > span {
+    font-size: 22px;
+}
+
+.setup-profile-preview strong {
+    font-weight: 700;
+}
+
+.invite-card {
+    text-align: center;
+}
+
+.invite-code-box {
+    margin: 24px 0 12px;
+
+    padding: 20px;
+
+    border: 1px solid #ddd6eb;
+    border-radius: 14px;
+
+    background: #f8f5fd;
+}
+
+.invite-code-box span {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #888;
+
+    font-size: 11px;
+}
+
+.invite-code-box strong {
+    display: block;
+
+    color: var(--primary);
+
+    font-size: 30px;
+    font-weight: 700;
+
+    letter-spacing: 5px;
+}
+
+.invite-guide {
+    margin: 15px 0 20px;
+
+    color: #999;
+
+    font-size: 12px;
+
+    word-break: keep-all;
+}
+
+
+/* =====================================================
+   7. 앱 화면
+===================================================== */
+
+.app-screen {
+    min-height: 100vh;
+
+    background: var(--background);
+}
+
+
+/* =====================================================
+   8. 헤더
+===================================================== */
 
 .header {
+    padding: 22px 20px;
+
     background: #ffffff;
+
     border-bottom: 1px solid #e8e8eb;
-    padding: 24px 20px;
 }
 
 .header-inner {
@@ -53,79 +539,97 @@ button {
     margin: 0 auto;
 
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 
     gap: 20px;
 }
 
 .header-inner h1 {
-    font-size: 22px;
-    font-weight: 700;
     color: #222;
+
+    font-size: 21px;
+    font-weight: 700;
+
+    letter-spacing: -0.4px;
 }
 
 .header-inner p {
     margin-top: 3px;
 
-    font-size: 13px;
     color: #888;
+
+    font-size: 12px;
 }
 
-#logout-btn {
-    padding: 8px 12px;
+.header-actions {
+    display: flex;
+    align-items: center;
 
-    border: 1px solid #dcdce2;
+    gap: 7px;
+}
+
+.header-actions button,
+#logout-btn,
+#settings-btn {
+    padding: 8px 11px;
+
+    border: 1px solid var(--border-dark);
     border-radius: 9px;
 
     background: #ffffff;
+
     color: #666;
 
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-
-    white-space: nowrap;
 }
 
-#logout-btn:hover {
+.header-actions button:hover,
+#logout-btn:hover,
+#settings-btn:hover {
     background: #f5f5f7;
 }
 
 
-/* =========================
-   전체 영역
-========================= */
+/* =====================================================
+   9. 메인 컨테이너
+===================================================== */
 
 .container {
     width: min(900px, calc(100% - 40px));
+
     margin: 28px auto 60px;
 }
 
-
-/* =========================
+/* =====================================================
    월 선택
-========================= */
+===================================================== */
 
 .month-selector {
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 22px;
 
-    gap: 18px;
-
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .month-selector h2 {
-    min-width: 130px;
+    min-width: 120px;
+    margin: 0;
 
     text-align: center;
 
     font-size: 18px;
     font-weight: 700;
+    color: #222;
 
-    color: #333;
+    line-height: 36px;
 }
+
+
+/* 이전 / 다음 달 버튼 */
 
 .month-selector button {
     display: flex;
@@ -135,108 +639,75 @@ button {
     width: 36px;
     height: 36px;
 
+    padding: 0 0 2px 0;
+
     border: 1px solid #dddde2;
-    border-radius: 9px;
+    border-radius: 10px;
 
     background: #ffffff;
-    color: #555;
+    color: #666;
 
-    font-size: 22px;
+    font-family: Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 400;
     line-height: 1;
 
+    cursor: pointer;
+
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+
     transition:
-        background 0.2s,
-        border-color 0.2s;
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.1s ease;
 }
+
+
+/* 마우스 올렸을 때 */
 
 .month-selector button:hover {
-    background: #f0eef6;
-    border-color: #d4cae8;
+    background: #f7f4fc;
+    border-color: #d5cae8;
+    color: var(--primary);
 }
 
 
-/* =========================
-   공유 생활비 대시보드
-========================= */
+/* 클릭할 때 */
 
-.summary-card {
-    background: #ffffff;
-
-    border: 1px solid #e7e7ea;
-    border-radius: 18px;
-
-    padding: 28px 30px;
-
-    margin-bottom: 34px;
-}
-
-.summary-card > p {
-    margin-bottom: 18px;
-
-    font-size: 14px;
-    font-weight: 600;
-
-    color: #777;
+.month-selector button:active {
+    transform: scale(0.94);
 }
 
 
-/* 남은 금액 */
+/* 모바일 */
 
-.summary-main {
-    margin-bottom: 26px;
+@media (max-width: 600px) {
+
+    .month-selector {
+        gap: 18px;
+        margin-bottom: 20px;
+    }
+
+    .month-selector h2 {
+        min-width: 110px;
+        font-size: 17px;
+        line-height: 34px;
+    }
+
+    .month-selector button {
+        width: 34px;
+        height: 34px;
+
+        border-radius: 9px;
+
+        font-size: 16px;
+    }
 }
 
-.summary-label {
-    display: block;
-
-    margin-bottom: 3px;
-
-    font-size: 12px;
-    color: #999;
-}
-
-.summary-main h2 {
-    font-size: 34px;
-    font-weight: 750;
-
-    letter-spacing: -0.8px;
-
-    color: #6f50b5;
-}
-
-
-/* =========================
-   전체 사용률
-========================= */
-
-.summary-progress {
-    margin-bottom: 24px;
-}
-
-.summary-progress-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 8px;
-}
-
-.summary-progress-top span {
-    font-size: 12px;
-    color: #777;
-}
-
-.summary-progress-top strong {
-    font-size: 12px;
-    font-weight: 700;
-
-    color: #6f50b5;
-}
-
-
-/* =========================
-   진행률 공통
-========================= */
+/* =====================================================
+   11. 진행률 공통
+===================================================== */
 
 .progress-track {
     width: 100%;
@@ -255,79 +726,129 @@ button {
 
     border-radius: inherit;
 
-    background: #6f50b5;
+    background: var(--primary);
 
     transition:
         width 0.35s ease,
         background 0.25s ease;
 }
 
-
-/* 예산 80% 이상 */
-
-.progress-bar.warning {
-    background: #c28a2c;
+.large-progress {
+    height: 10px;
 }
 
-
-/* 예산 초과 */
+.progress-bar.warning {
+    background: var(--warning);
+}
 
 .progress-bar.danger {
     background: #bd5656;
 }
 
 
-/* =========================
-   총 예산 / 사용 금액
-========================= */
+/* =====================================================
+   12. 공동 생활비 메인 카드
+===================================================== */
 
-.summary-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+.shared-dashboard-card {
+    position: relative;
 
-    gap: 10px;
+    margin-bottom: 34px;
 
-    padding-top: 20px;
+    padding: 30px;
 
-    border-top: 1px solid #eeeeef;
+    border: 1px solid #dfd8ec;
+    border-radius: 20px;
+
+    background: #ffffff;
 }
 
-.summary-stat {
-    padding: 13px 14px;
+.dashboard-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
 
-    border-radius: 11px;
+    gap: 20px;
 
-    background: #f7f7f9;
+    margin-bottom: 24px;
 }
 
-.summary-stat span {
+.dashboard-eyebrow {
     display: block;
 
     margin-bottom: 4px;
 
-    font-size: 11px;
+    color: #777;
 
-    color: #999;
+    font-size: 13px;
+    font-weight: 600;
 }
 
-.summary-stat strong {
-    display: block;
+.dashboard-card-header h2 {
+    margin-bottom: 2px;
 
-    font-size: 15px;
+    color: var(--primary);
+
+    font-size: 36px;
+    font-weight: 750;
+
+    letter-spacing: -1px;
+}
+
+.dashboard-card-header p {
+    color: #999;
+
+    font-size: 12px;
+}
+
+.large-percent {
+    color: var(--primary);
+
+    font-size: 28px;
     font-weight: 700;
 
+    white-space: nowrap;
+}
+
+.shared-dashboard-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-top: 18px;
+    padding-top: 17px;
+
+    border-top: 1px solid #eeeeef;
+}
+
+.shared-dashboard-bottom span {
+    color: #888;
+
+    font-size: 12px;
+}
+
+.shared-dashboard-bottom strong {
     color: #333;
+
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.shared-dashboard-card .small-setting-btn {
+    margin-top: 15px;
 }
 
 
-/* =========================
-   섹션 제목
-========================= */
+/* =====================================================
+   13. 섹션 제목
+===================================================== */
 
 .section-title {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 
     gap: 12px;
 
@@ -335,248 +856,332 @@ button {
 }
 
 .section-title h2 {
+    color: #333;
+
     font-size: 18px;
     font-weight: 700;
-
-    color: #333;
 
     letter-spacing: -0.3px;
 }
 
+.section-description {
+    margin-top: 2px;
 
-/* =========================
-   섹션 버튼
-========================= */
+    color: #999;
 
-.section-actions {
+    font-size: 11px;
+}
+
+
+/* =====================================================
+   14. 각자 생활비
+===================================================== */
+
+.personal-overview-section {
+    margin-bottom: 38px;
+}
+
+.personal-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+.person-budget-card {
+    min-width: 0;
+
+    padding: 21px;
+
+    border: 1px solid var(--border);
+    border-radius: 15px;
+
+    background: #ffffff;
+}
+
+.person-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 18px;
+}
+
+.person-name {
     display: flex;
     align-items: center;
 
     gap: 8px;
+
+    min-width: 0;
 }
 
-.section-title button {
-    padding: 9px 14px;
-
-    border-radius: 9px;
-
-    background: #6f50b5;
-    color: #ffffff;
-
-    font-size: 12px;
-    font-weight: 600;
-
-    white-space: nowrap;
-
-    transition:
-        background 0.2s,
-        border-color 0.2s;
-}
-
-.section-title button:hover {
-    background: #5e429c;
-}
-
-
-/* 보조 버튼 */
-
-#budget-setting-btn,
-#personal-budget-btn,
-#category-setting-btn {
-    background: #ffffff;
-
-    border: 1px solid #dcdce2;
-
-    color: #555;
-}
-
-#budget-setting-btn:hover,
-#personal-budget-btn:hover,
-#category-setting-btn:hover {
-    background: #f5f5f7;
-    border-color: #cfcfd6;
-}
-
-
-/* =========================
-   공유 생활비 목록
-========================= */
-
-.budget-list {
-    display: grid;
-
-    gap: 10px;
-}
-
-.budget-card {
-    background: #ffffff;
-
-    border: 1px solid #e7e7ea;
-    border-radius: 14px;
-
-    padding: 19px 20px;
-}
-
-.budget-card-main {
-    width: 100%;
-}
-
-.budget-card-top {
+.person-name > div {
     display: flex;
-    justify-content: space-between;
     align-items: center;
 
-    gap: 16px;
+    gap: 5px;
 
-    margin-bottom: 4px;
+    min-width: 0;
 }
 
-.budget-card h3 {
-    font-size: 15px;
-    font-weight: 600;
+.person-icon {
+    flex-shrink: 0;
 
-    color: #333;
+    font-size: 19px;
 }
 
-.budget-card p {
-    font-size: 12px;
-
-    color: #999;
-}
-
-.budget-card strong {
-    font-size: 17px;
-    font-weight: 700;
+.person-name strong {
+    overflow: hidden;
 
     color: #444;
 
+    font-size: 14px;
+    font-weight: 700;
+
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+.me-badge {
+    flex-shrink: 0;
 
-/* =========================
-   카테고리 진행률
-========================= */
+    padding: 2px 6px;
 
-.category-progress-wrap {
-    display: grid;
-    grid-template-columns: 1fr auto;
+    border-radius: 999px;
+
+    background: var(--primary-light);
+
+    color: var(--primary);
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.person-main-number {
+    display: flex;
+    align-items: baseline;
+
+    gap: 4px;
+
+    margin-bottom: 3px;
+}
+
+.person-main-number strong {
+    min-width: 0;
+
+    color: #333;
+
+    font-size: 23px;
+    font-weight: 700;
+
+    letter-spacing: -0.5px;
+}
+
+.person-main-number span {
+    color: #999;
+
+    font-size: 10px;
+}
+
+.person-budget-text {
+    margin-bottom: 12px;
+
+    color: #999;
+
+    font-size: 11px;
+}
+
+.person-budget-text strong {
+    color: var(--primary);
+
+    font-weight: 700;
+}
+
+.person-remaining {
+    display: flex;
     align-items: center;
+    justify-content: space-between;
 
     gap: 10px;
 
-    margin-top: 13px;
+    margin-top: 14px;
 }
 
-.category-progress-wrap .progress-track {
-    height: 6px;
+.person-remaining span {
+    color: #999;
+
+    font-size: 11px;
 }
 
-.category-progress-text {
-    min-width: 34px;
+.person-remaining strong {
+    color: #444;
 
-    text-align: right;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.detail-btn {
+    width: 100%;
+
+    margin-top: 15px;
+    padding: 8px 10px;
+
+    border-radius: 8px;
+
+    background: #f5f5f7;
+
+    color: #666;
 
     font-size: 11px;
     font-weight: 600;
 
-    color: #888;
+    transition: background 0.2s;
+}
+
+.detail-btn:hover {
+    background: #ececf0;
 }
 
 
-/* 예산이 많이 사용된 카드 */
+/* =====================================================
+   15. 공동 소비 카테고리 비율
+===================================================== */
 
-.budget-card.warning {
-    border-color: #e8d4ab;
+.shared-category-section {
+    margin-top: 8px;
+    margin-bottom: 38px;
 }
 
-.budget-card.danger {
-    border-color: #e4baba;
-}
+.category-ratio-list {
+    overflow: hidden;
 
-
-/* =========================
-   개인 잔액
-========================= */
-
-.personal-section {
-    margin-top: 38px;
-}
-
-.personal-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-
-    gap: 10px;
-}
-
-.personal-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    gap: 12px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
 
     background: #ffffff;
-
-    border: 1px solid #e7e7ea;
-    border-radius: 14px;
-
-    padding: 20px;
 }
 
-.personal-card span {
-    font-size: 14px;
-    font-weight: 600;
+.category-ratio-item {
+    padding: 17px 20px;
 
+    border-bottom: 1px solid #eeeeef;
+}
+
+.category-ratio-item:last-child {
+    border-bottom: none;
+}
+
+.category-ratio-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 9px;
+}
+
+.category-ratio-name {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    min-width: 0;
+}
+
+.category-ratio-name strong {
     color: #444;
+
+    font-size: 13px;
+    font-weight: 600;
 }
 
-.personal-card strong {
-    font-size: 17px;
+.category-ratio-number {
+    display: flex;
+    align-items: baseline;
+
+    gap: 7px;
+
+    flex-shrink: 0;
+}
+
+.category-ratio-number span {
+    color: #777;
+
+    font-size: 12px;
+}
+
+.category-ratio-number strong {
+    min-width: 34px;
+
+    text-align: right;
+
+    color: var(--primary);
+
+    font-size: 12px;
     font-weight: 700;
+}
 
-    color: #6f50b5;
-
-    white-space: nowrap;
+.category-ratio-item .progress-track {
+    height: 6px;
 }
 
 
-/* =========================
-   최근 거래내역
-========================= */
+/* =====================================================
+   16. 지출 추가 메인 버튼
+===================================================== */
+
+.main-expense-action {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-bottom: 34px;
+}
+
+.main-expense-action .primary-btn {
+    width: auto;
+
+    min-width: 140px;
+}
+
+
+/* =====================================================
+   17. 최근 거래내역
+===================================================== */
 
 .transactions-section {
-    margin-top: 38px;
+    margin-top: 34px;
 }
 
 .transaction-list {
     overflow: hidden;
 
-    background: #ffffff;
-
-    border: 1px solid #e7e7ea;
+    border: 1px solid var(--border);
     border-radius: 14px;
+
+    background: #ffffff;
 }
 
 .empty-message {
-    padding: 35px 20px;
+    padding: 34px 20px;
 
     text-align: center;
 
-    font-size: 13px;
-
     color: #aaa;
+
+    font-size: 12px;
 }
 
 .transaction-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 
     gap: 20px;
 
-    padding: 17px 20px;
+    padding: 16px 20px;
 
     border-bottom: 1px solid #eeeeef;
 }
@@ -590,20 +1195,23 @@ button {
 }
 
 .transaction-info h3 {
-    margin-bottom: 3px;
+    overflow: hidden;
 
-    font-size: 14px;
-    font-weight: 600;
+    margin-bottom: 3px;
 
     color: #333;
 
-    word-break: break-word;
+    font-size: 13px;
+    font-weight: 600;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .transaction-info p {
-    font-size: 11px;
-
     color: #999;
+
+    font-size: 10px;
 
     word-break: keep-all;
 }
@@ -612,43 +1220,36 @@ button {
     display: flex;
     align-items: center;
 
-    gap: 14px;
+    gap: 12px;
 
     flex-shrink: 0;
 }
 
 .transaction-amount {
-    font-size: 15px;
-    font-weight: 700;
-
     color: #444;
+
+    font-size: 14px;
+    font-weight: 700;
 
     white-space: nowrap;
 }
 
-
-/* =========================
-   수정 / 삭제 버튼
-========================= */
-
 .transaction-actions {
     display: flex;
 
-    gap: 6px;
+    gap: 5px;
 }
 
 .transaction-actions button {
-    padding: 6px 9px;
+    padding: 5px 8px;
 
     border-radius: 7px;
 
     background: #f3f3f5;
+
     color: #666;
 
-    font-size: 11px;
-    font-weight: 500;
-
-    transition: background 0.2s;
+    font-size: 10px;
 }
 
 .transaction-actions button:hover {
@@ -656,17 +1257,168 @@ button {
 }
 
 .delete-expense-btn {
-    color: #b84a4a !important;
-}
-
-.delete-expense-btn:hover {
-    background: #faeeee !important;
+    color: var(--danger) !important;
 }
 
 
-/* =========================
-   모달 배경
-========================= */
+/* =====================================================
+   18. 개인 상세 화면
+===================================================== */
+
+.detail-header {
+    justify-content: flex-start;
+}
+
+.person-detail-summary {
+    margin-bottom: 36px;
+
+    padding: 28px 30px;
+
+    border: 1px solid var(--border);
+    border-radius: 18px;
+
+    background: #ffffff;
+}
+
+.person-detail-profile {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 24px;
+}
+
+.detail-person-icon {
+    font-size: 30px;
+}
+
+.person-detail-profile span:not(.detail-person-icon) {
+    display: block;
+
+    margin-bottom: 1px;
+
+    color: #999;
+
+    font-size: 11px;
+}
+
+.person-detail-profile h1 {
+    color: #333;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.detail-budget-main {
+    display: flex;
+    align-items: baseline;
+
+    gap: 5px;
+
+    margin-bottom: 2px;
+}
+
+.detail-budget-main strong {
+    color: var(--primary);
+
+    font-size: 32px;
+    font-weight: 750;
+}
+
+.detail-budget-main span {
+    color: #999;
+
+    font-size: 11px;
+}
+
+.person-detail-summary > p {
+    margin-bottom: 14px;
+
+    color: #999;
+
+    font-size: 12px;
+}
+
+.person-detail-summary > p strong {
+    color: var(--primary);
+}
+
+.detail-remaining {
+    margin-top: 18px;
+    padding-top: 16px;
+
+    border-top: 1px solid #eeeeef;
+}
+
+.detail-remaining strong {
+    font-size: 16px;
+}
+
+.detail-category-section {
+    margin-bottom: 36px;
+}
+
+
+/* =====================================================
+   19. 혼자 / 같이 비율
+===================================================== */
+
+.expense-type-section {
+    margin-bottom: 38px;
+}
+
+.expense-type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 10px;
+}
+
+.expense-type-card {
+    padding: 17px 18px;
+
+    border: 1px solid var(--border);
+    border-radius: 13px;
+
+    background: #ffffff;
+}
+
+.expense-type-card span {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #666;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.expense-type-card strong {
+    display: block;
+
+    color: #333;
+
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.expense-type-card small {
+    display: block;
+
+    margin-top: 2px;
+
+    color: var(--primary);
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   20. 모달
+===================================================== */
 
 .modal {
     display: none;
@@ -688,23 +1440,18 @@ button {
     display: flex;
 }
 
-
-/* =========================
-   모달 본체
-========================= */
-
 .modal-content {
-    width: min(420px, 100%);
+    width: min(430px, 100%);
 
     max-height: calc(100vh - 40px);
 
     overflow-y: auto;
 
-    background: #ffffff;
-
-    border-radius: 16px;
-
     padding: 24px;
+
+    border-radius: 17px;
+
+    background: #ffffff;
 
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.15);
@@ -715,40 +1462,45 @@ button {
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-    background: #d8d8dd;
-
     border-radius: 10px;
+
+    background: #d8d8dd;
 }
-
-
-/* =========================
-   모달 제목
-========================= */
 
 .modal-header {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    align-items: center;
 
     gap: 16px;
 
-    margin-bottom: 24px;
+    margin-bottom: 23px;
 }
 
 .modal-header h2 {
-    font-size: 20px;
-    font-weight: 700;
-
     color: #222;
+
+    font-size: 19px;
+    font-weight: 700;
 }
 
-.modal-header button {
+.modal-description {
+    margin-top: 2px;
+
+    color: #999;
+
+    font-size: 11px;
+}
+
+.modal-header > button {
     display: flex;
     align-items: center;
     justify-content: center;
 
     width: 32px;
     height: 32px;
+
+    flex-shrink: 0;
 
     background: none;
 
@@ -758,89 +1510,37 @@ button {
     line-height: 1;
 }
 
-.modal-header button:hover {
+.modal-header > button:hover {
     color: #444;
 }
 
 
-/* =========================
-   입력 폼
-========================= */
-
-.form-group {
-    margin-bottom: 18px;
-}
-
-.form-group label {
-    display: block;
-
-    margin-bottom: 7px;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    color: #555;
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    height: 44px;
-
-    padding: 0 12px;
-
-    border: 1px solid #dddde2;
-    border-radius: 9px;
-
-    background: #ffffff;
-
-    font-size: 14px;
-    color: #333;
-
-    outline: none;
-
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: #6f50b5;
-
-    box-shadow:
-        0 0 0 3px rgba(111, 80, 181, 0.08);
-}
-
-.form-group input::placeholder {
-    color: #aaa;
-}
-
-
-/* =========================
-   혼자 / 같이
-   공주 / 왕자
-========================= */
+/* =====================================================
+   21. 혼자 / 같이, 결제자
+===================================================== */
 
 .type-buttons,
 .payer-buttons {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 
     gap: 8px;
 }
 
 .type-btn,
 .payer-btn {
-    height: 42px;
+    min-height: 43px;
 
-    border: 1px solid #dddde2;
+    padding: 8px 10px;
+
+    border: 1px solid var(--border-dark);
     border-radius: 9px;
 
     background: #ffffff;
+
     color: #555;
 
-    font-size: 13px;
+    font-size: 12px;
 
     transition:
         background 0.2s,
@@ -855,56 +1555,90 @@ button {
 
 .type-btn.active,
 .payer-btn.active {
-    border-color: #6f50b5;
+    border-color: var(--primary);
 
-    background: #f3effa;
-    color: #6f50b5;
+    background: var(--primary-light);
+
+    color: var(--primary);
 
     font-weight: 600;
 }
 
 
-/* =========================
-   저장 버튼
-========================= */
+/* =====================================================
+   22. 비공개 지출
+===================================================== */
 
-.save-btn {
-    width: 100%;
-    height: 46px;
+.privacy-option {
+    margin: 4px 0 18px;
 
-    margin-top: 4px;
+    padding: 14px;
 
-    border-radius: 9px;
+    border: 1px solid #e6e2ed;
+    border-radius: 11px;
 
-    background: #6f50b5;
-    color: #ffffff;
+    background: #faf9fc;
+}
 
-    font-size: 14px;
+.privacy-switch-row {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    cursor: pointer;
+}
+
+.privacy-switch-row input {
+    width: 17px;
+    height: 17px;
+
+    margin-top: 2px;
+
+    accent-color: var(--primary);
+}
+
+.privacy-switch-text {
+    display: block;
+}
+
+.privacy-switch-text strong {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #555;
+
+    font-size: 12px;
     font-weight: 600;
-
-    transition: background 0.2s;
 }
 
-.save-btn:hover {
-    background: #5e429c;
+.privacy-switch-text small {
+    display: block;
+
+    color: #999;
+
+    font-size: 10px;
+
+    word-break: keep-all;
 }
 
 
-/* =========================
-   카테고리 관리
-========================= */
+/* =====================================================
+   23. 카테고리 관리
+===================================================== */
 
 .category-setting-section {
-    margin-bottom: 28px;
+    margin-bottom: 27px;
 }
 
 .category-setting-title {
     margin-bottom: 10px;
 
-    font-size: 13px;
-    font-weight: 600;
-
     color: #555;
+
+    font-size: 12px;
+    font-weight: 600;
 }
 
 #category-setting-list {
@@ -915,8 +1649,8 @@ button {
 
 .category-setting-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 
     gap: 12px;
 
@@ -931,9 +1665,9 @@ button {
 }
 
 .category-setting-item span {
-    font-size: 13px;
-
     color: #444;
+
+    font-size: 12px;
 }
 
 .category-delete-btn {
@@ -942,9 +1676,10 @@ button {
     border-radius: 7px;
 
     background: #f5eeee;
-    color: #b84a4a;
 
-    font-size: 11px;
+    color: var(--danger);
+
+    font-size: 10px;
 }
 
 .category-delete-btn:hover {
@@ -952,13 +1687,13 @@ button {
 }
 
 .category-default-badge {
-    font-size: 10px;
-
     color: #999;
+
+    font-size: 9px;
 }
 
 .category-add-section {
-    padding-top: 22px;
+    padding-top: 21px;
 
     border-top: 1px solid #eeeeef;
 }
@@ -978,303 +1713,453 @@ button {
 
     padding: 0 12px;
 
-    border: 1px solid #dddde2;
+    border: 1px solid var(--border-dark);
     border-radius: 9px;
 
     background: #ffffff;
 
-    font-size: 14px;
+    font-size: 13px;
 
     outline: none;
 }
 
 .category-add-row input:focus {
-    border-color: #6f50b5;
+    border-color: var(--primary);
 
     box-shadow:
         0 0 0 3px rgba(111, 80, 181, 0.08);
 }
 
 
-/* =========================
-   로그인 화면
-========================= */
+/* =====================================================
+   24. 설정
+===================================================== */
 
-.login-screen {
-    min-height: 100vh;
+.settings-section {
+    padding: 20px 0;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 20px;
-
-    background: #f5f5f7;
+    border-bottom: 1px solid #eeeeef;
 }
 
-.login-card {
-    width: min(400px, 100%);
-
-    padding: 32px;
-
-    background: #ffffff;
-
-    border: 1px solid #e7e7ea;
-    border-radius: 16px;
-
-    box-shadow:
-        0 14px 40px rgba(0, 0, 0, 0.06);
+.settings-section:first-of-type {
+    padding-top: 0;
 }
 
-.login-card h1 {
-    margin-bottom: 6px;
-
-    text-align: center;
-
-    font-size: 24px;
-
-    color: #222;
+.settings-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
-.login-description {
-    margin-bottom: 28px;
+.settings-section h3 {
+    margin-bottom: 15px;
 
-    text-align: center;
-
-    font-size: 13px;
-
-    color: #888;
-}
-
-.login-main-btn {
-    width: 100%;
-    height: 46px;
-
-    margin-top: 4px;
-
-    border-radius: 9px;
-
-    background: #6f50b5;
-    color: #ffffff;
+    color: #444;
 
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-.login-main-btn:hover {
-    background: #5e429c;
+.settings-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #f0f0f2;
 }
 
-.login-error {
-    min-height: 20px;
+.settings-info-row:last-child {
+    border-bottom: none;
+}
 
-    margin-top: 12px;
-
-    text-align: center;
+.settings-info-row span {
+    color: #888;
 
     font-size: 12px;
+}
 
-    color: #b84a4a;
+.settings-info-row strong {
+    color: #444;
+
+    font-size: 12px;
+    font-weight: 700;
 }
 
 
-/* =========================
-   앱 화면
-========================= */
+/* =====================================================
+   25. 태블릿 / 작은 화면
+===================================================== */
 
-.app-screen {
-    display: none;
-}
-
-
-/* =========================
-   모바일
-========================= */
-
-@media (max-width: 600px) {
-
-    .header {
-        padding: 20px 16px;
-    }
+@media (max-width: 760px) {
 
     .header-inner {
         width: 100%;
     }
 
-    .header-inner h1 {
-        font-size: 20px;
+    .container {
+        width: calc(100% - 28px);
     }
 
-    .header-inner p {
+}
+
+
+/* =====================================================
+   26. 모바일
+===================================================== */
+
+@media (max-width: 600px) {
+
+    body {
+        background: #f6f6f8;
+    }
+
+
+    /* ---------------------------------
+       로그인 / 가입
+    --------------------------------- */
+
+    .auth-screen {
+        padding: 16px;
+    }
+
+    .auth-card {
+        padding: 27px 20px;
+
+        border-radius: 16px;
+    }
+
+    .auth-card h1 {
+        font-size: 22px;
+    }
+
+    .auth-description {
+        margin-bottom: 24px;
+
         font-size: 12px;
     }
 
-    #logout-btn {
-        padding: 7px 9px;
 
-        font-size: 11px;
+    /* ---------------------------------
+       헤더
+    --------------------------------- */
+
+    .header {
+        padding: 18px 14px;
     }
 
-
-    .container {
-        width: calc(100% - 24px);
-
-        margin: 18px auto 40px;
-    }
-
-
-    .month-selector {
-        gap: 14px;
-
-        margin-bottom: 16px;
-    }
-
-    .month-selector h2 {
-        min-width: 115px;
-
-        font-size: 17px;
-    }
-
-    .month-selector button {
-        width: 34px;
-        height: 34px;
-    }
-
-
-    /* 대시보드 */
-
-    .summary-card {
-        padding: 22px 18px;
-
-        border-radius: 14px;
-
-        margin-bottom: 26px;
-    }
-
-    .summary-card > p {
-        margin-bottom: 16px;
-
-        font-size: 13px;
-    }
-
-    .summary-main {
-        margin-bottom: 22px;
-    }
-
-    .summary-main h2 {
-        font-size: 29px;
-    }
-
-    .summary-stats {
-        gap: 8px;
-
-        padding-top: 17px;
-    }
-
-    .summary-stat {
-        padding: 11px 12px;
-    }
-
-    .summary-stat strong {
-        font-size: 14px;
-    }
-
-
-    /* 섹션 */
-
-    .section-title {
-        align-items: flex-start;
-
+    .header-inner {
         gap: 10px;
     }
 
-    .section-title h2 {
-        font-size: 17px;
+    .header-inner h1 {
+        font-size: 18px;
     }
 
-    .section-actions {
-        flex-wrap: wrap;
-        justify-content: flex-end;
-
-        gap: 6px;
+    .header-inner p {
+        font-size: 10px;
     }
 
-    .section-title button {
-        padding: 8px 10px;
-
-        font-size: 11px;
+    .header-actions {
+        gap: 5px;
     }
 
-
-    /* 공유 예산 */
-
-    .budget-card {
-        padding: 17px 16px;
-
-        border-radius: 12px;
-    }
-
-    .budget-card h3 {
-        font-size: 14px;
-    }
-
-    .budget-card p {
-        font-size: 11px;
-    }
-
-    .budget-card strong {
-        font-size: 15px;
-    }
-
-    .category-progress-wrap {
-        gap: 7px;
-
-        margin-top: 11px;
-    }
-
-    .category-progress-text {
-        min-width: 30px;
+    .header-actions button,
+    #logout-btn,
+    #settings-btn {
+        padding: 7px 8px;
 
         font-size: 10px;
     }
 
 
-    /* 개인 */
+    /* ---------------------------------
+       메인
+    --------------------------------- */
 
-    .personal-list {
-        grid-template-columns: 1fr;
+    .container {
+        width: calc(100% - 22px);
+
+        margin: 17px auto 40px;
     }
 
-    .personal-card {
-        padding: 17px 16px;
+
+    /* ---------------------------------
+       월
+    --------------------------------- */
+
+    .month-selector {
+        gap: 13px;
+
+        margin-bottom: 17px;
+    }
+
+    .month-selector h2 {
+        min-width: 115px;
+
+        font-size: 16px;
+    }
+
+    /* ---------------------------------
+       공동생활비
+    --------------------------------- */
+
+    .shared-dashboard-card {
+        padding: 22px 18px;
+
+        margin-bottom: 28px;
+
+        border-radius: 16px;
+    }
+
+    .dashboard-card-header {
+        gap: 10px;
+
+        margin-bottom: 20px;
+    }
+
+    .dashboard-eyebrow {
+        font-size: 11px;
+    }
+
+    .dashboard-card-header h2 {
+        font-size: 29px;
+    }
+
+    .dashboard-card-header p {
+        font-size: 10px;
+    }
+
+    .large-percent {
+        font-size: 22px;
+    }
+
+    .large-progress {
+        height: 9px;
+    }
+
+    .shared-dashboard-bottom {
+        margin-top: 15px;
+        padding-top: 14px;
+    }
+
+    .shared-dashboard-bottom span {
+        font-size: 10px;
+    }
+
+    .shared-dashboard-bottom strong {
+        font-size: 15px;
+    }
+
+
+    /* ---------------------------------
+       섹션 제목
+    --------------------------------- */
+
+    .section-title {
+        align-items: flex-start;
+
+        margin-bottom: 12px;
+    }
+
+    .section-title h2 {
+        font-size: 16px;
+    }
+
+    .section-description {
+        font-size: 10px;
+    }
+
+    .subtle-btn {
+        padding: 7px 8px;
+
+        font-size: 9px;
+    }
+
+
+    /* ---------------------------------
+       각자 생활비
+       ★ 모바일에서도 두 칸 유지
+    --------------------------------- */
+
+    .personal-overview-section {
+        margin-bottom: 31px;
+    }
+
+    .personal-overview-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 7px;
+    }
+
+    .person-budget-card {
+        padding: 15px 12px;
 
         border-radius: 12px;
     }
 
-    .personal-card span {
-        font-size: 13px;
+    .person-card-header {
+        margin-bottom: 13px;
     }
 
-    .personal-card strong {
-        font-size: 16px;
+    .person-name {
+        gap: 4px;
+    }
+
+    .person-name > div {
+        gap: 3px;
+    }
+
+    .person-icon {
+        font-size: 15px;
+    }
+
+    .person-name strong {
+        max-width: 65px;
+
+        font-size: 11px;
+    }
+
+    .me-badge {
+        padding: 1px 4px;
+
+        font-size: 7px;
+    }
+
+    .person-main-number {
+        display: block;
+
+        margin-bottom: 2px;
+    }
+
+    .person-main-number strong {
+        display: block;
+
+        overflow: hidden;
+
+        font-size: 17px;
+
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .person-main-number span {
+        font-size: 8px;
+    }
+
+    .person-budget-text {
+        overflow: hidden;
+
+        margin-bottom: 9px;
+
+        font-size: 9px;
+
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .person-budget-card .progress-track {
+        height: 6px;
+    }
+
+    .person-remaining {
+        margin-top: 10px;
+    }
+
+    .person-remaining span {
+        font-size: 8px;
+    }
+
+    .person-remaining strong {
+        max-width: 80px;
+
+        overflow: hidden;
+
+        font-size: 11px;
+
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .detail-btn {
+        margin-top: 11px;
+
+        padding: 6px;
+
+        font-size: 9px;
     }
 
 
-    /* 거래내역 */
+    /* ---------------------------------
+       카테고리 비율
+    --------------------------------- */
+
+    .shared-category-section {
+        margin-bottom: 31px;
+    }
+
+    .category-ratio-item {
+        padding: 14px 15px;
+    }
+
+    .category-ratio-top {
+        gap: 8px;
+
+        margin-bottom: 7px;
+    }
+
+    .category-ratio-name strong {
+        font-size: 11px;
+    }
+
+    .category-ratio-number {
+        gap: 5px;
+    }
+
+    .category-ratio-number span,
+    .category-ratio-number strong {
+        font-size: 10px;
+    }
+
+
+    /* ---------------------------------
+       지출 버튼
+    --------------------------------- */
+
+    .main-expense-action {
+        margin-bottom: 29px;
+    }
+
+    .main-expense-action .primary-btn {
+        width: 100%;
+    }
+
+
+    /* ---------------------------------
+       거래내역
+    --------------------------------- */
+
+    .transactions-section {
+        margin-top: 30px;
+    }
 
     .transaction-item {
         align-items: flex-start;
 
-        padding: 16px;
+        gap: 8px;
 
-        gap: 10px;
+        padding: 14px;
     }
 
     .transaction-info h3 {
-        font-size: 13px;
+        font-size: 11px;
     }
 
     .transaction-info p {
+        font-size: 9px;
         line-height: 1.5;
     }
 
@@ -1282,25 +2167,68 @@ button {
         flex-direction: column;
         align-items: flex-end;
 
-        gap: 6px;
+        gap: 5px;
     }
 
     .transaction-amount {
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .transaction-actions {
-        gap: 4px;
+        gap: 3px;
     }
 
     .transaction-actions button {
-        padding: 5px 7px;
+        padding: 4px 6px;
 
-        font-size: 10px;
+        font-size: 8px;
     }
 
 
-    /* 모달 */
+    /* ---------------------------------
+       상세화면
+    --------------------------------- */
+
+    .person-detail-summary {
+        padding: 22px 18px;
+
+        border-radius: 15px;
+
+        margin-bottom: 30px;
+    }
+
+    .detail-person-icon {
+        font-size: 25px;
+    }
+
+    .person-detail-profile h1 {
+        font-size: 18px;
+    }
+
+    .detail-budget-main strong {
+        font-size: 27px;
+    }
+
+    .expense-type-grid {
+        gap: 7px;
+    }
+
+    .expense-type-card {
+        padding: 14px;
+    }
+
+    .expense-type-card span {
+        font-size: 10px;
+    }
+
+    .expense-type-card strong {
+        font-size: 15px;
+    }
+
+
+    /* ---------------------------------
+       모달
+    --------------------------------- */
 
     .modal {
         align-items: flex-end;
@@ -1313,9 +2241,9 @@ button {
 
         max-height: 92vh;
 
-        border-radius: 18px 18px 0 0;
+        padding: 21px 17px 24px;
 
-        padding: 22px 18px 24px;
+        border-radius: 18px 18px 0 0;
     }
 
     .modal-header {
@@ -1323,21 +2251,213 @@ button {
     }
 
     .modal-header h2 {
-        font-size: 19px;
+        font-size: 18px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
     }
 
 
-    /* 카테고리 */
+    /* ---------------------------------
+       프로필 아이콘
+    --------------------------------- */
+
+    .profile-icon-list {
+        grid-template-columns:
+            repeat(4, 1fr);
+
+        gap: 6px;
+    }
+
+    .profile-icon-btn,
+    .settings-icon-btn {
+        min-height: 43px;
+
+        font-size: 18px;
+    }
+
+
+    /* ---------------------------------
+       카테고리 추가
+    --------------------------------- */
 
     .category-add-row {
-        grid-template-columns: 72px 1fr;
+        grid-template-columns: 70px 1fr;
     }
 
+}
 
-    /* 로그인 */
 
-    .login-card {
-        padding: 26px 20px;
+/* =====================================================
+   27. 아주 작은 모바일
+===================================================== */
+
+@media (max-width: 360px) {
+
+    .person-budget-card {
+        padding: 13px 9px;
+    }
+
+    .person-main-number strong {
+        font-size: 15px;
+    }
+
+    .person-name strong {
+        max-width: 50px;
+    }
+
+    .person-remaining strong {
+        font-size: 10px;
+    }
+
+}
+/* =====================================================
+   개인 상세화면 뒤로가기
+===================================================== */
+
+.detail-top-nav {
+    display: flex;
+    align-items: center;
+
+    margin-bottom: 12px;
+}
+
+.detail-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: auto;
+    height: auto;
+
+    padding: 4px;
+
+    border: none;
+    border-radius: 0;
+
+    background: transparent;
+    color: #666;
+
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        transform 0.1s ease;
+}
+
+.detail-back-btn:hover {
+    background: transparent;
+    color: var(--primary);
+}
+
+.detail-back-btn:active {
+    transform: translateX(-2px);
+}
+.input-guide {
+    display: block;
+    margin-top: 6px;
+
+    font-size: 10px;
+    color: #999;
+}
+/* =====================================================
+   28. 비밀번호 재설정
+===================================================== */
+
+
+/* 로그인 화면의 비밀번호 찾기 버튼 */
+
+.forgot-password-btn {
+    display: block;
+
+    margin: 4px auto 0;
+
+    padding: 6px 4px;
+
+    background: transparent;
+    color: #888;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    text-align: center;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease;
+}
+
+.forgot-password-btn:hover {
+    color: var(--primary);
+}
+
+
+/* 비밀번호 재설정 결과 메시지 */
+
+.form-message {
+    min-height: 20px;
+
+    margin-top: 14px;
+
+    text-align: center;
+
+    color: var(--primary);
+
+    font-size: 12px;
+    line-height: 1.6;
+
+    word-break: keep-all;
+}
+
+
+/* 오류일 때 JS에서 error 클래스 추가 가능 */
+
+.form-message.error {
+    color: var(--danger);
+}
+
+
+/* 성공 메시지 */
+
+.form-message.success {
+    color: var(--primary);
+}
+
+
+/* 재설정 화면 이메일 입력 후 버튼 간격 */
+
+#password-reset-screen .primary-btn {
+    margin-top: 4px;
+}
+
+
+/* 재설정 화면의 자물쇠 아이콘 */
+
+#password-reset-screen .auth-logo {
+    margin-top: 4px;
+    margin-bottom: 10px;
+}
+
+
+/* =====================================================
+   모바일
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .forgot-password-btn {
+        margin-top: 3px;
+        font-size: 10px;
+    }
+
+    .form-message {
+        margin-top: 12px;
+        font-size: 11px;
     }
 
 }
