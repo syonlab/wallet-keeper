@@ -1,5 +1,5 @@
 // =====================================================
-// 지갑지킴이 2.0
+// 지갑지킴이 2.1.1
 // =====================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
@@ -28,6 +28,11 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+
+// =====================================================
+// Firebase
+// =====================================================
+
 const firebaseConfig = {
   apiKey: "AIzaSyDiHLEi_GAgfHax_3XwYd6z9xO433kSEDY",
   authDomain: "wallet-budget-8cadd.firebaseapp.com",
@@ -37,78 +42,230 @@ const firebaseConfig = {
   appId: "1:924575676755:web:f4d118ee533c7f45fd89a6"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+
+const app =
+  initializeApp(
+    firebaseConfig
+  );
+
+
+const db =
+  getFirestore(
+    app
+  );
+
+
+const auth =
+  getAuth(
+    app
+  );
 
 
 // =====================================================
-// 기본 데이터 / 상태
+// 기본 카테고리
 // =====================================================
 
 const defaultCategories = [
-  { name: "식비", emoji: "🍚", isDefault: true },
-  { name: "간식", emoji: "🍪", isDefault: true },
-  { name: "데이트", emoji: "💕", isDefault: true },
-  { name: "생활비", emoji: "🏠", isDefault: true },
-  { name: "FLEX", emoji: "💸", isDefault: true },
-  { name: "쇼핑", emoji: "🛍️", isDefault: true }
+
+  {
+    name: "식비",
+    emoji: "🍚",
+    isDefault: true
+  },
+
+  {
+    name: "간식",
+    emoji: "🍪",
+    isDefault: true
+  },
+
+  {
+    name: "데이트",
+    emoji: "💕",
+    isDefault: true
+  },
+
+  {
+    name: "생활비",
+    emoji: "🏠",
+    isDefault: true
+  },
+
+  {
+    name: "FLEX",
+    emoji: "💸",
+    isDefault: true
+  },
+
+  {
+    name: "쇼핑",
+    emoji: "🛍️",
+    isDefault: true
+  }
+
 ];
 
-let currentUser = null;
-let myProfile = null;
-let partnerProfile = null;
-let currentCouple = null;
-let coupleId = null;
 
-let expenses = [];
-let privateDetails = {};
-let categories = [...defaultCategories];
+// =====================================================
+// 앱 상태
+// =====================================================
+
+let currentUser =
+  null;
+
+
+let myProfile =
+  null;
+
+
+let partnerProfile =
+  null;
+
+
+let currentCouple =
+  null;
+
+
+let coupleId =
+  null;
+
+
+let expenses =
+  [];
+
+
+let privateDetails =
+  {};
+
+
+let categories =
+  [...defaultCategories];
+
 
 let monthlySettings = {
+
   sharedBudget: 0,
+
   personalBudgets: {}
+
 };
 
-const today = new Date();
 
-let selectedYear = today.getFullYear();
-let selectedMonth = today.getMonth() + 1;
+const today =
+  new Date();
 
-let editingExpenseId = null;
-let detailUserUid = null;
 
-let selectedProfileIcon = "🩷";
-let selectedSettingsIcon = "🩷";
+let selectedYear =
+  today.getFullYear();
 
-let unsubscribeExpenses = null;
-let unsubscribeMonthlySettings = null;
-let unsubscribeCategories = null;
-let unsubscribeCouple = null;
-let unsubscribePartnerProfile = null;
-let unsubscribePrivateDetails = null;
+
+let selectedMonth =
+  today.getMonth() + 1;
+
+
+let editingExpenseId =
+  null;
+
+
+let detailUserUid =
+  null;
+
+
+// 최근 거래는 처음 15개만 표시
+
+let transactionVisibleCount =
+  15;
+
+
+let selectedProfileIcon =
+  "🩷";
+
+
+let selectedSettingsIcon =
+  "🩷";
+
+
+// =====================================================
+// Firestore 실시간 구독
+// =====================================================
+
+let unsubscribeExpenses =
+  null;
+
+
+let unsubscribeMonthlySettings =
+  null;
+
+
+let unsubscribeCategories =
+  null;
+
+
+let unsubscribeCouple =
+  null;
+
+
+let unsubscribePartnerProfile =
+  null;
+
+
+let unsubscribePrivateDetails =
+  null;
 
 
 // =====================================================
 // DOM
 // =====================================================
 
-const $ = (id) => document.getElementById(id);
+const $ =
+  (id) =>
+    document.getElementById(
+      id
+    );
 
 
+// =====================================================
 // 화면
+// =====================================================
 
-const loginScreen = $("login-screen");
-const signupScreen = $("signup-screen");
-const passwordResetScreen = $("password-reset-screen");
-const profileScreen = $("profile-screen");
-const coupleSetupScreen = $("couple-setup-screen");
-const inviteScreen = $("invite-screen");
-const joinCoupleScreen = $("join-couple-screen");
-const appScreen = $("app-screen");
-const personDetailScreen = $("person-detail-screen");
+const loginScreen =
+  $("login-screen");
+
+
+const signupScreen =
+  $("signup-screen");
+
+
+const passwordResetScreen =
+  $("password-reset-screen");
+
+
+const profileScreen =
+  $("profile-screen");
+
+
+const coupleSetupScreen =
+  $("couple-setup-screen");
+
+
+const inviteScreen =
+  $("invite-screen");
+
+
+const joinCoupleScreen =
+  $("join-couple-screen");
+
+
+const appScreen =
+  $("app-screen");
+
+
+const personDetailScreen =
+  $("person-detail-screen");
+
 
 const allScreens = [
+
   loginScreen,
   signupScreen,
   passwordResetScreen,
@@ -118,370 +275,587 @@ const allScreens = [
   joinCoupleScreen,
   appScreen,
   personDetailScreen
-].filter(Boolean);
+
+].filter(
+  Boolean
+);
 
 
-// 로그인 / 회원가입 / 비밀번호 재설정
+// =====================================================
+// 로그인 / 회원가입
+// =====================================================
 
-const loginEmail = $("login-email");
-const loginPassword = $("login-password");
-const loginBtn = $("login-btn");
-const loginError = $("login-error");
-const showSignupBtn = $("show-signup-btn");
-
-const showPasswordResetBtn = $("show-password-reset-btn");
-const passwordResetBackBtn = $("password-reset-back-btn");
-const passwordResetEmail = $("password-reset-email");
-const sendPasswordResetBtn = $("send-password-reset-btn");
-const passwordResetMessage = $("password-reset-message");
-
-const signupBackBtn = $("signup-back-btn");
-const signupEmail = $("signup-email");
-const signupPassword = $("signup-password");
-const signupPasswordConfirm = $("signup-password-confirm");
-const signupBtn = $("signup-btn");
-const signupError = $("signup-error");
+const loginEmail =
+  $("login-email");
 
 
+const loginPassword =
+  $("login-password");
+
+
+const loginBtn =
+  $("login-btn");
+
+
+const loginError =
+  $("login-error");
+
+
+const showSignupBtn =
+  $("show-signup-btn");
+
+
+const showPasswordResetBtn =
+  $("show-password-reset-btn");
+
+
+const passwordResetBackBtn =
+  $("password-reset-back-btn");
+
+
+const passwordResetEmail =
+  $("password-reset-email");
+
+
+const sendPasswordResetBtn =
+  $("send-password-reset-btn");
+
+
+const passwordResetMessage =
+  $("password-reset-message");
+
+
+const signupBackBtn =
+  $("signup-back-btn");
+
+
+const signupEmail =
+  $("signup-email");
+
+
+const signupPassword =
+  $("signup-password");
+
+
+const signupPasswordConfirm =
+  $("signup-password-confirm");
+
+
+const signupBtn =
+  $("signup-btn");
+
+
+const signupError =
+  $("signup-error");
+
+
+// =====================================================
 // 프로필
+// =====================================================
 
-const profileNickname = $("profile-nickname");
+const profileNickname =
+  $("profile-nickname");
+
 
 const profileIconButtons =
-  document.querySelectorAll(".profile-icon-btn");
+  document.querySelectorAll(
+    ".profile-icon-btn"
+  );
+
 
 const customProfileIcon =
   $("custom-profile-icon");
 
+
 const saveProfileBtn =
   $("save-profile-btn");
+
 
 const profileError =
   $("profile-error");
 
 
+// =====================================================
 // 커플 연결
+// =====================================================
 
 const setupMyIcon =
   $("setup-my-icon");
 
+
 const setupMyNickname =
   $("setup-my-nickname");
+
 
 const createCoupleBtn =
   $("create-couple-btn");
 
+
 const showJoinCoupleBtn =
   $("show-join-couple-btn");
+
 
 const setupLogoutBtn =
   $("setup-logout-btn");
 
+
 const inviteCodeElement =
   $("invite-code");
+
 
 const copyInviteCodeBtn =
   $("copy-invite-code-btn");
 
+
 const inviteContinueBtn =
   $("invite-continue-btn");
+
 
 const joinBackBtn =
   $("join-back-btn");
 
+
 const joinCodeInput =
   $("join-code-input");
 
+
 const joinCoupleBtn =
   $("join-couple-btn");
+
 
 const joinError =
   $("join-error");
 
 
-// 헤더 / 월
+// =====================================================
+// 헤더 / 월 이동
+// =====================================================
 
 const settingsBtn =
   $("settings-btn");
 
+
 const logoutBtn =
   $("logout-btn");
+
 
 const prevMonthBtn =
   $("prev-month-btn");
 
+
 const nextMonthBtn =
   $("next-month-btn");
+
 
 const currentMonthTitle =
   $("current-month-title");
 
 
+// =====================================================
 // 공동 대시보드
+// =====================================================
 
 const sharedUsedAmount =
   $("shared-used-amount");
 
+
 const sharedBudgetAmount =
   $("shared-budget-amount");
+
 
 const sharedBudgetPercent =
   $("shared-budget-percent");
 
+
 const sharedBudgetProgress =
   $("shared-budget-progress");
 
+
 const sharedRemainingAmount =
   $("shared-remaining-amount");
+
 
 const budgetSettingBtn =
   $("budget-setting-btn");
 
 
+// =====================================================
+// 월 진행률
+// =====================================================
+
+const monthProgressPercent =
+  $("month-progress-percent");
+
+
+const monthProgressBar =
+  $("month-progress-bar");
+
+
+const monthBudgetStatus =
+  $("month-budget-status");
+
+
+// =====================================================
 // 내 생활비
+// =====================================================
 
 const myIcon =
   $("my-icon");
 
+
 const myNickname =
   $("my-nickname");
+
 
 const myUsedAmount =
   $("my-used-amount");
 
+
 const myBudgetAmount =
   $("my-budget-amount");
+
 
 const myBudgetPercent =
   $("my-budget-percent");
 
+
 const myBudgetProgress =
   $("my-budget-progress");
 
+
 const myRemainingAmount =
   $("my-remaining-amount");
+
 
 const myDetailBtn =
   $("my-detail-btn");
 
 
+// =====================================================
 // 상대 생활비
+// =====================================================
 
 const partnerIcon =
   $("partner-icon");
 
+
 const partnerNickname =
   $("partner-nickname");
+
 
 const partnerUsedAmount =
   $("partner-used-amount");
 
+
 const partnerBudgetAmount =
   $("partner-budget-amount");
+
 
 const partnerBudgetPercent =
   $("partner-budget-percent");
 
+
 const partnerBudgetProgress =
   $("partner-budget-progress");
 
+
 const partnerRemainingAmount =
   $("partner-remaining-amount");
+
 
 const partnerDetailBtn =
   $("partner-detail-btn");
 
 
-// 카테고리 / 거래
+// =====================================================
+// 카테고리
+// =====================================================
 
 const categorySettingBtn =
   $("category-setting-btn");
 
+
 const sharedCategoryList =
   $("shared-category-list");
 
+
+// =====================================================
+// 지출 / 거래내역
+// =====================================================
+
 const addExpenseBtn =
   $("add-expense-btn");
+
 
 const transactionList =
   $("transaction-list");
 
 
+const transactionSort =
+  $("transaction-sort");
+
+
+const transactionMoreBtn =
+  $("transaction-more-btn");
+
+
+// =====================================================
+// 소비 달력
+// =====================================================
+
+const expenseCalendar =
+  $("expense-calendar");
+
+
+// =====================================================
+// 맨 위로 버튼
+// =====================================================
+
+const scrollTopBtn =
+  $("scroll-top-btn");
+
+
+// =====================================================
 // 개인 상세
+// =====================================================
 
 const detailBackBtn =
   $("detail-back-btn");
 
+
 const detailPersonIcon =
   $("detail-person-icon");
+
 
 const detailMonthLabel =
   $("detail-month-label");
 
+
 const detailPersonName =
   $("detail-person-name");
+
 
 const detailUsedAmount =
   $("detail-used-amount");
 
+
 const detailBudgetAmount =
   $("detail-budget-amount");
+
 
 const detailBudgetPercent =
   $("detail-budget-percent");
 
+
 const detailBudgetProgress =
   $("detail-budget-progress");
+
 
 const detailRemainingAmount =
   $("detail-remaining-amount");
 
+
 const detailCategoryList =
   $("detail-category-list");
+
 
 const detailAloneAmount =
   $("detail-alone-amount");
 
+
 const detailAlonePercent =
   $("detail-alone-percent");
+
 
 const detailTogetherAmount =
   $("detail-together-amount");
 
+
 const detailTogetherPercent =
   $("detail-together-percent");
+
 
 const detailTransactionList =
   $("detail-transaction-list");
 
 
+// =====================================================
 // 지출 모달
+// =====================================================
 
 const expenseModal =
   $("expense-modal");
 
+
 const expenseModalTitle =
   $("expense-modal-title");
+
 
 const closeModalBtn =
   $("close-modal");
 
+
 const dateInput =
   $("expense-date");
+
 
 const amountInput =
   $("expense-amount");
 
+
 const typeButtons =
-  document.querySelectorAll(".type-btn");
+  document.querySelectorAll(
+    ".type-btn"
+  );
+
 
 const categoryInput =
   $("expense-category");
 
+
 const descriptionInput =
   $("expense-description");
+
 
 const privateExpenseGroup =
   $("private-expense-group");
 
+
 const privateExpenseToggle =
   $("private-expense-toggle");
 
+
 const payerButtons =
-  document.querySelectorAll(".payer-btn");
+  document.querySelectorAll(
+    ".payer-btn"
+  );
+
 
 const payerMeIcon =
   $("payer-me-icon");
 
+
 const payerMeName =
   $("payer-me-name");
+
 
 const payerPartnerIcon =
   $("payer-partner-icon");
 
+
 const payerPartnerName =
   $("payer-partner-name");
+
 
 const saveExpenseBtn =
   $("save-expense");
 
 
+// =====================================================
 // 예산 모달
+// =====================================================
 
 const budgetModal =
   $("budget-modal");
 
+
 const closeBudgetModal =
   $("close-budget-modal");
+
 
 const sharedBudgetInput =
   $("shared-budget-input");
 
+
 const myBudgetInput =
   $("my-budget-input");
+
 
 const partnerBudgetInput =
   $("partner-budget-input");
 
+
 const budgetMyIcon =
   $("budget-my-icon");
+
 
 const budgetMyName =
   $("budget-my-name");
 
+
 const budgetPartnerIcon =
   $("budget-partner-icon");
 
+
 const budgetPartnerName =
   $("budget-partner-name");
+
 
 const saveBudgetBtn =
   $("save-budget-btn");
 
 
+// =====================================================
 // 카테고리 모달
+// =====================================================
 
 const categoryModal =
   $("category-modal");
 
+
 const closeCategoryModal =
   $("close-category-modal");
+
 
 const categorySettingList =
   $("category-setting-list");
 
+
 const newCategoryEmoji =
   $("new-category-emoji");
 
+
 const newCategoryName =
   $("new-category-name");
+
 
 const addCategoryBtn =
   $("add-category-btn");
 
 
+// =====================================================
 // 설정 모달
+// =====================================================
 
 const settingsModal =
   $("settings-modal");
 
+
 const closeSettingsModal =
   $("close-settings-modal");
+
 
 const settingsNickname =
   $("settings-nickname");
 
+
 const settingsIconButtons =
-  document.querySelectorAll(".settings-icon-btn");
+  document.querySelectorAll(
+    ".settings-icon-btn"
+  );
+
 
 const customSettingsIcon =
   $("custom-settings-icon");
 
+
 const saveSettingsProfileBtn =
   $("save-settings-profile-btn");
 
+
 const settingsInviteCode =
   $("settings-invite-code");
+
 
 const settingsPartnerName =
   $("settings-partner-name");
@@ -491,14 +865,27 @@ const settingsPartnerName =
 // 공통 함수
 // =====================================================
 
-function showScreen(screen) {
+function showScreen(
+  screen
+) {
 
-  allScreens.forEach((item) => {
-    item.hidden = true;
-  });
+  allScreens.forEach(
+    (item) => {
 
-  if (screen) {
-    screen.hidden = false;
+      item.hidden =
+        true;
+
+    }
+  );
+
+
+  if (
+    screen
+  ) {
+
+    screen.hidden =
+      false;
+
   }
 
 }
@@ -512,59 +899,96 @@ function closeAllModals() {
     categoryModal,
     settingsModal
   ]
-    .filter(Boolean)
-    .forEach((modal) =>
-      modal.classList.remove("show")
+    .filter(
+      Boolean
+    )
+    .forEach(
+      (modal) => {
+
+        modal.classList.remove(
+          "show"
+        );
+
+      }
     );
 
 }
 
 
-function parseMoney(value) {
+function parseMoney(
+  value
+) {
 
   const onlyNumbers =
-    String(value ?? "")
-      .replace(/[^0-9]/g, "");
+    String(
+      value ?? ""
+    )
+      .replace(
+        /[^0-9]/g,
+        ""
+      );
+
 
   return onlyNumbers
-    ? Number(onlyNumbers)
+    ? Number(
+        onlyNumbers
+      )
     : 0;
 
 }
 
 
-function formatMoneyInput(value) {
+function formatMoneyInput(
+  value
+) {
 
   const number =
-    parseMoney(value);
+    parseMoney(
+      value
+    );
+
 
   return number
-    ? number.toLocaleString("ko-KR")
+    ? number.toLocaleString(
+        "ko-KR"
+      )
     : "";
 
 }
 
 
-function formatWon(value) {
+function formatWon(
+  value
+) {
 
   return `${Number(
-    value || 0
-  ).toLocaleString("ko-KR")}원`;
+    value ||
+    0
+  ).toLocaleString(
+    "ko-KR"
+  )}원`;
 
 }
 
 
-function attachMoneyFormatter(input) {
+function attachMoneyFormatter(
+  input
+) {
 
   if (
     !input ||
-    input.dataset.moneyFormatter === "true"
+    input.dataset.moneyFormatter ===
+      "true"
   ) {
+
     return;
+
   }
+
 
   input.dataset.moneyFormatter =
     "true";
+
 
   input.addEventListener(
     "input",
@@ -581,25 +1005,42 @@ function attachMoneyFormatter(input) {
 }
 
 
-function escapeHtml(text) {
+function escapeHtml(
+  text
+) {
 
   const div =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
+
 
   div.textContent =
-    String(text ?? "");
+    String(
+      text ?? ""
+    );
+
 
   return div.innerHTML;
 
 }
 
 
+// =====================================================
+// 월 관련
+// =====================================================
+
 function getMonthKey() {
 
   return (
     `${selectedYear}-` +
-    String(selectedMonth)
-      .padStart(2, "0")
+    String(
+      selectedMonth
+    )
+      .padStart(
+        2,
+        "0"
+      )
   );
 
 }
@@ -607,8 +1048,14 @@ function getMonthKey() {
 
 function updateMonthTitle() {
 
-  currentMonthTitle.textContent =
-    `${selectedYear}년 ${selectedMonth}월`;
+  if (
+    currentMonthTitle
+  ) {
+
+    currentMonthTitle.textContent =
+      `${selectedYear}년 ${selectedMonth}월`;
+
+  }
 
 }
 
@@ -618,23 +1065,40 @@ function getDefaultDate() {
   const now =
     new Date();
 
+
   const month =
-    String(selectedMonth)
-      .padStart(2, "0");
+    String(
+      selectedMonth
+    )
+      .padStart(
+        2,
+        "0"
+      );
+
 
   let day =
     "01";
 
+
   if (
-    now.getFullYear() === selectedYear &&
-    now.getMonth() + 1 === selectedMonth
+    now.getFullYear() ===
+      selectedYear
+    &&
+    now.getMonth() + 1 ===
+      selectedMonth
   ) {
 
     day =
-      String(now.getDate())
-        .padStart(2, "0");
+      String(
+        now.getDate()
+      )
+        .padStart(
+          2,
+          "0"
+        );
 
   }
+
 
   return (
     `${selectedYear}-${month}-${day}`
@@ -643,19 +1107,31 @@ function getDefaultDate() {
 }
 
 
+// =====================================================
+// 진행바
+// =====================================================
+
 function setProgress(
   element,
   percent
 ) {
 
-  if (!element) {
+  if (
+    !element
+  ) {
+
     return;
+
   }
 
+
   const safePercent =
-    Number.isFinite(percent)
+    Number.isFinite(
+      percent
+    )
       ? percent
       : 0;
+
 
   element.style.width =
     `${Math.min(
@@ -666,13 +1142,16 @@ function setProgress(
       100
     )}%`;
 
+
   element.classList.remove(
     "warning",
     "danger"
   );
 
+
   if (
-    safePercent >= 100
+    safePercent >=
+    100
   ) {
 
     element.classList.add(
@@ -682,7 +1161,8 @@ function setProgress(
   }
 
   else if (
-    safePercent >= 80
+    safePercent >=
+    80
   ) {
 
     element.classList.add(
@@ -703,53 +1183,88 @@ function getUsagePercent(
     !budget ||
     budget <= 0
   ) {
+
     return 0;
+
   }
 
+
   return Math.round(
-    (used / budget) * 100
+    (
+      used /
+      budget
+    ) *
+    100
   );
 
 }
 
 
-function getCategoryInfo(name) {
+// =====================================================
+// 카테고리 / 프로필
+// =====================================================
+
+function getCategoryInfo(
+  name
+) {
 
   return (
     categories.find(
       (category) =>
-        category.name === name
+        category.name ===
+        name
     )
 
     ||
 
     {
-      name,
-      emoji: "📌",
-      isDefault: false
+      name:
+        name ||
+        "기타",
+
+      emoji:
+        "📌",
+
+      isDefault:
+        false
     }
   );
 
 }
 
 
-function getProfileByUid(uid) {
+function getProfileByUid(
+  uid
+) {
 
-  if (!uid) {
+  if (
+    !uid
+  ) {
+
     return null;
+
   }
 
+
   if (
-    myProfile?.uid === uid
+    myProfile?.uid ===
+    uid
   ) {
+
     return myProfile;
+
   }
 
+
   if (
-    partnerProfile?.uid === uid
+    partnerProfile?.uid ===
+    uid
   ) {
+
     return partnerProfile;
+
   }
+
 
   return null;
 
@@ -762,13 +1277,17 @@ function getPartnerUid() {
     !currentCouple?.members ||
     !currentUser
   ) {
+
     return null;
+
   }
+
 
   return (
     currentCouple.members.find(
       (uid) =>
-        uid !== currentUser.uid
+        uid !==
+        currentUser.uid
     )
 
     ||
@@ -779,15 +1298,26 @@ function getPartnerUid() {
 }
 
 
+// =====================================================
+// 비공개 설명
+// =====================================================
+
 function getPublicDescription(
   expense
 ) {
 
-  if (!expense) {
+  if (
+    !expense
+  ) {
+
     return "";
+
   }
 
-  if (!expense.isPrivate) {
+
+  if (
+    !expense.isPrivate
+  ) {
 
     return (
       expense.description ||
@@ -795,6 +1325,7 @@ function getPublicDescription(
     );
 
   }
+
 
   if (
     expense.payerUid ===
@@ -805,11 +1336,14 @@ function getPublicDescription(
       privateDetails[
         expense.id
       ]
+
       ||
+
       ""
     );
 
   }
+
 
   return "";
 
@@ -825,14 +1359,21 @@ function getExpenseDisplayTitle(
       expense.category
     );
 
+
   const description =
     getPublicDescription(
       expense
     );
 
-  if (description) {
+
+  if (
+    description
+  ) {
+
     return description;
+
   }
+
 
   return (
     `${category.emoji} ${category.name}`
@@ -841,21 +1382,31 @@ function getExpenseDisplayTitle(
 }
 
 
-function typeLabel(type) {
+function typeLabel(
+  type
+) {
 
   return (
-    type === "together"
+    type ===
+      "together"
+
       ? "같이"
+
       : "혼자"
   );
 
 }
 
 
+// =====================================================
+// 현재 월 지출
+// =====================================================
+
 function getCurrentMonthExpenses() {
 
   const monthKey =
     getMonthKey();
+
 
   return expenses.filter(
     (expense) =>
@@ -867,10 +1418,256 @@ function getCurrentMonthExpenses() {
 
 
 // =====================================================
+// 한 달 진행률
+// =====================================================
+
+function getMonthProgress() {
+
+  const now =
+    new Date();
+
+
+  const selectedStart =
+    new Date(
+      selectedYear,
+      selectedMonth - 1,
+      1
+    );
+
+
+  const currentStart =
+    new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1
+    );
+
+
+  if (
+    selectedStart <
+    currentStart
+  ) {
+
+    return 100;
+
+  }
+
+
+  if (
+    selectedStart >
+    currentStart
+  ) {
+
+    return 0;
+
+  }
+
+
+  const daysInMonth =
+    new Date(
+      selectedYear,
+      selectedMonth,
+      0
+    )
+      .getDate();
+
+
+  return Math.round(
+    (
+      now.getDate() /
+      daysInMonth
+    ) *
+    100
+  );
+
+}
+
+
+// =====================================================
+// 거래 정렬
+// =====================================================
+
+function getCreatedAtMillis(
+  expense
+) {
+
+  const value =
+    expense?.createdAt;
+
+
+  if (
+    !value
+  ) {
+
+    return 0;
+
+  }
+
+
+  if (
+    typeof value.toMillis ===
+    "function"
+  ) {
+
+    return value.toMillis();
+
+  }
+
+
+  if (
+    typeof value.seconds ===
+    "number"
+  ) {
+
+    return (
+      value.seconds *
+      1000
+    );
+
+  }
+
+
+  const parsed =
+    new Date(
+      value
+    )
+      .getTime();
+
+
+  return Number.isFinite(
+    parsed
+  )
+    ? parsed
+    : 0;
+
+}
+
+
+function sortExpenseList(
+  list,
+  mode = "date-desc"
+) {
+
+  const copied =
+    [...list];
+
+
+  // 입력순
+  if (
+    mode ===
+    "created-desc"
+  ) {
+
+    return copied.sort(
+      (a, b) =>
+        getCreatedAtMillis(
+          b
+        )
+        -
+        getCreatedAtMillis(
+          a
+        )
+    );
+
+  }
+
+
+  // 날짜순
+  // 날짜가 같으면 최근 입력한 것이 위
+
+  return copied.sort(
+    (a, b) => {
+
+      const dateCompare =
+        String(
+          b.date ||
+          ""
+        )
+          .localeCompare(
+            String(
+              a.date ||
+              ""
+            )
+          );
+
+
+      if (
+        dateCompare !==
+        0
+      ) {
+
+        return dateCompare;
+
+      }
+
+
+      return (
+        getCreatedAtMillis(
+          b
+        )
+        -
+        getCreatedAtMillis(
+          a
+        )
+      );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// 지출 수정 / 삭제 권한
+// =====================================================
+
+function canCurrentUserManageExpense(
+  expense
+) {
+
+  if (
+    !currentUser ||
+    !expense
+  ) {
+
+    return false;
+
+  }
+
+
+  // 2.1 이후 데이터
+  // 실제 입력한 계정이 수정 / 삭제 가능
+
+  if (
+    expense.createdByUid
+  ) {
+
+    return (
+      expense.createdByUid ===
+      currentUser.uid
+    );
+
+  }
+
+
+  // 2.0 이전 기록은 createdByUid가 없으므로
+  // 기존 방식인 결제자 기준으로 호환
+
+  return (
+    expense.payerUid ===
+    currentUser.uid
+  );
+
+}
+
+
+// =====================================================
 // Firestore 경로
 // =====================================================
 
-function userDocRef(uid) {
+function userDocRef(
+  uid
+) {
 
   return doc(
     db,
@@ -961,7 +1758,7 @@ function privateDetailDocRef(
 
 
 // =====================================================
-// 초대코드
+// 초대코드 생성
 // =====================================================
 
 function createRandomCode(
@@ -971,8 +1768,10 @@ function createRandomCode(
   const chars =
     "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+
   let result =
     "";
+
 
   for (
     let i = 0;
@@ -990,6 +1789,7 @@ function createRandomCode(
 
   }
 
+
   return result;
 
 }
@@ -1004,7 +1804,10 @@ async function makeUniqueInviteCode() {
   ) {
 
     const code =
-      createRandomCode(6);
+      createRandomCode(
+        6
+      );
+
 
     const inviteSnapshot =
       await getDoc(
@@ -1015,6 +1818,7 @@ async function makeUniqueInviteCode() {
         )
       );
 
+
     if (
       !inviteSnapshot.exists()
     ) {
@@ -1024,6 +1828,7 @@ async function makeUniqueInviteCode() {
     }
 
   }
+
 
   throw new Error(
     "초대코드를 만들지 못했습니다."
@@ -1043,11 +1848,14 @@ async function login() {
       .value
       .trim();
 
+
   const password =
     loginPassword.value;
 
+
   loginError.textContent =
     "";
+
 
   if (
     !email ||
@@ -1061,6 +1869,7 @@ async function login() {
 
   }
 
+
   try {
 
     await signInWithEmailAndPassword(
@@ -1068,6 +1877,7 @@ async function login() {
       email,
       password
     );
+
 
     loginPassword.value =
       "";
@@ -1080,6 +1890,7 @@ async function login() {
       "로그인 실패:",
       error
     );
+
 
     loginError.textContent =
       "이메일 또는 비밀번호를 확인해주세요.";
@@ -1100,7 +1911,8 @@ loginPassword.addEventListener(
   (event) => {
 
     if (
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ) {
 
       login();
@@ -1109,8 +1921,6 @@ loginPassword.addEventListener(
 
   }
 );
-
-
 // =====================================================
 // 비밀번호 재설정
 // =====================================================
@@ -1122,17 +1932,21 @@ showPasswordResetBtn.addEventListener(
     passwordResetMessage.textContent =
       "";
 
+
     passwordResetMessage.classList.remove(
       "success",
       "error"
     );
 
+
     passwordResetEmail.value =
       loginEmail.value.trim();
+
 
     showScreen(
       passwordResetScreen
     );
+
 
     passwordResetEmail.focus();
 
@@ -1147,10 +1961,12 @@ passwordResetBackBtn.addEventListener(
     passwordResetMessage.textContent =
       "";
 
+
     passwordResetMessage.classList.remove(
       "success",
       "error"
     );
+
 
     showScreen(
       loginScreen
@@ -1167,42 +1983,54 @@ async function sendResetEmail() {
       .value
       .trim();
 
+
   passwordResetMessage.textContent =
     "";
+
 
   passwordResetMessage.classList.remove(
     "success",
     "error"
   );
 
-  if (!email) {
+
+  if (
+    !email
+  ) {
 
     passwordResetMessage.textContent =
       "이메일을 입력해주세요.";
+
 
     passwordResetMessage.classList.add(
       "error"
     );
 
+
     return;
 
   }
+
 
   try {
 
     sendPasswordResetBtn.disabled =
       true;
 
+
     sendPasswordResetBtn.textContent =
       "보내는 중...";
+
 
     await sendPasswordResetEmail(
       auth,
       email
     );
 
+
     passwordResetMessage.textContent =
       "비밀번호 재설정 메일을 보냈어요. 메일함을 확인해주세요.";
+
 
     passwordResetMessage.classList.add(
       "success"
@@ -1216,6 +2044,7 @@ async function sendResetEmail() {
       "비밀번호 재설정 메일 전송 실패:",
       error
     );
+
 
     if (
       error.code ===
@@ -1244,6 +2073,7 @@ async function sendResetEmail() {
 
     }
 
+
     passwordResetMessage.classList.add(
       "error"
     );
@@ -1254,6 +2084,7 @@ async function sendResetEmail() {
 
     sendPasswordResetBtn.disabled =
       false;
+
 
     sendPasswordResetBtn.textContent =
       "재설정 메일 보내기";
@@ -1274,7 +2105,8 @@ passwordResetEmail.addEventListener(
   (event) => {
 
     if (
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ) {
 
       sendResetEmail();
@@ -1283,8 +2115,10 @@ passwordResetEmail.addEventListener(
 
   }
 );
+
+
 // =====================================================
-// 회원가입
+// 회원가입 화면
 // =====================================================
 
 showSignupBtn.addEventListener(
@@ -1294,9 +2128,25 @@ showSignupBtn.addEventListener(
     signupError.textContent =
       "";
 
+
+    signupEmail.value =
+      loginEmail.value.trim();
+
+
+    signupPassword.value =
+      "";
+
+
+    signupPasswordConfirm.value =
+      "";
+
+
     showScreen(
       signupScreen
     );
+
+
+    signupEmail.focus();
 
   }
 );
@@ -1306,6 +2156,10 @@ signupBackBtn.addEventListener(
   "click",
   () => {
 
+    signupError.textContent =
+      "";
+
+
     showScreen(
       loginScreen
     );
@@ -1314,57 +2168,755 @@ signupBackBtn.addEventListener(
 );
 
 
+// =====================================================
+// 회원가입
+// =====================================================
+
+async function signup() {
+
+  const email =
+    signupEmail
+      .value
+      .trim();
+
+
+  const password =
+    signupPassword.value;
+
+
+  const confirmPassword =
+    signupPasswordConfirm.value;
+
+
+  signupError.textContent =
+    "";
+
+
+  if (
+    !email ||
+    !password ||
+    !confirmPassword
+  ) {
+
+    signupError.textContent =
+      "모든 항목을 입력해주세요.";
+
+
+    return;
+
+  }
+
+
+  if (
+    password !==
+    confirmPassword
+  ) {
+
+    signupError.textContent =
+      "비밀번호가 서로 달라요.";
+
+
+    return;
+
+  }
+
+
+  if (
+    password.length <
+    6
+  ) {
+
+    signupError.textContent =
+      "비밀번호는 6자리 이상 입력해주세요.";
+
+
+    return;
+
+  }
+
+
+  try {
+
+    const credential =
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+
+    await setDoc(
+      userDocRef(
+        credential.user.uid
+      ),
+      {
+
+        email,
+
+        nickname:
+          "",
+
+        icon:
+          "🩷",
+
+        coupleId:
+          null,
+
+        createdAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    signupPassword.value =
+      "";
+
+
+    signupPasswordConfirm.value =
+      "";
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "회원가입 실패:",
+      error
+    );
+
+
+    if (
+      error.code ===
+      "auth/email-already-in-use"
+    ) {
+
+      signupError.textContent =
+        "이미 가입된 이메일이에요.";
+
+    }
+
+    else if (
+      error.code ===
+      "auth/invalid-email"
+    ) {
+
+      signupError.textContent =
+        "이메일 형식을 확인해주세요.";
+
+    }
+
+    else if (
+      error.code ===
+      "auth/weak-password"
+    ) {
+
+      signupError.textContent =
+        "비밀번호를 조금 더 길게 설정해주세요.";
+
+    }
+
+    else {
+
+      signupError.textContent =
+        "회원가입에 실패했어요. 잠시 후 다시 시도해주세요.";
+
+    }
+
+  }
+
+}
+
+
 signupBtn.addEventListener(
+  "click",
+  signup
+);
+
+
+signupPasswordConfirm.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (
+      event.key ===
+      "Enter"
+    ) {
+
+      signup();
+
+    }
+
+  }
+);
+
+
+// =====================================================
+// 프로필 아이콘 선택
+// =====================================================
+
+function clearActiveIconButtons(
+  buttons
+) {
+
+  buttons.forEach(
+    (button) => {
+
+      button.classList.remove(
+        "active"
+      );
+
+    }
+  );
+
+}
+
+
+profileIconButtons.forEach(
+  (button) => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        clearActiveIconButtons(
+          profileIconButtons
+        );
+
+
+        button.classList.add(
+          "active"
+        );
+
+
+        selectedProfileIcon =
+          button.dataset.icon;
+
+
+        if (
+          customProfileIcon
+        ) {
+
+          customProfileIcon.value =
+            "";
+
+        }
+
+      }
+    );
+
+  }
+);
+
+
+if (
+  customProfileIcon
+) {
+
+  customProfileIcon.addEventListener(
+    "input",
+    () => {
+
+      const value =
+        customProfileIcon
+          .value
+          .trim();
+
+
+      if (
+        value
+      ) {
+
+        clearActiveIconButtons(
+          profileIconButtons
+        );
+
+
+        selectedProfileIcon =
+          value;
+
+      }
+
+    }
+  );
+
+}
+
+
+settingsIconButtons.forEach(
+  (button) => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        clearActiveIconButtons(
+          settingsIconButtons
+        );
+
+
+        button.classList.add(
+          "active"
+        );
+
+
+        selectedSettingsIcon =
+          button.dataset.icon;
+
+
+        if (
+          customSettingsIcon
+        ) {
+
+          customSettingsIcon.value =
+            "";
+
+        }
+
+      }
+    );
+
+  }
+);
+
+
+if (
+  customSettingsIcon
+) {
+
+  customSettingsIcon.addEventListener(
+    "input",
+    () => {
+
+      const value =
+        customSettingsIcon
+          .value
+          .trim();
+
+
+      if (
+        value
+      ) {
+
+        clearActiveIconButtons(
+          settingsIconButtons
+        );
+
+
+        selectedSettingsIcon =
+          value;
+
+      }
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// 최초 프로필 저장
+// =====================================================
+
+async function saveInitialProfile() {
+
+  const nickname =
+    profileNickname
+      .value
+      .trim();
+
+
+  const customIcon =
+    customProfileIcon
+      ?.value
+      .trim();
+
+
+  const icon =
+    customIcon
+
+    ||
+
+    selectedProfileIcon
+
+    ||
+
+    "🩷";
+
+
+  profileError.textContent =
+    "";
+
+
+  if (
+    !nickname
+  ) {
+
+    profileError.textContent =
+      "닉네임을 입력해주세요.";
+
+
+    return;
+
+  }
+
+
+  try {
+
+    await updateDoc(
+      userDocRef(
+        currentUser.uid
+      ),
+      {
+
+        nickname,
+
+        icon
+
+      }
+    );
+
+
+    await loadMyProfile();
+
+
+    showCoupleSetupScreen();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "프로필 저장 실패:",
+      error
+    );
+
+
+    profileError.textContent =
+      "프로필을 저장하지 못했어요.";
+
+  }
+
+}
+
+
+saveProfileBtn.addEventListener(
+  "click",
+  saveInitialProfile
+);
+
+
+// =====================================================
+// 내 프로필 불러오기
+// =====================================================
+
+async function loadMyProfile() {
+
+  if (
+    !currentUser
+  ) {
+
+    return null;
+
+  }
+
+
+  const snapshot =
+    await getDoc(
+      userDocRef(
+        currentUser.uid
+      )
+    );
+
+
+  if (
+    !snapshot.exists()
+  ) {
+
+    await setDoc(
+      userDocRef(
+        currentUser.uid
+      ),
+      {
+
+        email:
+          currentUser.email ||
+          "",
+
+        nickname:
+          "",
+
+        icon:
+          "🩷",
+
+        coupleId:
+          null,
+
+        createdAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    myProfile = {
+
+      uid:
+        currentUser.uid,
+
+      email:
+        currentUser.email ||
+        "",
+
+      nickname:
+        "",
+
+      icon:
+        "🩷",
+
+      coupleId:
+        null
+
+    };
+
+
+    return myProfile;
+
+  }
+
+
+  myProfile = {
+
+    uid:
+      snapshot.id,
+
+    ...snapshot.data()
+
+  };
+
+
+  return myProfile;
+
+}
+
+
+// =====================================================
+// 커플 연결 준비 화면
+// =====================================================
+
+function showCoupleSetupScreen() {
+
+  if (
+    !myProfile
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    setupMyIcon
+  ) {
+
+    setupMyIcon.textContent =
+      myProfile.icon ||
+      "🩷";
+
+  }
+
+
+  if (
+    setupMyNickname
+  ) {
+
+    setupMyNickname.textContent =
+      myProfile.nickname ||
+      "나";
+
+  }
+
+
+  showScreen(
+    coupleSetupScreen
+  );
+
+}
+
+
+// =====================================================
+// 커플 생성
+// =====================================================
+
+async function createCouple() {
+
+  if (
+    !currentUser ||
+    !myProfile
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    createCoupleBtn.disabled =
+      true;
+
+
+    createCoupleBtn.textContent =
+      "만드는 중...";
+
+
+    const inviteCode =
+      await makeUniqueInviteCode();
+
+
+    const newCoupleRef =
+      doc(
+        collection(
+          db,
+          "couples"
+        )
+      );
+
+
+    await setDoc(
+      newCoupleRef,
+      {
+
+        inviteCode,
+
+        members: [
+          currentUser.uid
+        ],
+
+        createdAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    await setDoc(
+      doc(
+        db,
+        "invites",
+        inviteCode
+      ),
+      {
+
+        coupleId:
+          newCoupleRef.id,
+
+        createdBy:
+          currentUser.uid,
+
+        createdAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    await updateDoc(
+      userDocRef(
+        currentUser.uid
+      ),
+      {
+
+        coupleId:
+          newCoupleRef.id
+
+      }
+    );
+
+
+    coupleId =
+      newCoupleRef.id;
+
+
+    myProfile.coupleId =
+      newCoupleRef.id;
+
+
+    currentCouple = {
+
+      id:
+        newCoupleRef.id,
+
+      inviteCode,
+
+      members: [
+        currentUser.uid
+      ]
+
+    };
+
+
+    inviteCodeElement.textContent =
+      inviteCode;
+
+
+    showScreen(
+      inviteScreen
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "커플 생성 실패:",
+      error
+    );
+
+
+    alert(
+      "커플 공간을 만들지 못했어요."
+    );
+
+  }
+
+  finally {
+
+    createCoupleBtn.disabled =
+      false;
+
+
+    createCoupleBtn.textContent =
+      "초대코드 만들기";
+
+  }
+
+}
+
+
+createCoupleBtn.addEventListener(
+  "click",
+  createCouple
+);
+
+
+// =====================================================
+// 초대코드 복사
+// =====================================================
+
+copyInviteCodeBtn.addEventListener(
   "click",
   async () => {
 
-    const email =
-      signupEmail
-        .value
+    const code =
+      inviteCodeElement
+        .textContent
         .trim();
 
-    const password =
-      signupPassword.value;
-
-    const confirmPassword =
-      signupPasswordConfirm.value;
-
-    signupError.textContent =
-      "";
 
     if (
-      !email ||
-      !password ||
-      !confirmPassword
+      !code
     ) {
-
-      signupError.textContent =
-        "모든 항목을 입력해주세요.";
-
-      return;
-
-    }
-
-
-    if (
-      password.length < 6
-    ) {
-
-      signupError.textContent =
-        "비밀번호는 6자 이상 입력해주세요.";
-
-      return;
-
-    }
-
-
-    if (
-      password !==
-      confirmPassword
-    ) {
-
-      signupError.textContent =
-        "비밀번호가 서로 다릅니다.";
 
       return;
 
@@ -1373,55 +2925,324 @@ signupBtn.addEventListener(
 
     try {
 
-      await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
+      await navigator.clipboard.writeText(
+        code
       );
 
-      signupPassword.value =
-        "";
 
-      signupPasswordConfirm.value =
-        "";
+      const originalText =
+        copyInviteCodeBtn.textContent;
+
+
+      copyInviteCodeBtn.textContent =
+        "복사 완료!";
+
+
+      setTimeout(
+        () => {
+
+          copyInviteCodeBtn.textContent =
+            originalText;
+
+        },
+        1500
+      );
 
     }
 
     catch (error) {
 
       console.error(
-        "회원가입 실패:",
+        "초대코드 복사 실패:",
         error
       );
 
-      if (
-        error.code ===
-        "auth/email-already-in-use"
-      ) {
 
-        signupError.textContent =
-          "이미 사용 중인 이메일입니다.";
-
-      }
-
-      else if (
-        error.code ===
-        "auth/invalid-email"
-      ) {
-
-        signupError.textContent =
-          "이메일 형식을 확인해주세요.";
-
-      }
-
-      else {
-
-        signupError.textContent =
-          "회원가입 중 오류가 발생했습니다.";
-
-      }
+      alert(
+        `초대코드: ${code}`
+      );
 
     }
+
+  }
+);
+
+
+// =====================================================
+// 커플 연결 화면 열기
+// =====================================================
+
+showJoinCoupleBtn.addEventListener(
+  "click",
+  () => {
+
+    joinCodeInput.value =
+      "";
+
+
+    joinError.textContent =
+      "";
+
+
+    showScreen(
+      joinCoupleScreen
+    );
+
+
+    joinCodeInput.focus();
+
+  }
+);
+
+
+joinBackBtn.addEventListener(
+  "click",
+  () => {
+
+    joinError.textContent =
+      "";
+
+
+    showCoupleSetupScreen();
+
+  }
+);
+
+
+// =====================================================
+// 초대코드로 커플 연결
+// =====================================================
+
+async function joinCouple() {
+
+  const code =
+    joinCodeInput
+      .value
+      .trim()
+      .toUpperCase();
+
+
+  joinError.textContent =
+    "";
+
+
+  if (
+    !code
+  ) {
+
+    joinError.textContent =
+      "초대코드를 입력해주세요.";
+
+
+    return;
+
+  }
+
+
+  try {
+
+    joinCoupleBtn.disabled =
+      true;
+
+
+    joinCoupleBtn.textContent =
+      "연결 중...";
+
+
+    const inviteSnapshot =
+      await getDoc(
+        doc(
+          db,
+          "invites",
+          code
+        )
+      );
+
+
+    if (
+      !inviteSnapshot.exists()
+    ) {
+
+      joinError.textContent =
+        "초대코드를 찾을 수 없어요.";
+
+
+      return;
+
+    }
+
+
+    const inviteData =
+      inviteSnapshot.data();
+
+
+    const targetCoupleId =
+      inviteData.coupleId;
+
+
+    if (
+      !targetCoupleId
+    ) {
+
+      joinError.textContent =
+        "초대코드 정보가 올바르지 않아요.";
+
+
+      return;
+
+    }
+
+
+    const targetCoupleRef =
+      doc(
+        db,
+        "couples",
+        targetCoupleId
+      );
+
+
+    const coupleSnapshot =
+      await getDoc(
+        targetCoupleRef
+      );
+
+
+    if (
+      !coupleSnapshot.exists()
+    ) {
+
+      joinError.textContent =
+        "커플 공간을 찾을 수 없어요.";
+
+
+      return;
+
+    }
+
+
+    const coupleData =
+      coupleSnapshot.data();
+
+
+    const members =
+      coupleData.members ||
+      [];
+
+
+    if (
+      members.length >= 2
+      &&
+      !members.includes(
+        currentUser.uid
+      )
+    ) {
+
+      joinError.textContent =
+        "이미 두 사람이 연결된 초대코드예요.";
+
+
+      return;
+
+    }
+
+
+    await updateDoc(
+      targetCoupleRef,
+      {
+
+        members:
+          arrayUnion(
+            currentUser.uid
+          )
+
+      }
+    );
+
+
+    await updateDoc(
+      userDocRef(
+        currentUser.uid
+      ),
+      {
+
+        coupleId:
+          targetCoupleId
+
+      }
+    );
+
+
+    coupleId =
+      targetCoupleId;
+
+
+    myProfile.coupleId =
+      targetCoupleId;
+
+
+    await startCoupleApp();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "커플 연결 실패:",
+      error
+    );
+
+
+    joinError.textContent =
+      "커플 연결에 실패했어요.";
+
+  }
+
+  finally {
+
+    joinCoupleBtn.disabled =
+      false;
+
+
+    joinCoupleBtn.textContent =
+      "연결하기";
+
+  }
+
+}
+
+
+joinCoupleBtn.addEventListener(
+  "click",
+  joinCouple
+);
+
+
+joinCodeInput.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (
+      event.key ===
+      "Enter"
+    ) {
+
+      joinCouple();
+
+    }
+
+  }
+);
+
+
+// =====================================================
+// 초대 화면에서 앱으로
+// =====================================================
+
+inviteContinueBtn.addEventListener(
+  "click",
+  async () => {
+
+    await startCoupleApp();
 
   }
 );
@@ -1432,6 +3253,9 @@ signupBtn.addEventListener(
 // =====================================================
 
 async function logout() {
+
+  closeAllModals();
+
 
   try {
 
@@ -1466,692 +3290,129 @@ setupLogoutBtn.addEventListener(
 
 
 // =====================================================
-// 프로필 아이콘 / 최초 프로필
+// 실시간 구독 해제
 // =====================================================
 
-profileIconButtons.forEach(
-  (button) => {
+function clearSubscriptions() {
 
-    button.addEventListener(
-      "click",
-      () => {
+  [
 
-        profileIconButtons.forEach(
-          (btn) =>
-            btn.classList.remove(
-              "active"
-            )
-        );
+    unsubscribeExpenses,
+    unsubscribeMonthlySettings,
+    unsubscribeCategories,
+    unsubscribeCouple,
+    unsubscribePartnerProfile,
+    unsubscribePrivateDetails
 
-        button.classList.add(
-          "active"
-        );
+  ]
+    .filter(
+      (unsubscribe) =>
+        typeof unsubscribe ===
+        "function"
+    )
+    .forEach(
+      (unsubscribe) => {
 
-        selectedProfileIcon =
-          button.dataset.icon;
-
-        if (
-          customProfileIcon
-        ) {
-
-          customProfileIcon.value =
-            "";
-
-        }
+        unsubscribe();
 
       }
     );
 
-  }
-);
+
+  unsubscribeExpenses =
+    null;
 
 
-if (
-  customProfileIcon
-) {
-
-  customProfileIcon.addEventListener(
-    "input",
-    function () {
-
-      const value =
-        this.value.trim();
-
-      if (!value) {
-        return;
-      }
-
-      selectedProfileIcon =
-        value;
-
-      profileIconButtons.forEach(
-        (button) =>
-          button.classList.remove(
-            "active"
-          )
-      );
-
-    }
-  );
-
-}
+  unsubscribeMonthlySettings =
+    null;
 
 
-saveProfileBtn.addEventListener(
-  "click",
-  async () => {
-
-    const nickname =
-      profileNickname
-        .value
-        .trim();
-
-    profileError.textContent =
-      "";
-
-    if (!nickname) {
-
-      profileError.textContent =
-        "별명을 입력해주세요.";
-
-      return;
-
-    }
+  unsubscribeCategories =
+    null;
 
 
-    if (
-      !selectedProfileIcon
-    ) {
-
-      profileError.textContent =
-        "아이콘을 선택해주세요.";
-
-      return;
-
-    }
+  unsubscribeCouple =
+    null;
 
 
-    try {
-
-      await setDoc(
-
-        userDocRef(
-          currentUser.uid
-        ),
-
-        {
-          email:
-            currentUser.email ||
-            "",
-
-          nickname,
-
-          icon:
-            selectedProfileIcon,
-
-          coupleId:
-            null,
-
-          createdAt:
-            serverTimestamp()
-        },
-
-        {
-          merge: true
-        }
-
-      );
+  unsubscribePartnerProfile =
+    null;
 
 
-      myProfile = {
-
-        uid:
-          currentUser.uid,
-
-        email:
-          currentUser.email ||
-          "",
-
-        nickname,
-
-        icon:
-          selectedProfileIcon,
-
-        coupleId:
-          null
-
-      };
-
-
-      updateSetupProfilePreview();
-
-      showScreen(
-        coupleSetupScreen
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "프로필 저장 실패:",
-        error
-      );
-
-      profileError.textContent =
-        "프로필 저장 중 오류가 발생했습니다.";
-
-    }
-
-  }
-);
-
-
-function updateSetupProfilePreview() {
-
-  setupMyIcon.textContent =
-    myProfile?.icon ||
-    "🙂";
-
-  setupMyNickname.textContent =
-    myProfile?.nickname ||
-    "나";
+  unsubscribePrivateDetails =
+    null;
 
 }
 
 
 // =====================================================
-// 새 커플 만들기
-// =====================================================
-
-createCoupleBtn.addEventListener(
-  "click",
-  async () => {
-
-    try {
-
-      const inviteCode =
-        await makeUniqueInviteCode();
-
-      const newCoupleRef =
-        doc(
-          collection(
-            db,
-            "couples"
-          )
-        );
-
-
-      await setDoc(
-
-        newCoupleRef,
-
-        {
-          inviteCode,
-
-          members: [
-            currentUser.uid
-          ],
-
-          createdAt:
-            serverTimestamp()
-        }
-
-      );
-
-
-      await setDoc(
-
-        doc(
-          db,
-          "invites",
-          inviteCode
-        ),
-
-        {
-          coupleId:
-            newCoupleRef.id,
-
-          createdBy:
-            currentUser.uid,
-
-          createdAt:
-            serverTimestamp()
-        }
-
-      );
-
-
-      await updateDoc(
-
-        userDocRef(
-          currentUser.uid
-        ),
-
-        {
-          coupleId:
-            newCoupleRef.id
-        }
-
-      );
-
-
-      coupleId =
-        newCoupleRef.id;
-
-      myProfile.coupleId =
-        coupleId;
-
-
-      currentCouple = {
-
-        id:
-          coupleId,
-
-        inviteCode,
-
-        members: [
-          currentUser.uid
-        ]
-
-      };
-
-
-      inviteCodeElement.textContent =
-        inviteCode;
-
-      showScreen(
-        inviteScreen
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "가계부 생성 실패:",
-        error
-      );
-
-      alert(
-        "가계부 생성 중 오류가 발생했습니다."
-      );
-
-    }
-
-  }
-);
-
-
-// =====================================================
-// 커플 참여
-// =====================================================
-
-showJoinCoupleBtn.addEventListener(
-  "click",
-  () => {
-
-    joinCodeInput.value =
-      "";
-
-    joinError.textContent =
-      "";
-
-    showScreen(
-      joinCoupleScreen
-    );
-
-  }
-);
-
-
-joinBackBtn.addEventListener(
-  "click",
-  () => {
-
-    showScreen(
-      coupleSetupScreen
-    );
-
-  }
-);
-
-
-joinCodeInput.addEventListener(
-  "input",
-  function () {
-
-    this.value =
-      this.value
-        .toUpperCase()
-        .replace(
-          /[^A-Z0-9]/g,
-          ""
-        );
-
-  }
-);
-
-
-joinCoupleBtn.addEventListener(
-  "click",
-  async () => {
-
-    const code =
-      joinCodeInput
-        .value
-        .trim()
-        .toUpperCase();
-
-    joinError.textContent =
-      "";
-
-    if (!code) {
-
-      joinError.textContent =
-        "초대코드를 입력해주세요.";
-
-      return;
-
-    }
-
-
-    try {
-
-      const inviteSnapshot =
-        await getDoc(
-
-          doc(
-            db,
-            "invites",
-            code
-          )
-
-        );
-
-
-      if (
-        !inviteSnapshot.exists()
-      ) {
-
-        joinError.textContent =
-          "초대코드를 찾을 수 없습니다.";
-
-        return;
-
-      }
-
-
-      const targetCoupleId =
-        inviteSnapshot
-          .data()
-          .coupleId;
-
-
-      if (
-        !targetCoupleId
-      ) {
-
-        joinError.textContent =
-          "올바르지 않은 초대코드입니다.";
-
-        return;
-
-      }
-
-
-      const targetCoupleRef =
-        doc(
-          db,
-          "couples",
-          targetCoupleId
-        );
-
-
-      const coupleDocument =
-        await getDoc(
-          targetCoupleRef
-        );
-
-
-      if (
-        !coupleDocument.exists()
-      ) {
-
-        joinError.textContent =
-          "연결할 가계부를 찾을 수 없습니다.";
-
-        return;
-
-      }
-
-
-      const coupleData =
-        coupleDocument.data();
-
-
-      const members =
-        Array.isArray(
-          coupleData.members
-        )
-
-          ? coupleData.members
-
-          : [];
-
-
-      if (
-        members.includes(
-          currentUser.uid
-        )
-      ) {
-
-        await updateDoc(
-
-          userDocRef(
-            currentUser.uid
-          ),
-
-          {
-            coupleId:
-              targetCoupleId
-          }
-
-        );
-
-      }
-
-      else {
-
-        if (
-          members.length >= 2
-        ) {
-
-          joinError.textContent =
-            "이미 두 사람이 연결된 가계부입니다.";
-
-          return;
-
-        }
-
-
-        await updateDoc(
-
-          targetCoupleRef,
-
-          {
-            members:
-              arrayUnion(
-                currentUser.uid
-              )
-          }
-
-        );
-
-
-        await updateDoc(
-
-          userDocRef(
-            currentUser.uid
-          ),
-
-          {
-            coupleId:
-              targetCoupleId
-          }
-
-        );
-
-      }
-
-
-      myProfile.coupleId =
-        targetCoupleId;
-
-      coupleId =
-        targetCoupleId;
-
-
-      await enterCoupleApp();
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "커플 연결 실패:",
-        error
-      );
-
-      joinError.textContent =
-        "연결 중 오류가 발생했습니다.";
-
-    }
-
-  }
-);
-
-
-// =====================================================
-// 초대코드 복사
-// =====================================================
-
-copyInviteCodeBtn.addEventListener(
-  "click",
-  async () => {
-
-    const code =
-      inviteCodeElement
-        .textContent
-        .trim();
-
-
-    try {
-
-      await navigator.clipboard
-        .writeText(
-          code
-        );
-
-
-      const oldText =
-        copyInviteCodeBtn
-          .textContent;
-
-
-      copyInviteCodeBtn.textContent =
-        "복사했어요 ✓";
-
-
-      setTimeout(
-        () => {
-
-          copyInviteCodeBtn.textContent =
-            oldText;
-
-        },
-        1300
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "복사 실패:",
-        error
-      );
-
-
-      alert(
-        `초대코드: ${code}`
-      );
-
-    }
-
-  }
-);
-
-
-inviteContinueBtn.addEventListener(
-  "click",
-  async () => {
-
-    await enterCoupleApp();
-
-  }
-);
-
-
-// =====================================================
-// 로그인 상태
+// 로그인 상태 변화
 // =====================================================
 
 onAuthStateChanged(
   auth,
   async (user) => {
 
-    stopRealtimeListeners();
-
-    closeAllModals();
+    clearSubscriptions();
 
 
     currentUser =
       user;
 
+
     myProfile =
       null;
+
 
     partnerProfile =
       null;
 
+
     currentCouple =
       null;
+
 
     coupleId =
       null;
 
+
     expenses =
       [];
+
 
     privateDetails =
       {};
 
-    categories = [
-      ...defaultCategories
-    ];
 
     monthlySettings = {
+
       sharedBudget: 0,
+
       personalBudgets: {}
+
     };
 
 
-    if (!user) {
+    categories =
+      [...defaultCategories];
+
+
+    detailUserUid =
+      null;
+
+
+    transactionVisibleCount =
+      15;
+
+
+    if (
+      !user
+    ) {
 
       showScreen(
         loginScreen
       );
+
 
       return;
 
@@ -2160,47 +3421,40 @@ onAuthStateChanged(
 
     try {
 
-      const profileSnapshot =
-        await getDoc(
-
-          userDocRef(
-            user.uid
-          )
-
-        );
+      await loadMyProfile();
 
 
       if (
-        !profileSnapshot.exists()
+        !myProfile.nickname
       ) {
-
-        selectedProfileIcon =
-          "🩷";
 
         profileNickname.value =
           "";
 
 
-        if (
-          customProfileIcon
-        ) {
+        selectedProfileIcon =
+          myProfile.icon ||
+          "🩷";
 
-          customProfileIcon.value =
-            "";
 
-        }
+        clearActiveIconButtons(
+          profileIconButtons
+        );
 
 
         profileIconButtons.forEach(
-          (
-            button,
-            index
-          ) => {
+          (button) => {
 
-            button.classList.toggle(
-              "active",
-              index === 0
-            );
+            if (
+              button.dataset.icon ===
+              selectedProfileIcon
+            ) {
+
+              button.classList.add(
+                "active"
+              );
+
+            }
 
           }
         );
@@ -2210,30 +3464,18 @@ onAuthStateChanged(
           profileScreen
         );
 
+
         return;
 
       }
-
-
-      myProfile = {
-
-        uid:
-          user.uid,
-
-        ...profileSnapshot.data()
-
-      };
 
 
       if (
         !myProfile.coupleId
       ) {
 
-        updateSetupProfilePreview();
+        showCoupleSetupScreen();
 
-        showScreen(
-          coupleSetupScreen
-        );
 
         return;
 
@@ -2244,88 +3486,104 @@ onAuthStateChanged(
         myProfile.coupleId;
 
 
-      await enterCoupleApp();
+      await startCoupleApp();
 
     }
 
     catch (error) {
 
       console.error(
-        "사용자 정보 확인 실패:",
+        "초기화 실패:",
         error
       );
 
-      alert(
-        "사용자 정보를 불러오지 못했습니다."
-      );
 
-      showScreen(
-        loginScreen
+      alert(
+        "앱 정보를 불러오는 중 문제가 생겼어요."
       );
 
     }
 
   }
 );
-
-
 // =====================================================
-// 가계부 입장 / 실시간 감지
+// 커플 앱 시작
 // =====================================================
 
-async function enterCoupleApp() {
+async function startCoupleApp() {
 
   if (
     !currentUser ||
     !coupleId
   ) {
+
     return;
+
   }
 
 
-  const coupleSnapshot =
+  clearSubscriptions();
+
+
+  updateMonthTitle();
+
+
+  transactionVisibleCount =
+    15;
+
+
+  await loadCoupleOnce();
+
+
+  subscribeCouple();
+
+  subscribeExpenses();
+
+  subscribeMonthlySettings();
+
+  subscribeCategories();
+
+  subscribePrivateDetails();
+
+
+  showScreen(
+    appScreen
+  );
+
+
+  renderApp();
+
+}
+
+
+// =====================================================
+// 커플 정보 1회 불러오기
+// =====================================================
+
+async function loadCoupleOnce() {
+
+  if (
+    !coupleId
+  ) {
+
+    return;
+
+  }
+
+
+  const snapshot =
     await getDoc(
-
-      doc(
-        db,
-        "couples",
-        coupleId
-      )
-
+      coupleDocRef()
     );
 
 
   if (
-    !coupleSnapshot.exists()
+    !snapshot.exists()
   ) {
 
-    await updateDoc(
-
-      userDocRef(
-        currentUser.uid
-      ),
-
-      {
-        coupleId: null
-      }
-
+    throw new Error(
+      "커플 정보를 찾을 수 없습니다."
     );
-
-
-    myProfile.coupleId =
-      null;
-
-    coupleId =
-      null;
-
-
-    updateSetupProfilePreview();
-
-    showScreen(
-      coupleSetupScreen
-    );
-
-    return;
 
   }
 
@@ -2333,98 +3591,95 @@ async function enterCoupleApp() {
   currentCouple = {
 
     id:
-      coupleSnapshot.id,
+      snapshot.id,
 
-    ...coupleSnapshot.data()
+    ...snapshot.data()
 
   };
 
 
-  startRealtimeListeners();
-
-  updateMonthTitle();
-
-  updateProfileUI();
-
-  renderCategories();
-
-  renderApp();
-
-  showScreen(
-    appScreen
-  );
+  await loadPartnerProfileOnce();
 
 }
 
 
-function startRealtimeListeners() {
+// =====================================================
+// 상대 프로필 1회 불러오기
+// =====================================================
 
-  stopRealtimeListeners();
+async function loadPartnerProfileOnce() {
 
-  listenCouple();
-
-  listenExpenses();
-
-  listenPrivateDetails();
-
-  listenMonthlySettings();
-
-  listenCategories();
-
-}
+  const partnerUid =
+    getPartnerUid();
 
 
-function stopRealtimeListeners() {
+  if (
+    !partnerUid
+  ) {
 
-  [
-    unsubscribeExpenses,
-    unsubscribeMonthlySettings,
-    unsubscribeCategories,
-    unsubscribeCouple,
-    unsubscribePartnerProfile,
-    unsubscribePrivateDetails
-  ]
-    .forEach(
-      (unsubscribe) => {
+    partnerProfile =
+      null;
 
-        if (
-          typeof unsubscribe ===
-          "function"
-        ) {
 
-          unsubscribe();
+    return;
 
-        }
+  }
 
-      }
+
+  const snapshot =
+    await getDoc(
+      userDocRef(
+        partnerUid
+      )
     );
 
 
-  unsubscribeExpenses =
-    null;
+  if (
+    snapshot.exists()
+  ) {
 
-  unsubscribeMonthlySettings =
-    null;
+    partnerProfile = {
 
-  unsubscribeCategories =
-    null;
+      uid:
+        snapshot.id,
 
-  unsubscribeCouple =
-    null;
+      ...snapshot.data()
 
-  unsubscribePartnerProfile =
-    null;
+    };
 
-  unsubscribePrivateDetails =
-    null;
+  }
+
+  else {
+
+    partnerProfile =
+      null;
+
+  }
 
 }
 
 
-function listenCouple() {
+// =====================================================
+// 커플 정보 실시간 구독
+// =====================================================
 
-  if (!coupleId) {
+function subscribeCouple() {
+
+  if (
+    !coupleId
+  ) {
+
     return;
+
+  }
+
+
+  if (
+    unsubscribeCouple
+  ) {
+
+    unsubscribeCouple();
+
   }
 
 
@@ -2433,12 +3688,14 @@ function listenCouple() {
 
       coupleDocRef(),
 
-      (snapshot) => {
+      async (snapshot) => {
 
         if (
           !snapshot.exists()
         ) {
+
           return;
+
         }
 
 
@@ -2452,19 +3709,17 @@ function listenCouple() {
         };
 
 
-        bindPartnerProfile(
-          getPartnerUid()
-        );
+        subscribePartnerProfile();
 
 
-        updateSettingsInfo();
+        renderApp();
 
       },
 
       (error) => {
 
         console.error(
-          "커플 정보 불러오기 실패:",
+          "커플 정보 구독 실패:",
           error
         );
 
@@ -2475,9 +3730,11 @@ function listenCouple() {
 }
 
 
-function bindPartnerProfile(
-  partnerUid
-) {
+// =====================================================
+// 상대 프로필 실시간 구독
+// =====================================================
+
+function subscribePartnerProfile() {
 
   if (
     unsubscribePartnerProfile
@@ -2485,21 +3742,27 @@ function bindPartnerProfile(
 
     unsubscribePartnerProfile();
 
+
     unsubscribePartnerProfile =
       null;
 
   }
 
 
-  partnerProfile =
-    null;
+  const partnerUid =
+    getPartnerUid();
 
 
-  if (!partnerUid) {
+  if (
+    !partnerUid
+  ) {
 
-    updateProfileUI();
+    partnerProfile =
+      null;
+
 
     renderApp();
+
 
     return;
 
@@ -2515,22 +3778,28 @@ function bindPartnerProfile(
 
       (snapshot) => {
 
-        partnerProfile =
+        if (
           snapshot.exists()
+        ) {
 
-            ? {
-                uid:
-                  snapshot.id,
+          partnerProfile = {
 
-                ...snapshot.data()
-              }
+            uid:
+              snapshot.id,
 
-            : null;
+            ...snapshot.data()
 
+          };
 
-        updateProfileUI();
+        }
 
-        updateSettingsInfo();
+        else {
+
+          partnerProfile =
+            null;
+
+        }
+
 
         renderApp();
 
@@ -2539,7 +3808,7 @@ function bindPartnerProfile(
       (error) => {
 
         console.error(
-          "상대 프로필 불러오기 실패:",
+          "상대 프로필 구독 실패:",
           error
         );
 
@@ -2550,14 +3819,31 @@ function bindPartnerProfile(
 }
 
 
-function listenExpenses() {
+// =====================================================
+// 지출 실시간 구독
+// =====================================================
 
-  if (!coupleId) {
+function subscribeExpenses() {
+
+  if (
+    !coupleId
+  ) {
+
     return;
+
   }
 
 
-  const expensesQuery =
+  if (
+    unsubscribeExpenses
+  ) {
+
+    unsubscribeExpenses();
+
+  }
+
+
+  const expenseQuery =
     query(
 
       expensesCollectionRef(),
@@ -2573,18 +3859,18 @@ function listenExpenses() {
   unsubscribeExpenses =
     onSnapshot(
 
-      expensesQuery,
+      expenseQuery,
 
       (snapshot) => {
 
         expenses =
           snapshot.docs.map(
-            (document) => ({
+            (expenseDoc) => ({
 
               id:
-                document.id,
+                expenseDoc.id,
 
-              ...document.data()
+              ...expenseDoc.data()
 
             })
           );
@@ -2597,7 +3883,7 @@ function listenExpenses() {
       (error) => {
 
         console.error(
-          "지출 불러오기 실패:",
+          "지출 구독 실패:",
           error
         );
 
@@ -2608,64 +3894,18 @@ function listenExpenses() {
 }
 
 
-function listenPrivateDetails() {
-
-  if (!currentUser) {
-    return;
-  }
-
-
-  unsubscribePrivateDetails =
-    onSnapshot(
-
-      privateDetailsCollectionRef(),
-
-      (snapshot) => {
-
-        privateDetails =
-          {};
-
-
-        snapshot.forEach(
-          (document) => {
-
-            privateDetails[
-              document.id
-            ] =
-              document
-                .data()
-                .description
-              ||
-              "";
-
-          }
-        );
-
-
-        renderApp();
-
-      },
-
-      (error) => {
-
-        console.error(
-          "비공개 상세 불러오기 실패:",
-          error
-        );
-
-      }
-
-    );
-
-}
 // =====================================================
-// 월별 예산 / 카테고리 실시간 감지
+// 월별 예산 실시간 구독
 // =====================================================
 
-function listenMonthlySettings() {
+function subscribeMonthlySettings() {
 
-  if (!coupleId) {
+  if (
+    !coupleId
+  ) {
+
     return;
+
   }
 
 
@@ -2697,14 +3937,12 @@ function listenMonthlySettings() {
 
             sharedBudget:
               Number(
-                data.sharedBudget
-              )
-              ||
-              0,
+                data.sharedBudget ||
+                0
+              ),
 
             personalBudgets:
-              data.personalBudgets
-              ||
+              data.personalBudgets ||
               {}
 
           };
@@ -2715,9 +3953,11 @@ function listenMonthlySettings() {
 
           monthlySettings = {
 
-            sharedBudget: 0,
+            sharedBudget:
+              0,
 
-            personalBudgets: {}
+            personalBudgets:
+              {}
 
           };
 
@@ -2731,7 +3971,7 @@ function listenMonthlySettings() {
       (error) => {
 
         console.error(
-          "월별 예산 불러오기 실패:",
+          "월별 예산 구독 실패:",
           error
         );
 
@@ -2742,10 +3982,27 @@ function listenMonthlySettings() {
 }
 
 
-function listenCategories() {
+// =====================================================
+// 카테고리 실시간 구독
+// =====================================================
 
-  if (!coupleId) {
+function subscribeCategories() {
+
+  if (
+    !coupleId
+  ) {
+
     return;
+
+  }
+
+
+  if (
+    unsubscribeCategories
+  ) {
+
+    unsubscribeCategories();
+
   }
 
 
@@ -2758,31 +4015,43 @@ function listenCategories() {
 
         if (
           snapshot.exists()
-          &&
-          Array.isArray(
-            snapshot
-              .data()
-              .categories
-          )
         ) {
 
-          categories =
-            snapshot
-              .data()
-              .categories;
+          const data =
+            snapshot.data();
+
+
+          if (
+            Array.isArray(
+              data.categories
+            )
+            &&
+            data.categories.length
+          ) {
+
+            categories =
+              data.categories;
+
+          }
+
+          else {
+
+            categories =
+              [...defaultCategories];
+
+          }
 
         }
 
         else {
 
-          categories = [
-            ...defaultCategories
-          ];
+          categories =
+            [...defaultCategories];
 
         }
 
 
-        renderCategories();
+        renderCategoryOptions();
 
         renderCategorySettingList();
 
@@ -2793,7 +4062,7 @@ function listenCategories() {
       (error) => {
 
         console.error(
-          "카테고리 불러오기 실패:",
+          "카테고리 구독 실패:",
           error
         );
 
@@ -2805,112 +4074,135 @@ function listenCategories() {
 
 
 // =====================================================
-// 프로필 UI
+// 내 비공개 설명 실시간 구독
 // =====================================================
 
-function updateProfileUI() {
+function subscribePrivateDetails() {
 
-  const myName =
-    myProfile?.nickname ||
-    "나";
+  if (
+    !currentUser
+  ) {
 
-  const myEmoji =
-    myProfile?.icon ||
-    "🙂";
+    return;
 
-  const partnerName =
-    partnerProfile?.nickname ||
-    "연결 대기";
-
-  const partnerEmoji =
-    partnerProfile?.icon ||
-    "⏳";
+  }
 
 
-  myIcon.textContent =
-    myEmoji;
+  if (
+    unsubscribePrivateDetails
+  ) {
 
-  myNickname.textContent =
-    myName;
+    unsubscribePrivateDetails();
 
-
-  payerMeIcon.textContent =
-    myEmoji;
-
-  payerMeName.textContent =
-    myName;
+  }
 
 
-  budgetMyIcon.textContent =
-    myEmoji;
+  unsubscribePrivateDetails =
+    onSnapshot(
 
-  budgetMyName.textContent =
-    myName;
+      privateDetailsCollectionRef(),
 
+      (snapshot) => {
 
-  partnerIcon.textContent =
-    partnerEmoji;
-
-  partnerNickname.textContent =
-    partnerName;
+        privateDetails =
+          {};
 
 
-  payerPartnerIcon.textContent =
-    partnerEmoji;
+        snapshot.docs.forEach(
+          (detailDoc) => {
 
-  payerPartnerName.textContent =
-    partnerName;
+            privateDetails[
+              detailDoc.id
+            ] =
+              detailDoc.data()
+                .description ||
+              "";
+
+          }
+        );
 
 
-  budgetPartnerIcon.textContent =
-    partnerEmoji;
+        renderApp();
 
-  budgetPartnerName.textContent =
-    partnerName;
+      },
 
+      (error) => {
 
-  const hasPartner =
-    Boolean(
-      partnerProfile
+        console.error(
+          "비공개 지출 설명 구독 실패:",
+          error
+        );
+
+      }
+
     );
-
-
-  $("payer-partner-btn").disabled =
-    !hasPartner;
-
-  partnerDetailBtn.disabled =
-    !hasPartner;
-
-  partnerBudgetInput.disabled =
-    !hasPartner;
 
 }
 
 
 // =====================================================
-// 월 이동
+// 월 변경
 // =====================================================
+
+function changeMonth(
+  amount
+) {
+
+  selectedMonth +=
+    amount;
+
+
+  if (
+    selectedMonth <=
+    0
+  ) {
+
+    selectedMonth =
+      12;
+
+
+    selectedYear -=
+      1;
+
+  }
+
+  else if (
+    selectedMonth >=
+    13
+  ) {
+
+    selectedMonth =
+      1;
+
+
+    selectedYear +=
+      1;
+
+  }
+
+
+  transactionVisibleCount =
+    15;
+
+
+  updateMonthTitle();
+
+
+  subscribeMonthlySettings();
+
+
+  renderApp();
+
+}
+
 
 prevMonthBtn.addEventListener(
   "click",
   () => {
 
-    selectedMonth--;
-
-
-    if (
-      selectedMonth < 1
-    ) {
-
-      selectedMonth =
-        12;
-
-      selectedYear--;
-
-    }
-
-
-    monthChanged();
+    changeMonth(
+      -1
+    );
 
   }
 );
@@ -2920,891 +4212,31 @@ nextMonthBtn.addEventListener(
   "click",
   () => {
 
-    selectedMonth++;
-
-
-    if (
-      selectedMonth > 12
-    ) {
-
-      selectedMonth =
-        1;
-
-      selectedYear++;
-
-    }
-
-
-    monthChanged();
+    changeMonth(
+      1
+    );
 
   }
 );
-
-
-function monthChanged() {
-
-  updateMonthTitle();
-
-  listenMonthlySettings();
-
-  renderApp();
-
-}
 
 
 // =====================================================
-// 지출 모달
+// 거래내역 정렬
 // =====================================================
 
-addExpenseBtn.addEventListener(
-  "click",
-  () => {
-
-    if (
-      !currentUser ||
-      !coupleId
-    ) {
-      return;
-    }
-
-
-    editingExpenseId =
-      null;
-
-
-    expenseModalTitle.textContent =
-      "지출 추가";
-
-
-    saveExpenseBtn.textContent =
-      "저장하기";
-
-
-    dateInput.value =
-      getDefaultDate();
-
-
-    amountInput.value =
-      "";
-
-
-    descriptionInput.value =
-      "";
-
-
-    privateExpenseToggle.checked =
-      false;
-
-
-    selectType(
-      "alone"
-    );
-
-
-    selectPayerRole(
-      "me"
-    );
-
-
-    if (
-      categories.length > 0
-    ) {
-
-      categoryInput.value =
-        categories[0].name;
-
-    }
-
-
-    updatePrivacyVisibility();
-
-
-    expenseModal.classList.add(
-      "show"
-    );
-
-  }
-);
-
-
-closeModalBtn.addEventListener(
-  "click",
-  () => {
-
-    expenseModal.classList.remove(
-      "show"
-    );
-
-  }
-);
-
-
-expenseModal.addEventListener(
-  "click",
-  (event) => {
-
-    if (
-      event.target ===
-      expenseModal
-    ) {
-
-      expenseModal.classList.remove(
-        "show"
-      );
-
-    }
-
-  }
-);
-
-
-typeButtons.forEach(
-  (button) => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        typeButtons.forEach(
-          (btn) =>
-            btn.classList.remove(
-              "active"
-            )
-        );
-
-
-        button.classList.add(
-          "active"
-        );
-
-
-        updatePrivacyVisibility();
-
-      }
-    );
-
-  }
-);
-
-
-payerButtons.forEach(
-  (button) => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        if (
-          button.disabled
-        ) {
-          return;
-        }
-
-
-        payerButtons.forEach(
-          (btn) =>
-            btn.classList.remove(
-              "active"
-            )
-        );
-
-
-        button.classList.add(
-          "active"
-        );
-
-
-        updatePrivacyVisibility();
-
-      }
-    );
-
-  }
-);
-
-
-function selectType(type) {
-
-  typeButtons.forEach(
-    (button) => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.type ===
-          type
-      );
-
-    }
-  );
-
-}
-
-
-function selectPayerRole(role) {
-
-  payerButtons.forEach(
-    (button) => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.payerRole ===
-          role
-      );
-
-    }
-  );
-
-}
-
-
-function getSelectedType() {
-
-  return (
-    document.querySelector(
-      ".type-btn.active"
-    )?.dataset.type
-
-    ||
-
-    "alone"
-  );
-
-}
-
-
-function getSelectedPayerRole() {
-
-  return (
-    document.querySelector(
-      ".payer-btn.active"
-    )?.dataset.payerRole
-
-    ||
-
-    "me"
-  );
-
-}
-
-
-function getSelectedPayerUid() {
-
-  if (
-    getSelectedPayerRole() ===
-    "partner"
-  ) {
-
-    return (
-      partnerProfile?.uid ||
-      null
-    );
-
-  }
-
-
-  return (
-    currentUser?.uid ||
-    null
-  );
-
-}
-
-
-function updatePrivacyVisibility() {
-
-  const canUsePrivacy =
-
-    getSelectedType() ===
-      "alone"
-
-    &&
-
-    getSelectedPayerRole() ===
-      "me";
-
-
-  privateExpenseGroup.hidden =
-    !canUsePrivacy;
-
-
-  if (
-    !canUsePrivacy
-  ) {
-
-    privateExpenseToggle.checked =
-      false;
-
-  }
-
-}
-
-
-// =====================================================
-// 지출 저장 / 수정 / 삭제
-// =====================================================
-
-saveExpenseBtn.addEventListener(
-  "click",
-  async () => {
-
-    const date =
-      dateInput.value;
-
-
-    const amount =
-      parseMoney(
-        amountInput.value
-      );
-
-
-    const category =
-      categoryInput.value;
-
-
-    const description =
-      descriptionInput
-        .value
-        .trim();
-
-
-    const type =
-      getSelectedType();
-
-
-    const payerUid =
-      getSelectedPayerUid();
-
-
-    const isPrivate =
-
-      type === "alone"
-
-      &&
-
-      payerUid ===
-        currentUser?.uid
-
-      &&
-
-      privateExpenseToggle.checked;
-
-
-    if (!date) {
-
-      alert(
-        "날짜를 선택해주세요."
-      );
-
-      return;
-
-    }
-
-
-    if (
-      !amount ||
-      amount <= 0
-    ) {
-
-      alert(
-        "금액을 입력해주세요."
-      );
-
-      return;
-
-    }
-
-
-    if (!category) {
-
-      alert(
-        "카테고리를 선택해주세요."
-      );
-
-      return;
-
-    }
-
-
-    if (!description) {
-
-      alert(
-        "지출 내용을 입력해주세요."
-      );
-
-      return;
-
-    }
-
-
-    if (!payerUid) {
-
-      alert(
-        "결제자를 선택해주세요."
-      );
-
-      return;
-
-    }
-
-
-    const expenseData = {
-
-      date,
-
-      monthKey:
-        date.slice(
-          0,
-          7
-        ),
-
-      amount,
-
-      category,
-
-      type,
-
-      payerUid,
-
-      isPrivate,
-
-      description:
-        isPrivate
-          ? ""
-          : description,
-
-      updatedAt:
-        serverTimestamp()
-
-    };
-
-
-    try {
-
-      let expenseId =
-        editingExpenseId;
-
-
-      let oldExpense =
-        null;
-
-
-      if (
-        editingExpenseId
-      ) {
-
-        oldExpense =
-          expenses.find(
-            (item) =>
-              item.id ===
-              editingExpenseId
-          )
-          ||
-          null;
-
-
-        if (
-          !oldExpense
-          ||
-          oldExpense.payerUid !==
-            currentUser.uid
-        ) {
-
-          alert(
-            "본인이 등록한 지출만 수정할 수 있어요."
-          );
-
-          return;
-
-        }
-
-
-        await updateDoc(
-
-          doc(
-            db,
-            "couples",
-            coupleId,
-            "expenses",
-            editingExpenseId
-          ),
-
-          expenseData
-
-        );
-
-      }
-
-      else {
-
-        const newExpenseRef =
-          doc(
-            expensesCollectionRef()
-          );
-
-
-        expenseId =
-          newExpenseRef.id;
-
-
-        await setDoc(
-
-          newExpenseRef,
-
-          {
-            ...expenseData,
-
-            createdAt:
-              serverTimestamp()
-          }
-
-        );
-
-      }
-
-
-      if (
-        isPrivate
-      ) {
-
-        await setDoc(
-
-          privateDetailDocRef(
-            expenseId
-          ),
-
-          {
-            description,
-
-            expenseId,
-
-            coupleId,
-
-            updatedAt:
-              serverTimestamp()
-          },
-
-          {
-            merge: true
-          }
-
-        );
-
-      }
-
-      else if (
-        oldExpense?.isPrivate
-        ||
-        privateDetails[
-          expenseId
-        ]
-      ) {
-
-        try {
-
-          await deleteDoc(
-
-            privateDetailDocRef(
-              expenseId
-            )
-
-          );
-
-        }
-
-        catch (error) {
-
-          console.warn(
-            "기존 비공개 상세 삭제 실패:",
-            error
-          );
-
-        }
-
-      }
-
-
-      editingExpenseId =
-        null;
-
-
-      expenseModal.classList.remove(
-        "show"
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "지출 저장 실패:",
-        error
-      );
-
-
-      alert(
-        "지출 저장 중 오류가 발생했습니다."
-      );
-
-    }
-
-  }
-);
-
-
-async function openEditExpense(id) {
-
-  const expense =
-    expenses.find(
-      (item) =>
-        item.id === id
-    );
-
-
-  if (!expense) {
-    return;
-  }
-
-
-  if (
-    expense.payerUid !==
-    currentUser.uid
-  ) {
-
-    alert(
-      "본인이 등록한 지출만 수정할 수 있어요."
-    );
-
-    return;
-
-  }
-
-
-  editingExpenseId =
-    id;
-
-
-  expenseModalTitle.textContent =
-    "지출 수정";
-
-
-  saveExpenseBtn.textContent =
-    "수정 저장";
-
-
-  dateInput.value =
-    expense.date
-    ||
-    getDefaultDate();
-
-
-  amountInput.value =
-    formatMoneyInput(
-      expense.amount
-    );
-
-
-  categoryInput.value =
-    expense.category;
-
-
-  descriptionInput.value =
-    getPublicDescription(
-      expense
-    );
-
-
-  selectType(
-    expense.type ||
-    "alone"
-  );
-
-
-  if (
-    expense.payerUid ===
-    partnerProfile?.uid
-  ) {
-
-    selectPayerRole(
-      "partner"
-    );
-
-  }
-
-  else {
-
-    selectPayerRole(
-      "me"
-    );
-
-  }
-
-
-  privateExpenseToggle.checked =
-    Boolean(
-      expense.isPrivate
-    );
-
-
-  updatePrivacyVisibility();
-
-
-  expenseModal.classList.add(
-    "show"
-  );
-
-}
-
-
-async function deleteExpense(id) {
-
-  const expense =
-    expenses.find(
-      (item) =>
-        item.id === id
-    );
-
-
-  if (!expense) {
-    return;
-  }
-
-
-  if (
-    expense.payerUid !==
-    currentUser.uid
-  ) {
-
-    alert(
-      "본인이 등록한 지출만 삭제할 수 있어요."
-    );
-
-    return;
-
-  }
-
-
-  const title =
-    getExpenseDisplayTitle(
-      expense
-    )
-    ||
-    expense.category;
-
-
-  const confirmed =
-    confirm(
-      `"${title}" 지출을 삭제할까요?`
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  try {
-
-    await deleteDoc(
-
-      doc(
-        db,
-        "couples",
-        coupleId,
-        "expenses",
-        id
-      )
-
-    );
-
-
-    if (
-      expense.isPrivate
-      ||
-      privateDetails[id]
-    ) {
-
-      try {
-
-        await deleteDoc(
-          privateDetailDocRef(
-            id
-          )
-        );
-
-      }
-
-      catch (error) {
-
-        console.warn(
-          "비공개 상세 삭제 실패:",
-          error
-        );
-
-      }
-
-    }
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "지출 삭제 실패:",
-      error
-    );
-
-
-    alert(
-      "지출 삭제 중 오류가 발생했습니다."
-    );
-
-  }
-
-}
-
-
-function bindTransactionActions(
-  container
+if (
+  transactionSort
 ) {
 
-  container.addEventListener(
-    "click",
-    (event) => {
+  transactionSort.addEventListener(
+    "change",
+    () => {
 
-      const editButton =
-        event.target.closest(
-          ".edit-expense-btn"
-        );
+      transactionVisibleCount =
+        15;
 
 
-      if (
-        editButton
-      ) {
-
-        openEditExpense(
-          editButton.dataset.id
-        );
-
-        return;
-
-      }
-
-
-      const deleteButton =
-        event.target.closest(
-          ".delete-expense-btn"
-        );
-
-
-      if (
-        deleteButton
-      ) {
-
-        deleteExpense(
-          deleteButton.dataset.id
-        );
-
-      }
+      renderTransactions();
 
     }
   );
@@ -3812,253 +4244,111 @@ function bindTransactionActions(
 }
 
 
-bindTransactionActions(
-  transactionList
-);
+// =====================================================
+// 거래내역 더보기
+// =====================================================
+
+if (
+  transactionMoreBtn
+) {
+
+  transactionMoreBtn.addEventListener(
+    "click",
+    () => {
+
+      transactionVisibleCount +=
+        15;
 
 
-bindTransactionActions(
-  detailTransactionList
-);
+      renderTransactions();
+
+    }
+  );
+
+}
 
 
 // =====================================================
-// 예산
+// 맨 위로 버튼
 // =====================================================
 
-budgetSettingBtn.addEventListener(
-  "click",
-  () => {
+if (
+  scrollTopBtn
+) {
 
-    const partnerUid =
-      partnerProfile?.uid;
-
-
-    sharedBudgetInput.value =
-      formatMoneyInput(
-        monthlySettings
-          .sharedBudget
-      );
-
-
-    myBudgetInput.value =
-      formatMoneyInput(
-
-        monthlySettings
-          .personalBudgets
-          ?.[
-            currentUser.uid
-          ]
-
-        ||
-
-        0
-
-      );
-
-
-    partnerBudgetInput.value =
-      formatMoneyInput(
-
-        partnerUid
-
-          ? monthlySettings
-              .personalBudgets
-              ?.[
-                partnerUid
-              ]
-              ||
-              0
-
-          : 0
-
-      );
-
-
-    partnerBudgetInput.disabled =
-      !partnerUid;
-
-
-    budgetModal.classList.add(
-      "show"
-    );
-
-  }
-);
-
-
-closeBudgetModal.addEventListener(
-  "click",
-  () => {
-
-    budgetModal.classList.remove(
-      "show"
-    );
-
-  }
-);
-
-
-budgetModal.addEventListener(
-  "click",
-  (event) => {
+  function updateScrollTopButton() {
 
     if (
-      event.target ===
-      budgetModal
+      window.scrollY >
+      500
     ) {
 
-      budgetModal.classList.remove(
+      scrollTopBtn.classList.add(
+        "show"
+      );
+
+    }
+
+    else {
+
+      scrollTopBtn.classList.remove(
         "show"
       );
 
     }
 
   }
-);
 
 
-saveBudgetBtn.addEventListener(
-  "click",
-  async () => {
-
-    const partnerUid =
-      partnerProfile?.uid;
-
-
-    const personalBudgets = {
-
-      ...(
-        monthlySettings
-          .personalBudgets
-        ||
-        {}
-      ),
-
-      [currentUser.uid]:
-        parseMoney(
-          myBudgetInput.value
-        )
-
-    };
+  window.addEventListener(
+    "scroll",
+    updateScrollTopButton,
+    {
+      passive:
+        true
+    }
+  );
 
 
-    if (
-      partnerUid
-    ) {
+  scrollTopBtn.addEventListener(
+    "click",
+    () => {
 
-      personalBudgets[
-        partnerUid
-      ] =
-        parseMoney(
-          partnerBudgetInput.value
-        );
+      window.scrollTo({
+
+        top:
+          0,
+
+        behavior:
+          "smooth"
+
+      });
 
     }
+  );
 
 
-    try {
+  updateScrollTopButton();
 
-      await setDoc(
-
-        monthlySettingsDocRef(),
-
-        {
-          sharedBudget:
-            parseMoney(
-              sharedBudgetInput.value
-            ),
-
-          personalBudgets,
-
-          updatedAt:
-            serverTimestamp()
-        },
-
-        {
-          merge: true
-        }
-
-      );
-
-
-      budgetModal.classList.remove(
-        "show"
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "예산 저장 실패:",
-        error
-      );
-
-
-      alert(
-        "예산 저장 중 오류가 발생했습니다."
-      );
-
-    }
-
-  }
-);
+}
 
 
 // =====================================================
-// 카테고리
+// 지출 카테고리 선택지
 // =====================================================
 
-categorySettingBtn.addEventListener(
-  "click",
-  () => {
+function renderCategoryOptions() {
 
-    renderCategorySettingList();
+  if (
+    !categoryInput
+  ) {
 
-
-    categoryModal.classList.add(
-      "show"
-    );
+    return;
 
   }
-);
 
 
-closeCategoryModal.addEventListener(
-  "click",
-  () => {
-
-    categoryModal.classList.remove(
-      "show"
-    );
-
-  }
-);
-
-
-categoryModal.addEventListener(
-  "click",
-  (event) => {
-
-    if (
-      event.target ===
-      categoryModal
-    ) {
-
-      categoryModal.classList.remove(
-        "show"
-      );
-
-    }
-
-  }
-);
-
-
-function renderCategories() {
-
-  const previous =
+  const currentValue =
     categoryInput.value;
 
 
@@ -4095,74 +4385,111 @@ function renderCategories() {
     categories.some(
       (category) =>
         category.name ===
-        previous
+        currentValue
     )
   ) {
 
     categoryInput.value =
-      previous;
+      currentValue;
 
   }
 
 }
-function renderCategorySettingList() {
-
-  categorySettingList.innerHTML =
-    "";
 
 
-  categories.forEach(
-    (category) => {
+// =====================================================
+// 지출 타입 선택
+// =====================================================
 
-      const item =
-        document.createElement(
-          "div"
-        );
+function getSelectedExpenseType() {
 
-
-      item.className =
-        "category-setting-item";
-
-
-      if (
-        category.isDefault
-      ) {
-
-        item.innerHTML = `
-          <span>
-            ${escapeHtml(category.emoji)}
-            ${escapeHtml(category.name)}
-          </span>
-
-          <span class="category-default-badge">
-            기본
-          </span>
-        `;
-
-      }
-
-      else {
-
-        item.innerHTML = `
-          <span>
-            ${escapeHtml(category.emoji)}
-            ${escapeHtml(category.name)}
-          </span>
-
-          <button
-            type="button"
-            class="category-delete-btn"
-            data-name="${escapeHtml(category.name)}"
-          >
-            삭제
-          </button>
-        `;
-
-      }
+  const activeButton =
+    [...typeButtons].find(
+      (button) =>
+        button.classList.contains(
+          "active"
+        )
+    );
 
 
-      categorySettingList.appendChild(
-        item
+  return (
+    activeButton?.dataset.type ||
+    "together"
+  );
+
+}
+
+
+function setSelectedExpenseType(
+  type
+) {
+
+  typeButtons.forEach(
+    (button) => {
+
+      const active =
+        button.dataset.type ===
+        type;
+
+
+      button.classList.toggle(
+        "active",
+        active
+      );
+
+    }
+  );
+
+
+  updatePrivacyVisibility();
+
+}
+
+
+// =====================================================
+// 결제자 선택
+// =====================================================
+
+function getSelectedPayerUid() {
+
+  const activeButton =
+    [...payerButtons].find(
+      (button) =>
+        button.classList.contains(
+          "active"
+        )
+    );
+
+
+  return (
+    activeButton?.dataset.uid
+
+    ||
+
+    currentUser?.uid
+
+    ||
+
+    ""
+  );
+
+}
+
+
+function setSelectedPayer(
+  uid
+) {
+
+  payerButtons.forEach(
+    (button) => {
+
+      button.classList.toggle(
+
+        "active",
+
+        button.dataset.uid ===
+          uid
+
       );
 
     }
@@ -4171,337 +4498,59 @@ function renderCategorySettingList() {
 }
 
 
-addCategoryBtn.addEventListener(
-  "click",
-  async () => {
+// =====================================================
+// 비공개 설정 표시
+// =====================================================
 
-    const emoji =
-      newCategoryEmoji
-        .value
-        .trim()
-      ||
-      "📌";
+function updatePrivacyVisibility() {
 
+  if (
+    !privateExpenseGroup
+  ) {
 
-    const name =
-      newCategoryName
-        .value
-        .trim();
-
-
-    if (!name) {
-
-      alert(
-        "카테고리 이름을 입력해주세요."
-      );
-
-      return;
-
-    }
-
-
-    const duplicate =
-      categories.some(
-        (category) =>
-          category.name
-            .toLowerCase()
-          ===
-          name.toLowerCase()
-      );
-
-
-    if (
-      duplicate
-    ) {
-
-      alert(
-        "이미 존재하는 카테고리입니다."
-      );
-
-      return;
-
-    }
-
-
-    const updatedCategories = [
-
-      ...categories,
-
-      {
-        name,
-
-        emoji,
-
-        isDefault:
-          false
-      }
-
-    ];
-
-
-    try {
-
-      await setDoc(
-
-        categorySettingsDocRef(),
-
-        {
-          categories:
-            updatedCategories
-        },
-
-        {
-          merge: true
-        }
-
-      );
-
-
-      newCategoryEmoji.value =
-        "";
-
-      newCategoryName.value =
-        "";
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "카테고리 추가 실패:",
-        error
-      );
-
-
-      alert(
-        "카테고리 추가 중 오류가 발생했습니다."
-      );
-
-    }
+    return;
 
   }
-);
 
 
-categorySettingList.addEventListener(
-  "click",
-  async (event) => {
-
-    const button =
-      event.target.closest(
-        ".category-delete-btn"
-      );
+  const type =
+    getSelectedExpenseType();
 
 
-    if (!button) {
-      return;
-    }
+  privateExpenseGroup.hidden =
+    type !==
+    "alone";
 
 
-    const name =
-      button.dataset.name;
+  if (
+    type !==
+      "alone"
+    &&
+    privateExpenseToggle
+  ) {
 
-
-    const category =
-      categories.find(
-        (item) =>
-          item.name ===
-          name
-      );
-
-
-    if (
-      !category ||
-      category.isDefault
-    ) {
-      return;
-    }
-
-
-    const confirmed =
-      confirm(
-        `"${name}" 카테고리를 삭제할까요?`
-      );
-
-
-    if (!confirmed) {
-      return;
-    }
-
-
-    const updatedCategories =
-      categories.filter(
-        (item) =>
-          item.name !==
-          name
-      );
-
-
-    try {
-
-      await setDoc(
-
-        categorySettingsDocRef(),
-
-        {
-          categories:
-            updatedCategories
-        },
-
-        {
-          merge: true
-        }
-
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "카테고리 삭제 실패:",
-        error
-      );
-
-
-      alert(
-        "카테고리 삭제 중 오류가 발생했습니다."
-      );
-
-    }
+    privateExpenseToggle.checked =
+      false;
 
   }
-);
+
+}
 
 
 // =====================================================
-// 설정
+// 타입 버튼 이벤트
 // =====================================================
 
-settingsBtn.addEventListener(
-  "click",
-  () => {
-
-    settingsNickname.value =
-      myProfile?.nickname ||
-      "";
-
-
-    selectedSettingsIcon =
-      myProfile?.icon ||
-      "🩷";
-
-
-    const matchingButton =
-      [
-        ...settingsIconButtons
-      ]
-        .find(
-          (button) =>
-            button.dataset.icon ===
-            selectedSettingsIcon
-        );
-
-
-    settingsIconButtons.forEach(
-      (button) => {
-
-        button.classList.toggle(
-          "active",
-          button.dataset.icon ===
-            selectedSettingsIcon
-        );
-
-      }
-    );
-
-
-    if (
-      customSettingsIcon
-    ) {
-
-      customSettingsIcon.value =
-        matchingButton
-          ? ""
-          : selectedSettingsIcon;
-
-    }
-
-
-    updateSettingsInfo();
-
-
-    settingsModal.classList.add(
-      "show"
-    );
-
-  }
-);
-
-
-closeSettingsModal.addEventListener(
-  "click",
-  () => {
-
-    settingsModal.classList.remove(
-      "show"
-    );
-
-  }
-);
-
-
-settingsModal.addEventListener(
-  "click",
-  (event) => {
-
-    if (
-      event.target ===
-      settingsModal
-    ) {
-
-      settingsModal.classList.remove(
-        "show"
-      );
-
-    }
-
-  }
-);
-
-
-settingsIconButtons.forEach(
+typeButtons.forEach(
   (button) => {
 
     button.addEventListener(
       "click",
       () => {
 
-        settingsIconButtons.forEach(
-          (btn) =>
-            btn.classList.remove(
-              "active"
-            )
+        setSelectedExpenseType(
+          button.dataset.type
         );
-
-
-        button.classList.add(
-          "active"
-        );
-
-
-        selectedSettingsIcon =
-          button.dataset.icon;
-
-
-        if (
-          customSettingsIcon
-        ) {
-
-          customSettingsIcon.value =
-            "";
-
-        }
 
       }
     );
@@ -4510,149 +4559,892 @@ settingsIconButtons.forEach(
 );
 
 
-if (
-  customSettingsIcon
+// =====================================================
+// 결제자 버튼 이벤트
+// =====================================================
+
+payerButtons.forEach(
+  (button) => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        setSelectedPayer(
+          button.dataset.uid
+        );
+
+      }
+    );
+
+  }
+);
+
+
+// =====================================================
+// 새 지출 모달
+// =====================================================
+
+function prepareExpenseModal() {
+
+  editingExpenseId =
+    null;
+
+
+  expenseModalTitle.textContent =
+    "지출 추가";
+
+
+  dateInput.value =
+    getDefaultDate();
+
+
+  amountInput.value =
+    "";
+
+
+  descriptionInput.value =
+    "";
+
+
+  if (
+    privateExpenseToggle
+  ) {
+
+    privateExpenseToggle.checked =
+      false;
+
+  }
+
+
+  setSelectedExpenseType(
+    "together"
+  );
+
+
+  renderCategoryOptions();
+
+
+  if (
+    categories.length
+  ) {
+
+    categoryInput.value =
+      categories[0].name;
+
+  }
+
+
+  setSelectedPayer(
+    currentUser.uid
+  );
+
+
+  saveExpenseBtn.textContent =
+    "저장하기";
+
+
+  expenseModal.classList.add(
+    "show"
+  );
+
+
+  amountInput.focus();
+
+}
+
+
+addExpenseBtn.addEventListener(
+  "click",
+  prepareExpenseModal
+);
+
+
+// =====================================================
+// 지출 모달 닫기
+// =====================================================
+
+closeModalBtn.addEventListener(
+  "click",
+  () => {
+
+    expenseModal.classList.remove(
+      "show"
+    );
+
+
+    editingExpenseId =
+      null;
+
+  }
+);
+
+
+// =====================================================
+// 지출 수정 모달 열기
+// =====================================================
+
+function openEditExpense(
+  expenseId
 ) {
 
-  customSettingsIcon.addEventListener(
-    "input",
-    function () {
-
-      const value =
-        this.value.trim();
-
-
-      if (!value) {
-        return;
-      }
+  const expense =
+    expenses.find(
+      (item) =>
+        item.id ===
+        expenseId
+    );
 
 
-      selectedSettingsIcon =
-        value;
+  if (
+    !expense
+  ) {
+
+    alert(
+      "지출 정보를 찾을 수 없어요."
+    );
 
 
-      settingsIconButtons.forEach(
-        (button) =>
-          button.classList.remove(
-            "active"
-          )
+    return;
+
+  }
+
+
+  if (
+    !canCurrentUserManageExpense(
+      expense
+    )
+  ) {
+
+    alert(
+      "본인이 등록한 지출만 수정할 수 있어요."
+    );
+
+
+    return;
+
+  }
+
+
+  editingExpenseId =
+    expense.id;
+
+
+  expenseModalTitle.textContent =
+    "지출 수정";
+
+
+  dateInput.value =
+    expense.date ||
+    getDefaultDate();
+
+
+  amountInput.value =
+    formatMoneyInput(
+      expense.amount
+    );
+
+
+  setSelectedExpenseType(
+    expense.type ||
+    "together"
+  );
+
+
+  renderCategoryOptions();
+
+
+  categoryInput.value =
+    expense.category
+
+    ||
+
+    categories[0]?.name
+
+    ||
+
+    "";
+
+
+  descriptionInput.value =
+    getPublicDescription(
+      expense
+    );
+
+
+  if (
+    privateExpenseToggle
+  ) {
+
+    privateExpenseToggle.checked =
+      Boolean(
+        expense.isPrivate
       );
 
-    }
+  }
+
+
+  setSelectedPayer(
+    expense.payerUid ||
+    currentUser.uid
+  );
+
+
+  saveExpenseBtn.textContent =
+    "수정하기";
+
+
+  expenseModal.classList.add(
+    "show"
   );
 
 }
 
 
-saveSettingsProfileBtn.addEventListener(
-  "click",
-  async () => {
+// =====================================================
+// 지출 저장
+// =====================================================
 
-    const nickname =
-      settingsNickname
-        .value
-        .trim();
+async function saveExpense() {
+
+  if (
+    !currentUser ||
+    !coupleId
+  ) {
+
+    return;
+
+  }
 
 
-    if (!nickname) {
+  const date =
+    dateInput.value;
 
-      alert(
-        "별명을 입력해주세요."
+
+  const amount =
+    parseMoney(
+      amountInput.value
+    );
+
+
+  const type =
+    getSelectedExpenseType();
+
+
+  const category =
+    categoryInput.value;
+
+
+  const description =
+    descriptionInput
+      .value
+      .trim();
+
+
+  const payerUid =
+    getSelectedPayerUid();
+
+
+  const isPrivate =
+    type ===
+      "alone"
+    &&
+    Boolean(
+      privateExpenseToggle?.checked
+    );
+
+
+  if (
+    !date
+  ) {
+
+    alert(
+      "날짜를 선택해주세요."
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    !amount ||
+    amount <= 0
+  ) {
+
+    alert(
+      "금액을 입력해주세요."
+    );
+
+
+    amountInput.focus();
+
+
+    return;
+
+  }
+
+
+  if (
+    !category
+  ) {
+
+    alert(
+      "카테고리를 선택해주세요."
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    !payerUid
+  ) {
+
+    alert(
+      "결제자를 선택해주세요."
+    );
+
+
+    return;
+
+  }
+
+
+  const monthKey =
+    date.slice(
+      0,
+      7
+    );
+
+
+  const wasEditing =
+    Boolean(
+      editingExpenseId
+    );
+
+
+  try {
+
+    saveExpenseBtn.disabled =
+      true;
+
+
+    saveExpenseBtn.textContent =
+      wasEditing
+        ? "수정 중..."
+        : "저장 중...";
+
+
+    // =================================================
+    // 기존 지출 수정
+    // =================================================
+
+    if (
+      editingExpenseId
+    ) {
+
+      const oldExpense =
+        expenses.find(
+          (item) =>
+            item.id ===
+            editingExpenseId
+        );
+
+
+      if (
+        !oldExpense
+      ) {
+
+        alert(
+          "수정할 지출을 찾을 수 없어요."
+        );
+
+
+        return;
+
+      }
+
+
+      if (
+        !canCurrentUserManageExpense(
+          oldExpense
+        )
+      ) {
+
+        alert(
+          "본인이 등록한 지출만 수정할 수 있어요."
+        );
+
+
+        return;
+
+      }
+
+
+      const expenseRef =
+        doc(
+          db,
+          "couples",
+          coupleId,
+          "expenses",
+          editingExpenseId
+        );
+
+
+      await updateDoc(
+        expenseRef,
+        {
+
+          date,
+
+          monthKey,
+
+          amount,
+
+          type,
+
+          category,
+
+          payerUid,
+
+          isPrivate,
+
+          description:
+            isPrivate
+              ? ""
+              : description,
+
+          updatedAt:
+            serverTimestamp()
+
+        }
       );
 
-      return;
+
+      if (
+        isPrivate
+      ) {
+
+        await setDoc(
+          privateDetailDocRef(
+            editingExpenseId
+          ),
+          {
+
+            description,
+
+            updatedAt:
+              serverTimestamp()
+
+          },
+          {
+            merge:
+              true
+          }
+        );
+
+      }
+
+      else {
+
+        try {
+
+          await deleteDoc(
+            privateDetailDocRef(
+              editingExpenseId
+            )
+          );
+
+        }
+
+        catch (error) {
+
+          console.warn(
+            "비공개 설명 정리 생략:",
+            error
+          );
+
+        }
+
+      }
 
     }
 
 
-    try {
+    // =================================================
+    // 새 지출 등록
+    // =================================================
 
-      await updateDoc(
+    else {
 
-        userDocRef(
-          currentUser.uid
-        ),
+      const newExpenseRef =
+        doc(
+          expensesCollectionRef()
+        );
 
+
+      await setDoc(
+        newExpenseRef,
         {
-          nickname,
 
-          icon:
-            selectedSettingsIcon
+          date,
+
+          monthKey,
+
+          amount,
+
+          type,
+
+          category,
+
+          payerUid,
+
+          createdByUid:
+            currentUser.uid,
+
+          isPrivate,
+
+          description:
+            isPrivate
+              ? ""
+              : description,
+
+          createdAt:
+            serverTimestamp(),
+
+          updatedAt:
+            serverTimestamp()
+
         }
-
       );
 
 
-      myProfile.nickname =
-        nickname;
+      if (
+        isPrivate
+      ) {
+
+        await setDoc(
+          privateDetailDocRef(
+            newExpenseRef.id
+          ),
+          {
+
+            description,
+
+            createdAt:
+              serverTimestamp(),
+
+            updatedAt:
+              serverTimestamp()
+
+          }
+        );
+
+      }
+
+    }
 
 
-      myProfile.icon =
-        selectedSettingsIcon;
+    expenseModal.classList.remove(
+      "show"
+    );
 
 
-      updateProfileUI();
+    editingExpenseId =
+      null;
 
-      renderApp();
+
+    transactionVisibleCount =
+      15;
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "지출 저장 실패:",
+      error
+    );
 
 
-      settingsModal.classList.remove(
-        "show"
+    alert(
+      "지출을 저장하지 못했어요."
+    );
+
+  }
+
+  finally {
+
+    saveExpenseBtn.disabled =
+      false;
+
+
+    saveExpenseBtn.textContent =
+      wasEditing
+        ? "수정하기"
+        : "저장하기";
+
+  }
+
+}
+
+
+saveExpenseBtn.addEventListener(
+  "click",
+  saveExpense
+);
+
+
+// =====================================================
+// 지출 삭제
+// =====================================================
+
+async function deleteExpense(
+  expenseId
+) {
+
+  const expense =
+    expenses.find(
+      (item) =>
+        item.id ===
+        expenseId
+    );
+
+
+  if (
+    !expense
+  ) {
+
+    alert(
+      "삭제할 지출을 찾을 수 없어요."
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    !canCurrentUserManageExpense(
+      expense
+    )
+  ) {
+
+    alert(
+      "본인이 등록한 지출만 삭제할 수 있어요."
+    );
+
+
+    return;
+
+  }
+
+
+  const confirmed =
+    confirm(
+      `${formatWon(expense.amount)} 지출을 삭제할까요?`
+    );
+
+
+  if (
+    !confirmed
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    await deleteDoc(
+      doc(
+        db,
+        "couples",
+        coupleId,
+        "expenses",
+        expenseId
+      )
+    );
+
+
+    try {
+
+      await deleteDoc(
+        privateDetailDocRef(
+          expenseId
+        )
       );
 
     }
 
     catch (error) {
 
-      console.error(
-        "프로필 수정 실패:",
+      console.warn(
+        "비공개 설명 삭제 생략:",
         error
-      );
-
-
-      alert(
-        "프로필 저장 중 오류가 발생했습니다."
       );
 
     }
 
+
+    transactionVisibleCount =
+      15;
+
   }
-);
+
+  catch (error) {
+
+    console.error(
+      "지출 삭제 실패:",
+      error
+    );
 
 
-function updateSettingsInfo() {
+    alert(
+      "지출을 삭제하지 못했어요."
+    );
 
-  settingsInviteCode.textContent =
-    currentCouple?.inviteCode ||
-    "------";
-
-
-  settingsPartnerName.textContent =
-    partnerProfile?.nickname ||
-    "아직 연결되지 않음";
+  }
 
 }
 
 
 // =====================================================
-// 메인 계산 / 렌더
+// 금액 입력 콤마
+// =====================================================
+
+[
+  amountInput,
+  sharedBudgetInput,
+  myBudgetInput,
+  partnerBudgetInput
+]
+  .filter(
+    Boolean
+  )
+  .forEach(
+    attachMoneyFormatter
+  );
+
+
+// =====================================================
+// 모달 바깥 클릭 시 닫기
+// =====================================================
+
+[
+  expenseModal,
+  budgetModal,
+  categoryModal,
+  settingsModal
+]
+  .filter(
+    Boolean
+  )
+  .forEach(
+    (modal) => {
+
+      modal.addEventListener(
+        "click",
+        (event) => {
+
+          if (
+            event.target ===
+            modal
+          ) {
+
+            modal.classList.remove(
+              "show"
+            );
+
+
+            if (
+              modal ===
+              expenseModal
+            ) {
+
+              editingExpenseId =
+                null;
+
+            }
+
+          }
+
+        }
+      );
+
+    }
+  );
+
+
+// =====================================================
+// ESC로 모달 닫기
+// =====================================================
+
+document.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (
+      event.key !==
+      "Escape"
+    ) {
+
+      return;
+
+    }
+
+
+    closeAllModals();
+
+
+    editingExpenseId =
+      null;
+
+  }
+);
+// =====================================================
+// 메인 화면 렌더링
 // =====================================================
 
 function renderApp() {
 
-  if (!currentUser) {
+  if (
+    !currentUser ||
+    !myProfile
+  ) {
+
     return;
+
   }
 
 
-  updateProfileUI();
+  updateMonthTitle();
 
 
   const monthlyExpenses =
     getCurrentMonthExpenses();
 
 
-  const sharedExpenses =
+  // ===================================================
+  // 프로필
+  // ===================================================
+
+  renderProfileCards();
+
+  renderPayerButtons();
+
+
+  // ===================================================
+  // 같이 사용한 지출
+  // ===================================================
+
+  const togetherExpenses =
     monthlyExpenses.filter(
       (expense) =>
         expense.type ===
@@ -4661,7 +5453,7 @@ function renderApp() {
 
 
   const sharedUsed =
-    sharedExpenses.reduce(
+    togetherExpenses.reduce(
       (
         sum,
         expense
@@ -4671,7 +5463,6 @@ function renderApp() {
           expense.amount ||
           0
         ),
-
       0
     );
 
@@ -4679,8 +5470,7 @@ function renderApp() {
   const sharedBudget =
     Number(
       monthlySettings
-        .sharedBudget
-      ||
+        .sharedBudget ||
       0
     );
 
@@ -4692,31 +5482,60 @@ function renderApp() {
     );
 
 
-  const sharedRemaining =
-    sharedBudget -
-    sharedUsed;
+  // ===================================================
+  // 공동 예산
+  // ===================================================
+
+  if (
+    sharedUsedAmount
+  ) {
+
+    sharedUsedAmount.textContent =
+      formatWon(
+        sharedUsed
+      );
+
+  }
 
 
-  sharedUsedAmount.textContent =
-    formatWon(
-      sharedUsed
-    );
+  if (
+    sharedBudgetAmount
+  ) {
+
+    sharedBudgetAmount.textContent =
+      formatWon(
+        sharedBudget
+      );
+
+  }
 
 
-  sharedBudgetAmount.textContent =
-    formatWon(
-      sharedBudget
-    );
+  if (
+    sharedBudgetPercent
+  ) {
+
+    sharedBudgetPercent.textContent =
+      sharedBudget > 0
+        ? `${sharedPercent}%`
+        : "0%";
+
+  }
 
 
-  sharedBudgetPercent.textContent =
-    `${sharedPercent}%`;
+  if (
+    sharedRemainingAmount
+  ) {
 
+    sharedRemainingAmount.textContent =
+      formatWon(
+        Math.max(
+          sharedBudget -
+          sharedUsed,
+          0
+        )
+      );
 
-  sharedRemainingAmount.textContent =
-    formatWon(
-      sharedRemaining
-    );
+  }
 
 
   setProgress(
@@ -4725,12 +5544,247 @@ function renderApp() {
   );
 
 
+  renderMonthBudgetProgress(
+    sharedUsed,
+    sharedBudget
+  );
+
+
+  // ===================================================
+  // 개인 생활비 카드
+  // ===================================================
+
+  renderPersonalBudgetCards(
+    monthlyExpenses
+  );
+
+
+  // ===================================================
+  // 공동 카테고리 비율
+  // ===================================================
+
+  renderCategoryRatios(
+    sharedCategoryList,
+    togetherExpenses
+  );
+
+
+  // ===================================================
+  // 최근 거래내역
+  // ===================================================
+
+  renderTransactions();
+
+
+  // ===================================================
+  // 달력
+  // ===================================================
+
+  renderExpenseCalendar(
+    monthlyExpenses
+  );
+
+
+  // ===================================================
+  // 개인 상세화면 열려 있으면 실시간 갱신
+  // ===================================================
+
+  if (
+    detailUserUid &&
+    personDetailScreen &&
+    !personDetailScreen.hidden
+  ) {
+
+    renderPersonDetail();
+
+  }
+
+}
+
+
+// =====================================================
+// 프로필 카드
+// =====================================================
+
+function renderProfileCards() {
+
+  if (
+    myIcon
+  ) {
+
+    myIcon.textContent =
+      myProfile?.icon ||
+      "🩷";
+
+  }
+
+
+  if (
+    myNickname
+  ) {
+
+    myNickname.textContent =
+      myProfile?.nickname ||
+      "나";
+
+  }
+
+
+  if (
+    partnerIcon
+  ) {
+
+    partnerIcon.textContent =
+      partnerProfile?.icon ||
+      "💜";
+
+  }
+
+
+  if (
+    partnerNickname
+  ) {
+
+    partnerNickname.textContent =
+      partnerProfile?.nickname ||
+      "상대방";
+
+  }
+
+}
+
+
+// =====================================================
+// 지출 입력 결제자 표시
+// =====================================================
+
+function renderPayerButtons() {
+
+  if (
+    !currentUser ||
+    !myProfile
+  ) {
+
+    return;
+
+  }
+
+
+  payerButtons.forEach(
+    (button) => {
+
+      const role =
+        button.dataset.payer;
+
+
+      if (
+        role ===
+        "me"
+      ) {
+
+        button.dataset.uid =
+          currentUser.uid;
+
+      }
+
+
+      else if (
+        role ===
+        "partner"
+      ) {
+
+        button.dataset.uid =
+          partnerProfile?.uid ||
+          "";
+
+      }
+
+    }
+  );
+
+
+  if (
+    payerMeIcon
+  ) {
+
+    payerMeIcon.textContent =
+      myProfile.icon ||
+      "🩷";
+
+  }
+
+
+  if (
+    payerMeName
+  ) {
+
+    payerMeName.textContent =
+      myProfile.nickname ||
+      "나";
+
+  }
+
+
+  if (
+    payerPartnerIcon
+  ) {
+
+    payerPartnerIcon.textContent =
+      partnerProfile?.icon ||
+      "💜";
+
+  }
+
+
+  if (
+    payerPartnerName
+  ) {
+
+    payerPartnerName.textContent =
+      partnerProfile?.nickname ||
+      "상대방";
+
+  }
+
+}
+
+
+// =====================================================
+// 개인 생활비 카드
+// =====================================================
+
+function renderPersonalBudgetCards(
+  monthlyExpenses
+) {
+
+  if (
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
+  const myUid =
+    currentUser.uid;
+
+
+  const partnerUid =
+    partnerProfile?.uid ||
+    null;
+
+
+  // ===================================================
+  // 내가 결제한 전체 지출
+  // ===================================================
+
   const myUsed =
     monthlyExpenses
       .filter(
         (expense) =>
           expense.payerUid ===
-          currentUser.uid
+          myUid
       )
       .reduce(
         (
@@ -4742,168 +5796,306 @@ function renderApp() {
             expense.amount ||
             0
           ),
-
         0
       );
+
+
+  // ===================================================
+  // 상대가 결제한 전체 지출
+  // ===================================================
+
+  const partnerUsed =
+    partnerUid
+
+      ? monthlyExpenses
+          .filter(
+            (expense) =>
+              expense.payerUid ===
+              partnerUid
+          )
+          .reduce(
+            (
+              sum,
+              expense
+            ) =>
+              sum +
+              Number(
+                expense.amount ||
+                0
+              ),
+            0
+          )
+
+      : 0;
+
+
+  const personalBudgets =
+    monthlySettings
+      .personalBudgets ||
+    {};
 
 
   const myBudget =
     Number(
-
-      monthlySettings
-        .personalBudgets
-        ?.[
-          currentUser.uid
-        ]
-
-      ||
-
+      personalBudgets[
+        myUid
+      ] ||
       0
-
     );
 
 
-  renderPersonCard(
-    "me",
-    myUsed,
-    myBudget
-  );
+  const partnerBudget =
+    partnerUid
 
-
-  if (
-    partnerProfile
-  ) {
-
-    const partnerUsed =
-      monthlyExpenses
-        .filter(
-          (expense) =>
-            expense.payerUid ===
-            partnerProfile.uid
-        )
-        .reduce(
-          (
-            sum,
-            expense
-          ) =>
-            sum +
-            Number(
-              expense.amount ||
-              0
-            ),
-
+      ? Number(
+          personalBudgets[
+            partnerUid
+          ] ||
           0
-        );
+        )
+
+      : 0;
 
 
-    const partnerBudget =
-      Number(
-
-        monthlySettings
-          .personalBudgets
-          ?.[
-            partnerProfile.uid
-          ]
-
-        ||
-
-        0
-
-      );
+  const myPercent =
+    getUsagePercent(
+      myUsed,
+      myBudget
+    );
 
 
-    renderPersonCard(
-      "partner",
+  const partnerPercent =
+    getUsagePercent(
       partnerUsed,
       partnerBudget
     );
 
-  }
 
-  else {
-
-    renderPersonCard(
-      "partner",
-      0,
-      0
-    );
-
-  }
-
-
-  renderCategoryRatios(
-    sharedCategoryList,
-    sharedExpenses
-  );
-
-
-  renderTransactionList(
-    transactionList,
-    monthlyExpenses
-  );
-
+  // ===================================================
+  // 내 카드
+  // ===================================================
 
   if (
-    !personDetailScreen.hidden
-    &&
-    detailUserUid
-  ) {
-
-    renderPersonDetail();
-
-  }
-
-}
-
-
-function renderPersonCard(
-  role,
-  used,
-  budget
-) {
-
-  const percent =
-    getUsagePercent(
-      used,
-      budget
-    );
-
-
-  const remaining =
-    budget -
-    used;
-
-
-  if (
-    role === "me"
+    myUsedAmount
   ) {
 
     myUsedAmount.textContent =
       formatWon(
-        used
+        myUsed
       );
 
+  }
+
+
+  if (
+    myBudgetAmount
+  ) {
 
     myBudgetAmount.textContent =
       formatWon(
-        budget
+        myBudget
       );
 
+  }
+
+
+  if (
+    myBudgetPercent
+  ) {
 
     myBudgetPercent.textContent =
-      `${percent}%`;
+      myBudget > 0
+        ? `${myPercent}%`
+        : "0%";
 
+  }
+
+
+  if (
+    myRemainingAmount
+  ) {
 
     myRemainingAmount.textContent =
       formatWon(
-        remaining
+        Math.max(
+          myBudget -
+          myUsed,
+          0
+        )
       );
 
+  }
 
-    setProgress(
-      myBudgetProgress,
-      percent
+
+  setProgress(
+    myBudgetProgress,
+    myPercent
+  );
+
+
+  // ===================================================
+  // 상대 카드
+  // ===================================================
+
+  if (
+    partnerUsedAmount
+  ) {
+
+    partnerUsedAmount.textContent =
+      formatWon(
+        partnerUsed
+      );
+
+  }
+
+
+  if (
+    partnerBudgetAmount
+  ) {
+
+    partnerBudgetAmount.textContent =
+      formatWon(
+        partnerBudget
+      );
+
+  }
+
+
+  if (
+    partnerBudgetPercent
+  ) {
+
+    partnerBudgetPercent.textContent =
+      partnerBudget > 0
+        ? `${partnerPercent}%`
+        : "0%";
+
+  }
+
+
+  if (
+    partnerRemainingAmount
+  ) {
+
+    partnerRemainingAmount.textContent =
+      formatWon(
+        Math.max(
+          partnerBudget -
+          partnerUsed,
+          0
+        )
+      );
+
+  }
+
+
+  setProgress(
+    partnerBudgetProgress,
+    partnerPercent
+  );
+
+}
+
+
+// =====================================================
+// 한 달 진행률 + 남은 예산
+// =====================================================
+
+function renderMonthBudgetProgress(
+  used,
+  budget
+) {
+
+  const monthProgress =
+    getMonthProgress();
+
+
+  if (
+    monthProgressPercent
+  ) {
+
+    monthProgressPercent.textContent =
+      `${monthProgress}%`;
+
+  }
+
+
+  if (
+    monthProgressBar
+  ) {
+
+    monthProgressBar.style.width =
+      `${Math.min(
+        Math.max(
+          monthProgress,
+          0
+        ),
+        100
+      )}%`;
+
+  }
+
+
+  if (
+    !monthBudgetStatus
+  ) {
+
+    return;
+
+  }
+
+
+  const now =
+    new Date();
+
+
+  const selectedStart =
+    new Date(
+      selectedYear,
+      selectedMonth - 1,
+      1
     );
+
+
+  const currentStart =
+    new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1
+    );
+
+
+  // ===================================================
+  // 과거 달
+  // ===================================================
+
+  if (
+    selectedStart <
+    currentStart
+  ) {
+
+    if (
+      budget > 0
+    ) {
+
+      const usedPercent =
+        getUsagePercent(
+          used,
+          budget
+        );
+
+
+      monthBudgetStatus.textContent =
+        `마감된 달이에요 · 예산 ${usedPercent}% 사용`;
+
+    }
+
+    else {
+
+      monthBudgetStatus.textContent =
+        "마감된 달이에요 · 설정된 공동예산이 없어요.";
+
+    }
 
 
     return;
@@ -4911,44 +6103,103 @@ function renderPersonCard(
   }
 
 
-  partnerUsedAmount.textContent =
-    formatWon(
-      used
+  // ===================================================
+  // 미래 달
+  // ===================================================
+
+  if (
+    selectedStart >
+    currentStart
+  ) {
+
+    if (
+      budget > 0
+    ) {
+
+      monthBudgetStatus.textContent =
+        `아직 시작 전이에요 · 예산 ${formatWon(budget)} 준비`;
+
+    }
+
+    else {
+
+      monthBudgetStatus.textContent =
+        "아직 시작 전이에요 · 공동예산이 아직 설정되지 않았어요.";
+
+    }
+
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // 현재 달
+  // ===================================================
+
+  const remainingPeriod =
+    Math.max(
+      100 -
+      monthProgress,
+      0
     );
 
 
-  partnerBudgetAmount.textContent =
-    formatWon(
+  if (
+    budget <= 0
+  ) {
+
+    monthBudgetStatus.textContent =
+      `남은 기간 ${remainingPeriod}% · 공동예산이 아직 설정되지 않았어요.`;
+
+
+    return;
+
+  }
+
+
+  const usedPercent =
+    getUsagePercent(
+      used,
       budget
     );
 
 
-  partnerBudgetPercent.textContent =
-    `${percent}%`;
-
-
-  partnerRemainingAmount.textContent =
-    formatWon(
-      remaining
+  const remainingBudgetPercent =
+    Math.max(
+      100 -
+      usedPercent,
+      0
     );
 
 
-  setProgress(
-    partnerBudgetProgress,
-    percent
-  );
+  monthBudgetStatus.textContent =
+    `남은 기간 ${remainingPeriod}% · 남은 예산 ${remainingBudgetPercent}%`;
 
 }
 
 
 // =====================================================
 // 카테고리 비율
+//
+// ★ 중요
+// 기존 style.css 클래스명을 그대로 사용합니다.
 // =====================================================
 
 function renderCategoryRatios(
   container,
   expenseList
 ) {
+
+  if (
+    !container
+  ) {
+
+    return;
+
+  }
+
 
   const total =
     expenseList.reduce(
@@ -4961,12 +6212,17 @@ function renderCategoryRatios(
           expense.amount ||
           0
         ),
-
       0
     );
 
 
-  if (!total) {
+  // ===================================================
+  // 지출 없음
+  // ===================================================
+
+  if (
+    !total
+  ) {
 
     container.innerHTML = `
       <div class="empty-message">
@@ -4980,6 +6236,10 @@ function renderCategoryRatios(
   }
 
 
+  // ===================================================
+  // 카테고리별 금액 합산
+  // ===================================================
+
   const amounts =
     {};
 
@@ -4987,13 +6247,17 @@ function renderCategoryRatios(
   expenseList.forEach(
     (expense) => {
 
-      amounts[
-        expense.category
-      ] =
+      const categoryName =
+        expense.category ||
+        "기타";
 
+
+      amounts[
+        categoryName
+      ] =
         (
           amounts[
-            expense.category
+            categoryName
           ]
 
           ||
@@ -5011,6 +6275,10 @@ function renderCategoryRatios(
     }
   );
 
+
+  // ===================================================
+  // 금액 / 퍼센트 계산
+  // ===================================================
 
   const rows =
     Object.entries(
@@ -5051,6 +6319,10 @@ function renderCategoryRatios(
     "";
 
 
+  // ===================================================
+  // 기존 CSS 구조 그대로 생성
+  // ===================================================
+
   rows.forEach(
     (row) => {
 
@@ -5076,11 +6348,15 @@ function renderCategoryRatios(
           <div class="category-ratio-name">
 
             <span>
-              ${escapeHtml(category.emoji)}
+              ${escapeHtml(
+                category.emoji
+              )}
             </span>
 
             <strong>
-              ${escapeHtml(category.name)}
+              ${escapeHtml(
+                category.name
+              )}
             </strong>
 
           </div>
@@ -5089,7 +6365,9 @@ function renderCategoryRatios(
           <div class="category-ratio-number">
 
             <span>
-              ${formatWon(row.amount)}
+              ${formatWon(
+                row.amount
+              )}
             </span>
 
             <strong>
@@ -5105,7 +6383,10 @@ function renderCategoryRatios(
 
           <div
             class="progress-bar"
-            style="width: ${Math.min(row.percent, 100)}%"
+            style="width: ${Math.min(
+              row.percent,
+              100
+            )}%"
           ></div>
 
         </div>
@@ -5123,13 +6404,109 @@ function renderCategoryRatios(
 
 
 // =====================================================
-// 거래내역
+// 최근 거래내역
+// =====================================================
+
+function renderTransactions() {
+
+  if (
+    !transactionList
+  ) {
+
+    return;
+
+  }
+
+
+  const monthlyExpenses =
+    getCurrentMonthExpenses();
+
+
+  const sortMode =
+    transactionSort?.value
+
+    ||
+
+    "date-desc";
+
+
+  const sorted =
+    sortExpenseList(
+      monthlyExpenses,
+      sortMode
+    );
+
+
+  // 처음에는 15개만
+
+  const visibleExpenses =
+    sorted.slice(
+      0,
+      transactionVisibleCount
+    );
+
+
+  renderTransactionList(
+    transactionList,
+    visibleExpenses
+  );
+
+
+  // ===================================================
+  // 더보기 버튼
+  // ===================================================
+
+  if (
+    transactionMoreBtn
+  ) {
+
+    const hasMore =
+      sorted.length >
+      transactionVisibleCount;
+
+
+    transactionMoreBtn.hidden =
+      !hasMore;
+
+
+    if (
+      hasMore
+    ) {
+
+      const remaining =
+        sorted.length -
+        transactionVisibleCount;
+
+
+      transactionMoreBtn.textContent =
+        `거래내역 더보기 ↓ (${remaining}개 남음)`;
+
+    }
+
+  }
+
+}
+
+
+// =====================================================
+// 거래내역 HTML
+//
+// 기존 CSS 구조 사용
 // =====================================================
 
 function renderTransactionList(
   container,
   list
 ) {
+
+  if (
+    !container
+  ) {
+
+    return;
+
+  }
+
 
   container.innerHTML =
     "";
@@ -5172,8 +6549,9 @@ function renderTransactionList(
 
 
       const canManage =
-        expense.payerUid ===
-        currentUser.uid;
+        canCurrentUserManageExpense(
+          expense
+        );
 
 
       const item =
@@ -5186,21 +6564,55 @@ function renderTransactionList(
         "transaction-item";
 
 
+      let privacyLabel =
+        "";
+
+
+      if (
+        expense.isPrivate
+      ) {
+
+        privacyLabel =
+          expense.payerUid ===
+          currentUser?.uid
+
+            ? " · 🔒 비공개"
+
+            : " · 🔒";
+
+      }
+
+
       item.innerHTML = `
         <div class="transaction-info">
 
           <h3>
-            ${escapeHtml(title)}
+            ${escapeHtml(
+              title
+            )}
           </h3>
 
           <p>
-            ${escapeHtml(expense.date || "")}
+            ${escapeHtml(
+              expense.date ||
+              ""
+            )}
             ·
-            ${escapeHtml(expense.category || "")}
+            ${escapeHtml(
+              expense.category ||
+              ""
+            )}
             ·
-            ${escapeHtml(typeLabel(expense.type))}
+            ${escapeHtml(
+              typeLabel(
+                expense.type
+              )
+            )}
             ·
-            ${escapeHtml(payerName)}
+            ${escapeHtml(
+              payerName
+            )}
+            ${privacyLabel}
           </p>
 
         </div>
@@ -5209,7 +6621,9 @@ function renderTransactionList(
         <div class="transaction-right">
 
           <div class="transaction-amount">
-            -${formatWon(expense.amount)}
+            -${formatWon(
+              expense.amount
+            )}
           </div>
 
 
@@ -5222,7 +6636,9 @@ function renderTransactionList(
                   <button
                     type="button"
                     class="edit-expense-btn"
-                    data-id="${expense.id}"
+                    data-id="${escapeHtml(
+                      expense.id
+                    )}"
                   >
                     수정
                   </button>
@@ -5230,7 +6646,9 @@ function renderTransactionList(
                   <button
                     type="button"
                     class="delete-expense-btn"
-                    data-id="${expense.id}"
+                    data-id="${escapeHtml(
+                      expense.id
+                    )}"
                   >
                     삭제
                   </button>
@@ -5252,57 +6670,494 @@ function renderTransactionList(
     }
   );
 
+
+  // ===================================================
+  // 수정 버튼
+  // ===================================================
+
+  container
+    .querySelectorAll(
+      ".edit-expense-btn"
+    )
+    .forEach(
+      (button) => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            openEditExpense(
+              button.dataset.id
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  // ===================================================
+  // 삭제 버튼
+  // ===================================================
+
+  container
+    .querySelectorAll(
+      ".delete-expense-btn"
+    )
+    .forEach(
+      (button) => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            deleteExpense(
+              button.dataset.id
+            );
+
+          }
+        );
+
+      }
+    );
+
 }
 
 
 // =====================================================
-// 개인 상세
+// 월간 소비 달력
+// =====================================================
+
+function renderExpenseCalendar(
+  monthlyExpenses
+) {
+
+  if (
+    !expenseCalendar
+  ) {
+
+    return;
+
+  }
+
+
+  expenseCalendar.innerHTML =
+    "";
+
+
+  const firstDay =
+    new Date(
+      selectedYear,
+      selectedMonth - 1,
+      1
+    )
+      .getDay();
+
+
+  const daysInMonth =
+    new Date(
+      selectedYear,
+      selectedMonth,
+      0
+    )
+      .getDate();
+
+
+  // ===================================================
+  // 날짜별 하루 총 지출
+  // ===================================================
+
+  const dailyTotals =
+    {};
+
+
+  monthlyExpenses.forEach(
+    (expense) => {
+
+      if (
+        !expense.date
+      ) {
+
+        return;
+
+      }
+
+
+      const day =
+        Number(
+          expense.date.slice(
+            8,
+            10
+          )
+        );
+
+
+      if (
+        !day ||
+        day < 1 ||
+        day > daysInMonth
+      ) {
+
+        return;
+
+      }
+
+
+      dailyTotals[
+        day
+      ] =
+        (
+          dailyTotals[
+            day
+          ]
+
+          ||
+
+          0
+        )
+
+        +
+
+        Number(
+          expense.amount ||
+          0
+        );
+
+    }
+  );
+
+
+  // ===================================================
+  // 첫 주 앞쪽 빈칸
+  // ===================================================
+
+  for (
+    let i = 0;
+    i < firstDay;
+    i++
+  ) {
+
+    const emptyCell =
+      document.createElement(
+        "div"
+      );
+
+
+    emptyCell.className =
+      "calendar-day empty";
+
+
+    expenseCalendar.appendChild(
+      emptyCell
+    );
+
+  }
+
+
+  const now =
+    new Date();
+
+
+  const isCurrentMonth =
+    now.getFullYear() ===
+      selectedYear
+
+    &&
+
+    now.getMonth() + 1 ===
+      selectedMonth;
+
+
+  // ===================================================
+  // 날짜 생성
+  // ===================================================
+
+  for (
+    let day = 1;
+    day <= daysInMonth;
+    day++
+  ) {
+
+    const amount =
+      dailyTotals[
+        day
+      ]
+
+      ||
+
+      0;
+
+
+    const cell =
+      document.createElement(
+        "div"
+      );
+
+
+    cell.className =
+      "calendar-day";
+
+
+    // 지출 있는 날
+
+    if (
+      amount > 0
+    ) {
+
+      cell.classList.add(
+        "has-expense"
+      );
+
+    }
+
+
+    // =================================================
+    // 하루 5만원 이상 ~ 10만원 미만
+    // =================================================
+
+    if (
+      amount >= 50000
+      &&
+      amount < 100000
+    ) {
+
+      cell.classList.add(
+        "spending-medium"
+      );
+
+    }
+
+
+    // =================================================
+    // 하루 10만원 이상
+    // =================================================
+
+    if (
+      amount >= 100000
+    ) {
+
+      cell.classList.add(
+        "spending-high"
+      );
+
+    }
+
+
+    // 오늘
+
+    if (
+      isCurrentMonth
+      &&
+      now.getDate() ===
+        day
+    ) {
+
+      cell.classList.add(
+        "today"
+      );
+
+    }
+
+
+    // =================================================
+    // 날짜 숫자
+    // =================================================
+
+    const dateElement =
+      document.createElement(
+        "span"
+      );
+
+
+    dateElement.className =
+      "calendar-date";
+
+
+    dateElement.textContent =
+      String(
+        day
+      );
+
+
+    cell.appendChild(
+      dateElement
+    );
+
+
+    // =================================================
+    // 하루 총 지출
+    // =================================================
+
+    if (
+      amount > 0
+    ) {
+
+      const amountElement =
+        document.createElement(
+          "strong"
+        );
+
+
+      amountElement.className =
+        "calendar-amount";
+
+
+      amountElement.textContent =
+        formatWon(
+          amount
+        );
+
+
+      cell.appendChild(
+        amountElement
+      );
+
+    }
+
+
+    expenseCalendar.appendChild(
+      cell
+    );
+
+  }
+
+
+  // ===================================================
+  // 마지막 주 뒤쪽 빈칸
+  // ===================================================
+
+  const totalCells =
+    firstDay +
+    daysInMonth;
+
+
+  const trailingCells =
+    (
+      7 -
+      (
+        totalCells %
+        7
+      )
+    )
+    %
+    7;
+
+
+  for (
+    let i = 0;
+    i < trailingCells;
+    i++
+  ) {
+
+    const emptyCell =
+      document.createElement(
+        "div"
+      );
+
+
+    emptyCell.className =
+      "calendar-day empty";
+
+
+    expenseCalendar.appendChild(
+      emptyCell
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// 개인 상세화면 열기
+// =====================================================
+
+function openPersonDetail(
+  uid
+) {
+
+  if (
+    !uid
+  ) {
+
+    return;
+
+  }
+
+
+  detailUserUid =
+    uid;
+
+
+  renderPersonDetail();
+
+
+  showScreen(
+    personDetailScreen
+  );
+
+
+  window.scrollTo({
+
+    top:
+      0,
+
+    behavior:
+      "smooth"
+
+  });
+
+}
+
+
+// =====================================================
+// 내 상세보기
 // =====================================================
 
 myDetailBtn.addEventListener(
   "click",
   () => {
 
-    detailUserUid =
-      currentUser.uid;
+    if (
+      currentUser
+    ) {
 
+      openPersonDetail(
+        currentUser.uid
+      );
 
-    renderPersonDetail();
-
-
-    showScreen(
-      personDetailScreen
-    );
+    }
 
   }
 );
 
+
+// =====================================================
+// 상대 상세보기
+// =====================================================
 
 partnerDetailBtn.addEventListener(
   "click",
   () => {
 
     if (
-      !partnerProfile
+      partnerProfile?.uid
     ) {
-      return;
+
+      openPersonDetail(
+        partnerProfile.uid
+      );
+
     }
-
-
-    detailUserUid =
-      partnerProfile.uid;
-
-
-    renderPersonDetail();
-
-
-    showScreen(
-      personDetailScreen
-    );
 
   }
 );
 
+
+// =====================================================
+// 상세화면 뒤로가기
+// =====================================================
 
 detailBackBtn.addEventListener(
   "click",
@@ -5316,11 +7171,26 @@ detailBackBtn.addEventListener(
       appScreen
     );
 
+
+    renderApp();
+
   }
 );
-
+// =====================================================
+// 개인 상세화면 렌더링
+// =====================================================
 
 function renderPersonDetail() {
+
+  if (
+    !detailUserUid ||
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
 
   const profile =
     getProfileByUid(
@@ -5328,8 +7198,12 @@ function renderPersonDetail() {
     );
 
 
-  if (!profile) {
+  if (
+    !profile
+  ) {
+
     return;
+
   }
 
 
@@ -5345,7 +7219,14 @@ function renderPersonDetail() {
     );
 
 
-  const used =
+  const sortedPersonExpenses =
+    sortExpenseList(
+      personExpenses,
+      "date-desc"
+    );
+
+
+  const totalUsed =
     personExpenses.reduce(
       (
         sum,
@@ -5356,73 +7237,122 @@ function renderPersonDetail() {
           expense.amount ||
           0
         ),
-
       0
     );
 
 
   const budget =
     Number(
-
       monthlySettings
-        .personalBudgets
-        ?.[
+        .personalBudgets?.[
           detailUserUid
         ]
-
       ||
-
       0
-
     );
 
 
   const percent =
     getUsagePercent(
-      used,
+      totalUsed,
       budget
     );
 
 
   const remaining =
-    budget -
-    used;
-
-
-  detailPersonIcon.textContent =
-    profile.icon ||
-    "🙂";
-
-
-  detailPersonName.textContent =
-    profile.nickname ||
-    "사용자";
-
-
-  detailMonthLabel.textContent =
-    `${selectedMonth}월 생활비`;
-
-
-  detailUsedAmount.textContent =
-    formatWon(
-      used
+    Math.max(
+      budget -
+      totalUsed,
+      0
     );
 
 
-  detailBudgetAmount.textContent =
-    formatWon(
-      budget
-    );
+  // ===================================================
+  // 상단 프로필
+  // ===================================================
+
+  if (
+    detailPersonIcon
+  ) {
+
+    detailPersonIcon.textContent =
+      profile.icon ||
+      "🙂";
+
+  }
 
 
-  detailBudgetPercent.textContent =
-    `${percent}%`;
+  if (
+    detailPersonName
+  ) {
+
+    detailPersonName.textContent =
+      profile.nickname ||
+      "사용자";
+
+  }
 
 
-  detailRemainingAmount.textContent =
-    formatWon(
-      remaining
-    );
+  if (
+    detailMonthLabel
+  ) {
+
+    detailMonthLabel.textContent =
+      `${selectedMonth}월 생활비`;
+
+  }
+
+
+  // ===================================================
+  // 사용금액 / 예산
+  // ===================================================
+
+  if (
+    detailUsedAmount
+  ) {
+
+    detailUsedAmount.textContent =
+      formatWon(
+        totalUsed
+      );
+
+  }
+
+
+  if (
+    detailBudgetAmount
+  ) {
+
+    detailBudgetAmount.textContent =
+      formatWon(
+        budget
+      );
+
+  }
+
+
+  if (
+    detailBudgetPercent
+  ) {
+
+    detailBudgetPercent.textContent =
+      budget > 0
+        ? `${percent}%`
+        : "0%";
+
+  }
+
+
+  if (
+    detailRemainingAmount
+  ) {
+
+    detailRemainingAmount.textContent =
+      formatWon(
+        remaining
+      );
+
+  }
 
 
   setProgress(
@@ -5431,11 +7361,20 @@ function renderPersonDetail() {
   );
 
 
+  // ===================================================
+  // 개인 카테고리 비율
+  // 기존 CSS 구조 그대로 사용
+  // ===================================================
+
   renderCategoryRatios(
     detailCategoryList,
     personExpenses
   );
 
+
+  // ===================================================
+  // 혼자 / 같이 비율
+  // ===================================================
 
   const aloneAmount =
     personExpenses
@@ -5454,7 +7393,6 @@ function renderPersonDetail() {
             expense.amount ||
             0
           ),
-
         0
       );
 
@@ -5476,84 +7414,1219 @@ function renderPersonDetail() {
             expense.amount ||
             0
           ),
-
         0
       );
 
 
-  const total =
-    aloneAmount +
-    togetherAmount;
+  const alonePercent =
+    totalUsed > 0
 
-
-  detailAloneAmount.textContent =
-    formatWon(
-      aloneAmount
-    );
-
-
-  detailTogetherAmount.textContent =
-    formatWon(
-      togetherAmount
-    );
-
-
-  detailAlonePercent.textContent =
-    total
-
-      ? `${Math.round(
+      ? Math.round(
           (
             aloneAmount /
-            total
+            totalUsed
           ) *
           100
-        )}%`
+        )
 
-      : "0%";
+      : 0;
 
 
-  detailTogetherPercent.textContent =
-    total
+  const togetherPercent =
+    totalUsed > 0
 
-      ? `${Math.round(
+      ? Math.round(
           (
             togetherAmount /
-            total
+            totalUsed
           ) *
           100
-        )}%`
+        )
 
-      : "0%";
+      : 0;
 
+
+  if (
+    detailAloneAmount
+  ) {
+
+    detailAloneAmount.textContent =
+      formatWon(
+        aloneAmount
+      );
+
+  }
+
+
+  if (
+    detailAlonePercent
+  ) {
+
+    detailAlonePercent.textContent =
+      `${alonePercent}%`;
+
+  }
+
+
+  if (
+    detailTogetherAmount
+  ) {
+
+    detailTogetherAmount.textContent =
+      formatWon(
+        togetherAmount
+      );
+
+  }
+
+
+  if (
+    detailTogetherPercent
+  ) {
+
+    detailTogetherPercent.textContent =
+      `${togetherPercent}%`;
+
+  }
+
+
+  // ===================================================
+  // 개인 거래내역
+  // ===================================================
 
   renderTransactionList(
     detailTransactionList,
-    personExpenses
+    sortedPersonExpenses
   );
 
 }
 
 
 // =====================================================
-// 최초 준비
+// 예산 설정 모달 열기
 // =====================================================
 
-[
-  amountInput,
-  sharedBudgetInput,
-  myBudgetInput,
-  partnerBudgetInput
-]
-  .forEach(
-    attachMoneyFormatter
+function openBudgetModal() {
+
+  if (
+    !currentUser ||
+    !myProfile
+  ) {
+
+    return;
+
+  }
+
+
+  const myUid =
+    currentUser.uid;
+
+
+  const partnerUid =
+    partnerProfile?.uid ||
+    null;
+
+
+  const personalBudgets =
+    monthlySettings
+      .personalBudgets ||
+    {};
+
+
+  if (
+    sharedBudgetInput
+  ) {
+
+    sharedBudgetInput.value =
+      formatMoneyInput(
+        monthlySettings
+          .sharedBudget ||
+        0
+      );
+
+  }
+
+
+  if (
+    myBudgetInput
+  ) {
+
+    myBudgetInput.value =
+      formatMoneyInput(
+        personalBudgets[
+          myUid
+        ] ||
+        0
+      );
+
+  }
+
+
+  if (
+    partnerBudgetInput
+  ) {
+
+    partnerBudgetInput.value =
+      formatMoneyInput(
+
+        partnerUid
+
+          ? (
+              personalBudgets[
+                partnerUid
+              ] ||
+              0
+            )
+
+          : 0
+
+      );
+
+  }
+
+
+  if (
+    budgetMyIcon
+  ) {
+
+    budgetMyIcon.textContent =
+      myProfile.icon ||
+      "🩷";
+
+  }
+
+
+  if (
+    budgetMyName
+  ) {
+
+    budgetMyName.textContent =
+      myProfile.nickname ||
+      "나";
+
+  }
+
+
+  if (
+    budgetPartnerIcon
+  ) {
+
+    budgetPartnerIcon.textContent =
+      partnerProfile?.icon ||
+      "💜";
+
+  }
+
+
+  if (
+    budgetPartnerName
+  ) {
+
+    budgetPartnerName.textContent =
+      partnerProfile?.nickname ||
+      "상대방";
+
+  }
+
+
+  budgetModal.classList.add(
+    "show"
+  );
+
+}
+
+
+// =====================================================
+// 예산 설정 버튼
+// =====================================================
+
+if (
+  budgetSettingBtn
+) {
+
+  budgetSettingBtn.addEventListener(
+    "click",
+    openBudgetModal
+  );
+
+}
+
+
+if (
+  closeBudgetModal
+) {
+
+  closeBudgetModal.addEventListener(
+    "click",
+    () => {
+
+      budgetModal.classList.remove(
+        "show"
+      );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// 예산 저장
+// =====================================================
+
+async function saveBudget() {
+
+  if (
+    !currentUser ||
+    !coupleId
+  ) {
+
+    return;
+
+  }
+
+
+  const myUid =
+    currentUser.uid;
+
+
+  const partnerUid =
+    partnerProfile?.uid ||
+    null;
+
+
+  const sharedBudget =
+    parseMoney(
+      sharedBudgetInput?.value
+    );
+
+
+  const myBudget =
+    parseMoney(
+      myBudgetInput?.value
+    );
+
+
+  const partnerBudget =
+    parseMoney(
+      partnerBudgetInput?.value
+    );
+
+
+  const personalBudgets = {
+
+    [myUid]:
+      myBudget
+
+  };
+
+
+  if (
+    partnerUid
+  ) {
+
+    personalBudgets[
+      partnerUid
+    ] =
+      partnerBudget;
+
+  }
+
+
+  try {
+
+    saveBudgetBtn.disabled =
+      true;
+
+
+    saveBudgetBtn.textContent =
+      "저장 중...";
+
+
+    await setDoc(
+      monthlySettingsDocRef(),
+      {
+
+        sharedBudget,
+
+        personalBudgets,
+
+        updatedAt:
+          serverTimestamp()
+
+      },
+      {
+        merge:
+          true
+      }
+    );
+
+
+    budgetModal.classList.remove(
+      "show"
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "예산 저장 실패:",
+      error
+    );
+
+
+    alert(
+      "예산을 저장하지 못했어요."
+    );
+
+  }
+
+  finally {
+
+    saveBudgetBtn.disabled =
+      false;
+
+
+    saveBudgetBtn.textContent =
+      "저장하기";
+
+  }
+
+}
+
+
+if (
+  saveBudgetBtn
+) {
+
+  saveBudgetBtn.addEventListener(
+    "click",
+    saveBudget
+  );
+
+}
+
+
+// =====================================================
+// 카테고리 모달
+// =====================================================
+
+function openCategoryModal() {
+
+  renderCategorySettingList();
+
+
+  categoryModal.classList.add(
+    "show"
+  );
+
+}
+
+
+if (
+  categorySettingBtn
+) {
+
+  categorySettingBtn.addEventListener(
+    "click",
+    openCategoryModal
+  );
+
+}
+
+
+if (
+  closeCategoryModal
+) {
+
+  closeCategoryModal.addEventListener(
+    "click",
+    () => {
+
+      categoryModal.classList.remove(
+        "show"
+      );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// 카테고리 설정 목록
+// =====================================================
+
+function renderCategorySettingList() {
+
+  if (
+    !categorySettingList
+  ) {
+
+    return;
+
+  }
+
+
+  categorySettingList.innerHTML =
+    "";
+
+
+  categories.forEach(
+    (
+      category,
+      index
+    ) => {
+
+      const item =
+        document.createElement(
+          "div"
+        );
+
+
+      item.className =
+        "category-setting-item";
+
+
+      item.innerHTML = `
+        <div class="category-setting-name">
+
+          <span class="category-setting-emoji">
+            ${escapeHtml(
+              category.emoji
+            )}
+          </span>
+
+          <span>
+            ${escapeHtml(
+              category.name
+            )}
+          </span>
+
+        </div>
+
+
+        ${
+          category.isDefault
+
+            ? `
+              <span class="category-default-badge">
+                기본
+              </span>
+            `
+
+            : `
+              <button
+                type="button"
+                class="category-delete-btn"
+                data-index="${index}"
+              >
+                삭제
+              </button>
+            `
+        }
+      `;
+
+
+      categorySettingList.appendChild(
+        item
+      );
+
+    }
   );
 
 
-renderCategories();
+  categorySettingList
+    .querySelectorAll(
+      ".category-delete-btn"
+    )
+    .forEach(
+      (button) => {
 
-updateMonthTitle();
+        button.addEventListener(
+          "click",
+          () => {
 
-dateInput.value =
-  getDefaultDate();
+            const index =
+              Number(
+                button.dataset.index
+              );
+
+
+            deleteCategory(
+              index
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+// =====================================================
+// 카테고리 저장
+// =====================================================
+
+async function saveCategories() {
+
+  if (
+    !coupleId
+  ) {
+
+    return;
+
+  }
+
+
+  await setDoc(
+    categorySettingsDocRef(),
+    {
+
+      categories,
+
+      updatedAt:
+        serverTimestamp()
+
+    },
+    {
+      merge:
+        true
+    }
+  );
+
+}
+
+
+// =====================================================
+// 카테고리 추가
+// =====================================================
+
+async function addCategory() {
+
+  const emoji =
+    newCategoryEmoji
+      ?.value
+      .trim()
+
+    ||
+
+    "📌";
+
+
+  const name =
+    newCategoryName
+      ?.value
+      .trim();
+
+
+  if (
+    !name
+  ) {
+
+    alert(
+      "카테고리 이름을 입력해주세요."
+    );
+
+
+    return;
+
+  }
+
+
+  const duplicated =
+    categories.some(
+      (category) =>
+        category.name ===
+        name
+    );
+
+
+  if (
+    duplicated
+  ) {
+
+    alert(
+      "이미 같은 이름의 카테고리가 있어요."
+    );
+
+
+    return;
+
+  }
+
+
+  const newCategory = {
+
+    emoji,
+
+    name,
+
+    isDefault:
+      false
+
+  };
+
+
+  try {
+
+    categories.push(
+      newCategory
+    );
+
+
+    await saveCategories();
+
+
+    if (
+      newCategoryEmoji
+    ) {
+
+      newCategoryEmoji.value =
+        "";
+
+    }
+
+
+    if (
+      newCategoryName
+    ) {
+
+      newCategoryName.value =
+        "";
+
+    }
+
+
+    renderCategorySettingList();
+
+    renderCategoryOptions();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "카테고리 추가 실패:",
+      error
+    );
+
+
+    categories =
+      categories.filter(
+        (category) =>
+          category !==
+          newCategory
+      );
+
+
+    alert(
+      "카테고리를 추가하지 못했어요."
+    );
+
+  }
+
+}
+
+
+if (
+  addCategoryBtn
+) {
+
+  addCategoryBtn.addEventListener(
+    "click",
+    addCategory
+  );
+
+}
+
+
+if (
+  newCategoryName
+) {
+
+  newCategoryName.addEventListener(
+    "keydown",
+    (event) => {
+
+      if (
+        event.key ===
+        "Enter"
+      ) {
+
+        addCategory();
+
+      }
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// 카테고리 삭제
+// =====================================================
+
+async function deleteCategory(
+  index
+) {
+
+  const category =
+    categories[
+      index
+    ];
+
+
+  if (
+    !category
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    category.isDefault
+  ) {
+
+    alert(
+      "기본 카테고리는 삭제할 수 없어요."
+    );
+
+
+    return;
+
+  }
+
+
+  const used =
+    expenses.some(
+      (expense) =>
+        expense.category ===
+        category.name
+    );
+
+
+  if (
+    used
+  ) {
+
+    const confirmed =
+      confirm(
+        `"${category.name}" 카테고리를 사용한 기존 지출이 있어요.\n그래도 카테고리 목록에서 삭제할까요?`
+      );
+
+
+    if (
+      !confirmed
+    ) {
+
+      return;
+
+    }
+
+  }
+
+
+  const oldCategories =
+    [...categories];
+
+
+  categories.splice(
+    index,
+    1
+  );
+
+
+  try {
+
+    await saveCategories();
+
+
+    renderCategorySettingList();
+
+    renderCategoryOptions();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "카테고리 삭제 실패:",
+      error
+    );
+
+
+    categories =
+      oldCategories;
+
+
+    alert(
+      "카테고리를 삭제하지 못했어요."
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// 설정 모달
+// =====================================================
+
+function openSettingsModal() {
+
+  if (
+    !myProfile
+  ) {
+
+    return;
+
+  }
+
+
+  settingsNickname.value =
+    myProfile.nickname ||
+    "";
+
+
+  selectedSettingsIcon =
+    myProfile.icon ||
+    "🩷";
+
+
+  clearActiveIconButtons(
+    settingsIconButtons
+  );
+
+
+  const presetExists =
+    [...settingsIconButtons]
+      .some(
+        (button) =>
+          button.dataset.icon ===
+          selectedSettingsIcon
+      );
+
+
+  settingsIconButtons.forEach(
+    (button) => {
+
+      if (
+        button.dataset.icon ===
+        selectedSettingsIcon
+      ) {
+
+        button.classList.add(
+          "active"
+        );
+
+      }
+
+    }
+  );
+
+
+  if (
+    customSettingsIcon
+  ) {
+
+    customSettingsIcon.value =
+      presetExists
+        ? ""
+        : selectedSettingsIcon;
+
+  }
+
+
+  if (
+    settingsInviteCode
+  ) {
+
+    settingsInviteCode.textContent =
+      currentCouple?.inviteCode ||
+      "-";
+
+  }
+
+
+  if (
+    settingsPartnerName
+  ) {
+
+    settingsPartnerName.textContent =
+      partnerProfile?.nickname ||
+      "아직 연결되지 않았어요.";
+
+  }
+
+
+  settingsModal.classList.add(
+    "show"
+  );
+
+}
+
+
+if (
+  settingsBtn
+) {
+
+  settingsBtn.addEventListener(
+    "click",
+    openSettingsModal
+  );
+
+}
+
+
+if (
+  closeSettingsModal
+) {
+
+  closeSettingsModal.addEventListener(
+    "click",
+    () => {
+
+      settingsModal.classList.remove(
+        "show"
+      );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// 설정에서 프로필 저장
+// =====================================================
+
+async function saveSettingsProfile() {
+
+  if (
+    !currentUser ||
+    !myProfile
+  ) {
+
+    return;
+
+  }
+
+
+  const nickname =
+    settingsNickname
+      .value
+      .trim();
+
+
+  const customIcon =
+    customSettingsIcon
+      ?.value
+      .trim();
+
+
+  const icon =
+    customIcon
+
+    ||
+
+    selectedSettingsIcon
+
+    ||
+
+    myProfile.icon
+
+    ||
+
+    "🩷";
+
+
+  if (
+    !nickname
+  ) {
+
+    alert(
+      "닉네임을 입력해주세요."
+    );
+
+
+    return;
+
+  }
+
+
+  try {
+
+    saveSettingsProfileBtn.disabled =
+      true;
+
+
+    saveSettingsProfileBtn.textContent =
+      "저장 중...";
+
+
+    await updateDoc(
+      userDocRef(
+        currentUser.uid
+      ),
+      {
+
+        nickname,
+
+        icon
+
+      }
+    );
+
+
+    myProfile.nickname =
+      nickname;
+
+
+    myProfile.icon =
+      icon;
+
+
+    selectedProfileIcon =
+      icon;
+
+
+    selectedSettingsIcon =
+      icon;
+
+
+    renderApp();
+
+
+    settingsModal.classList.remove(
+      "show"
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "프로필 수정 실패:",
+      error
+    );
+
+
+    alert(
+      "프로필을 저장하지 못했어요."
+    );
+
+  }
+
+  finally {
+
+    saveSettingsProfileBtn.disabled =
+      false;
+
+
+    saveSettingsProfileBtn.textContent =
+      "저장하기";
+
+  }
+
+}
+
+
+if (
+  saveSettingsProfileBtn
+) {
+
+  saveSettingsProfileBtn.addEventListener(
+    "click",
+    saveSettingsProfile
+  );
+
+}
+
+
+// =====================================================
+// 설정 초대코드 클릭 복사
+// =====================================================
+
+if (
+  settingsInviteCode
+) {
+
+  settingsInviteCode.addEventListener(
+    "click",
+    async () => {
+
+      const code =
+        settingsInviteCode
+          .textContent
+          .trim();
+
+
+      if (
+        !code ||
+        code ===
+        "-"
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        await navigator.clipboard.writeText(
+          code
+        );
+
+
+        const original =
+          settingsInviteCode.textContent;
+
+
+        settingsInviteCode.textContent =
+          "복사 완료!";
+
+
+        setTimeout(
+          () => {
+
+            settingsInviteCode.textContent =
+              original;
+
+          },
+          1200
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "초대코드 복사 실패:",
+          error
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// 최종 초기값
+// =====================================================
 
 updatePrivacyVisibility();
+
+renderCategoryOptions();
+
+updateMonthTitle();

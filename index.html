@@ -13,7 +13,11 @@
 
     <link
         rel="stylesheet"
-        href="css/style.css"
+        href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css"
+        type="text/css"
+    >
+    <link
+        rel="stylesheet" href="css/style.css"
     >
 </head>
 
@@ -783,26 +787,62 @@
 
             <div class="progress-track large-progress">
 
-                <div
-                    id="shared-budget-progress"
-                    class="progress-bar"
-                ></div>
+            <div
+        id="shared-budget-progress"
+        class="progress-bar"
+    ></div>
 
-            </div>
+</div>
 
 
-            <div class="shared-dashboard-bottom">
+<!-- 이번 달 시간 진행률 -->
 
-                <span>
-                    남은 생활비
-                </span>
+<div class="month-progress-compare">
 
-                <strong id="shared-remaining-amount">
-                    0원
-                </strong>
+    <div class="month-progress-header">
 
-            </div>
+        <span>
+            이번 달 진행
+        </span>
 
+        <strong id="month-progress-percent">
+            0%
+        </strong>
+
+    </div>
+
+
+    <div class="progress-track month-progress-track">
+
+        <div
+            id="month-progress-bar"
+            class="month-progress-bar"
+        ></div>
+
+    </div>
+
+
+    <p
+        id="month-budget-status"
+        class="month-budget-status"
+    >
+        이번 달 진행률과 예산 사용률을 비교해드려요.
+    </p>
+
+</div>
+
+
+<div class="shared-dashboard-bottom">
+
+    <span>
+        남은 생활비
+    </span>
+
+    <strong id="shared-remaining-amount">
+        0원
+    </strong>
+
+</div>
 
             <button
                 id="budget-setting-btn"
@@ -1104,13 +1144,30 @@
 
         <section class="transactions-section">
 
-            <div class="section-title">
+    <div class="section-title transaction-section-title">
 
-                <h2>
-                    최근 거래내역
-                </h2>
+        <h2>
+            최근 거래내역
+        </h2>
 
-            </div>
+
+        <select
+            id="transaction-sort"
+            class="transaction-sort"
+            aria-label="거래내역 정렬"
+        >
+
+            <option value="date-desc">
+                날짜순
+            </option>
+
+            <option value="created-desc">
+                입력순
+            </option>
+
+        </select>
+
+    </div>
 
 
             <div
@@ -1124,7 +1181,64 @@
 
             </div>
 
+            <button
+                type="button"
+                id="transaction-more-btn"
+                class="transaction-more-btn"
+                hidden
+            >
+                거래내역 더보기 ↓
+            </button>
+
         </section>
+ <!-- =============================================
+             월간 소비 달력
+        ============================================== -->
+
+        <section class="expense-calendar-section">
+
+            <div class="section-title">
+
+                <div>
+
+                    <h2>
+                        이번 달 소비 달력
+                    </h2>
+
+                    <p class="section-description">
+                        하루에 얼마나 썼는지 한눈에 확인해요.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="expense-calendar-card">
+
+                <div class="calendar-weekdays">
+
+                    <span>일</span>
+                    <span>월</span>
+                    <span>화</span>
+                    <span>수</span>
+                    <span>목</span>
+                    <span>금</span>
+                    <span>토</span>
+
+                </div>
+
+
+                <div
+                    id="expense-calendar"
+                    class="expense-calendar-grid"
+                >
+                </div>
+
+            </div>
+
+        </section>
+
 
 
     </main>
@@ -2053,6 +2167,14 @@
     src="js/app.js"
 ></script>
 
+<button
+    type="button"
+    id="scroll-top-btn"
+    class="scroll-top-btn"
+    aria-label="맨 위로 이동"
+>
+    ↑
+</button>
 
 </body>
 
