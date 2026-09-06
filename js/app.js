@@ -1616,9 +1616,9 @@ function sortExpenseList(
 
 }
 
-
 // =====================================================
 // 지출 수정 / 삭제 권한
+// 작성자 또는 결제자 모두 수정 / 삭제 가능
 // =====================================================
 
 function canCurrentUserManageExpense(
@@ -1635,27 +1635,19 @@ function canCurrentUserManageExpense(
   }
 
 
-  // 2.1 이후 데이터
-  // 실제 입력한 계정이 수정 / 삭제 가능
-
-  if (
-    expense.createdByUid
-  ) {
-
-    return (
-      expense.createdByUid ===
-      currentUser.uid
-    );
-
-  }
+  const isPayer =
+    expense.payerUid ===
+    currentUser.uid;
 
 
-  // 2.0 이전 기록은 createdByUid가 없으므로
-  // 기존 방식인 결제자 기준으로 호환
+  const isCreator =
+    expense.createdByUid ===
+    currentUser.uid;
+
 
   return (
-    expense.payerUid ===
-    currentUser.uid
+    isPayer ||
+    isCreator
   );
 
 }
@@ -5674,7 +5666,7 @@ function renderPayerButtons() {
     (button) => {
 
       const role =
-        button.dataset.payer;
+        button.dataset.payerRole;
 
 
       if (
@@ -6592,27 +6584,49 @@ function renderTransactionList(
             )}
           </h3>
 
-          <p>
-            ${escapeHtml(
-              expense.date ||
-              ""
-            )}
-            ·
-            ${escapeHtml(
-              expense.category ||
-              ""
-            )}
-            ·
-            ${escapeHtml(
-              typeLabel(
-                expense.type
-              )
-            )}
-            ·
-            ${escapeHtml(
-              payerName
-            )}
+          <p class="transaction-meta">
+
+            <span class="transaction-date-category">
+              ${escapeHtml(
+                expense.date ||
+                ""
+              )}
+              ·
+              ${escapeHtml(
+                expense.category ||
+                ""
+              )}
+            </span>
+
+            <span
+              class="transaction-tag ${
+                expense.type === "together"
+                  ? "tag-together"
+                  : "tag-alone"
+              }"
+            >
+              ${escapeHtml(
+                typeLabel(
+                  expense.type
+                )
+              )}
+            </span>
+
+            <span class="transaction-tag tag-payer">
+              <span class="transaction-payer-icon">
+                ${escapeHtml(
+                 payerProfile?.icon ||
+                "💜"
+              )}
+              </span>
+
+              ${escapeHtml(
+                payerName
+              )}
+            </span>
+
             ${privacyLabel}
+
           </p>
 
         </div>
