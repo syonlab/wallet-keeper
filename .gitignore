@@ -1,0 +1,19 @@
+# 설치된 npm 패키지
+node_modules/
+
+# 앱용으로 자동 복사되는 웹 파일
+www/
+
+# Android Studio 개인 설정 / 캐시
+android/.idea/
+android/.gradle/
+android/local.properties
+
+# Android 빌드 결과물
+android/build/
+android/app/build/
+android/app/release/
+
+# 완성된 설치 파일
+*.apk
+*.aab

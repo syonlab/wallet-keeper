@@ -1,0 +1,27 @@
+{
+  "name": "couple-budget",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "android:update": "powershell -Command \"Copy-Item index.html www\\index.html -Force; Remove-Item www\\css -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item www\\js -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item css www\\css -Recurse; Copy-Item js www\\js -Recurse; npx.cmd cap sync android\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/syonlab/wallet-keeper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/syonlab/wallet-keeper/issues"
+  },
+  "homepage": "https://github.com/syonlab/wallet-keeper#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1"
+  }
+}

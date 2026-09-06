@@ -3100,3 +3100,14 @@ textarea {
   margin-right: 3px;
   font-size: 13px;
 }
+@media screen and (max-width: 480px) {
+    .calendar-day {
+        padding: 8px 3px;
+    }
+
+    .calendar-amount {
+        font-size: 8.5px;
+        white-space: nowrap;
+        letter-spacing: -0.3px;
+    }
+}

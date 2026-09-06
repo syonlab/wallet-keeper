@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">지갑지킴이</string>
+    <string name="title_activity_main">지갑지킴이</string>
+    <string name="package_name">com.syonlab.walletkeeper</string>
+    <string name="custom_url_scheme">com.syonlab.walletkeeper</string>
+</resources>
