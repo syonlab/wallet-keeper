@@ -28,6 +28,16 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+// =====================================================
+// 앱 실행 환경 감지
+// =====================================================
+
+const isApp =
+    window.location.hostname === "localhost";
+
+if (isApp) {
+    document.body.classList.add("app-mode");
+}
 
 // =====================================================
 // Firebase

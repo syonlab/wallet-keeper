@@ -3111,3 +3111,19 @@ textarea {
         letter-spacing: -0.3px;
     }
 }
+/* =====================================================
+   앱 전용 화면 보정
+===================================================== */
+
+body.app-mode {
+    font-size: 17px;
+}
+body.app-mode p,
+body.app-mode span,
+body.app-mode label,
+body.app-mode button,
+body.app-mode input,
+body.app-mode select,
+body.app-mode textarea {
+    font-size: 1.05em;
+}
