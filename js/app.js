@@ -29,16 +29,22 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 // =====================================================
-// 앱 실행 환경 감지
+// 앱 실행 환경 감지 + 브라우저 앱 모드 미리보기
 // =====================================================
 
-const isApp =
-    window.location.hostname === "localhost";
+const params =
+    new URLSearchParams(window.location.search);
 
-if (isApp) {
+const isAppPreview =
+    params.get("app") === "1";
+
+const isNativeApp =
+    window.location.hostname === "localhost" &&
+    !window.location.port;
+
+if (isNativeApp || isAppPreview) {
     document.body.classList.add("app-mode");
 }
-
 // =====================================================
 // Firebase
 // =====================================================
