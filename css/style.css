@@ -3269,3 +3269,13 @@ body.app-mode .transaction-sort {
 body.app-mode .calendar-amount {
     font-size: 9.5px;
 }
+body.app-mode .person-name strong {
+    font-size: 15px;
+}
+body.app-mode .me-badge {
+    font-size: 11px;
+}
+/* 앱 - 각자 생활비 남은 금액 */
+body.app-mode .person-remaining strong {
+    font-size: 13px;
+}
