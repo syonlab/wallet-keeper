@@ -1136,13 +1136,116 @@ select {
 
 .main-expense-action {
     display: flex;
-    justify-content: center;
+    align-items: center;
+    gap: 12px;
     margin-bottom: 34px;
 }
 
-.main-expense-action .primary-btn {
-    width: 100%;
-    max-width: 520px;
+.main-expense-action .expense-primary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    width: 178px;
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 10px;
+    background: var(--primary);
+    text-align: center;
+    box-shadow: none;
+}
+
+.main-expense-action .expense-primary-action:hover {
+    background: var(--primary-dark);
+}
+
+.expense-primary-plus {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.expense-primary-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.expense-primary-copy strong {
+    font-size: 14px;
+    line-height: 1.1;
+}
+
+.expense-primary-copy small {
+    display: none;
+}
+
+.monthly-income-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.monthly-income-actions .income-quick-btn {
+    min-width: 84px;
+    min-height: 46px;
+    padding: 0 13px;
+    border-radius: 12px;
+    color: #2e4059;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.income-history-content {
+    width: min(440px, 100%);
+    min-height: 226px;
+    padding: 38px 42px 24px;
+    border-radius: 22px;
+}
+
+.income-history-content .modal-header {
+    margin-bottom: 30px;
+}
+
+.income-history-content .modal-header h2 {
+    font-size: 21px;
+}
+
+.income-history-period {
+    margin-top: 4px;
+    color: #7d8ca3;
+    font-size: 12px;
+}
+
+.income-history-content .modal-header > button {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #f5f6f8;
+    color: #28394f;
+    font-size: 23px;
+}
+
+.income-history-list {
+    margin-top: 0;
+    border: 0;
+    border-radius: 14px;
+    background: #fafafb;
+}
+
+.income-history-list .empty-message {
+    min-height: 85px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7d8ca3;
+}
+
+.income-history-item .transaction-amount {
+    color: #27845d;
 }
 
 
@@ -2133,7 +2236,33 @@ select {
     }
 
     .main-expense-action .primary-btn {
-        width: 100%;
+        width: auto;
+    }
+
+    .main-expense-action .expense-primary-action {
+        width: 158px;
+        min-height: 44px;
+        padding: 0 12px;
+        border-radius: 10px;
+    }
+
+    .expense-primary-plus {
+        font-size: 18px;
+    }
+
+    .expense-primary-copy strong {
+        font-size: 13px;
+    }
+
+    .monthly-income-actions {
+        gap: 6px;
+    }
+
+    .monthly-income-actions .income-quick-btn {
+        min-width: 72px;
+        min-height: 40px;
+        padding: 0 10px;
+        font-size: 11px;
     }
 
 
@@ -3278,4 +3407,711 @@ body.app-mode .me-badge {
 /* 앱 - 각자 생활비 남은 금액 */
 body.app-mode .person-remaining strong {
     font-size: 13px;
+}
+
+
+/* =====================================================
+   24-1. 월간 지출 바구니 / 개인 연간 자산
+===================================================== */
+
+.monthly-groups-section {
+    margin-bottom: 38px;
+}
+
+.monthly-group-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.monthly-group-card {
+    padding: 17px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: #ffffff;
+}
+
+.monthly-group-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 9px;
+}
+
+.monthly-group-heading span {
+    color: #555;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.theme-help-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    margin-left: 3px;
+    border: 1px solid var(--border-dark);
+    border-radius: 50%;
+    background: #ffffff;
+    color: var(--primary);
+    font-size: 10px;
+    font-weight: 700;
+    vertical-align: 1px;
+}
+
+.theme-help-btn:hover {
+    background: var(--primary-light);
+}
+
+.theme-help-content {
+    position: relative;
+    width: min(340px, 100%);
+    padding: 32px 28px 26px;
+    text-align: center;
+}
+
+.theme-help-close {
+    position: absolute;
+    top: 12px;
+    right: 13px;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    color: #999;
+    font-size: 25px;
+}
+
+.theme-help-icon {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    place-items: center;
+    margin: 0 auto 13px;
+    border-radius: 18px;
+    background: var(--primary-light);
+    font-size: 27px;
+}
+
+.theme-help-content h2 {
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 20px;
+}
+
+.theme-help-content p {
+    min-height: 42px;
+    margin-bottom: 22px;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.65;
+    word-break: keep-all;
+}
+
+.monthly-group-heading small {
+    color: #999;
+    font-size: 10px;
+    text-align: right;
+}
+
+.monthly-group-card > strong {
+    display: block;
+    margin-bottom: 12px;
+    color: #333;
+    font-size: 19px;
+    letter-spacing: -0.4px;
+}
+
+.monthly-group-card .progress-track {
+    height: 6px;
+}
+
+.budget-group-settings {
+    margin: 2px 0 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.budget-group-grid {
+    display: grid;
+    gap: 9px;
+}
+
+.budget-group-grid label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #666;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.budget-group-grid input {
+    width: 54%;
+    height: 39px;
+    padding: 0 10px;
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    background: #ffffff;
+    color: #333;
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.annual-container {
+    max-width: 760px;
+}
+
+.annual-asset-card {
+    margin-bottom: 22px;
+    padding: 27px 29px;
+    border: 1px solid #dfd8ec;
+    border-radius: 20px;
+    background: #ffffff;
+}
+
+.annual-asset-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.annual-asset-heading > div {
+    min-width: 0;
+}
+
+.annual-asset-heading .dashboard-eyebrow {
+    display: block;
+}
+
+.annual-asset-heading > div > strong {
+    display: block;
+    margin: 5px 0 3px;
+    color: var(--primary);
+    font-size: 34px;
+    font-weight: 750;
+    letter-spacing: -1px;
+}
+
+.annual-asset-heading .subtle-btn {
+    flex: 0 0 auto;
+}
+
+.annual-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 17px;
+    border-top: 1px solid #eeeeef;
+}
+
+.annual-stat-grid div span,
+.annual-stat-grid div strong {
+    display: block;
+}
+
+.annual-stat-grid span {
+    color: #888;
+    font-size: 11px;
+}
+
+.annual-stat-grid strong {
+    margin-top: 4px;
+    color: #444;
+    font-size: 17px;
+}
+
+.annual-spending-section {
+    margin-bottom: 22px;
+}
+
+.annual-spending-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.annual-spending-card {
+    position: relative;
+    min-height: 174px;
+    padding: 18px;
+    overflow: hidden;
+    border: 1px solid #e8e4ee;
+    border-radius: 17px;
+    background: #ffffff;
+}
+
+.annual-spending-label,
+.annual-spending-card > strong,
+.annual-spending-card > p,
+.annual-spending-card > b {
+    display: block;
+}
+
+.annual-spending-label {
+    color: #465772;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.annual-spending-card > strong {
+    margin-top: 13px;
+    color: #263c5b;
+    font-size: 23px;
+    letter-spacing: -0.6px;
+}
+
+.annual-spending-card > p {
+    margin-top: 8px;
+    color: #8b94a3;
+    font-size: 10px;
+}
+
+.annual-spending-card .progress-track {
+    margin-top: 12px;
+}
+
+.annual-spending-card > b {
+    margin-top: 6px;
+    color: #4f3b91;
+    font-size: 11px;
+}
+
+.annual-special-card {
+    border-color: #e7dff4;
+    background: linear-gradient(145deg, #ffffff, #faf7ff);
+}
+
+.annual-special-icon {
+    position: absolute;
+    right: 15px;
+    bottom: 13px;
+    color: #e6d8fb;
+    font-size: 30px;
+}
+
+.annual-fold-section {
+    border-top: 1px solid #e9e9ed;
+}
+
+.annual-fold-toggle {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 2px;
+    background: transparent;
+    color: #263c5b;
+    text-align: left;
+}
+
+.annual-fold-toggle > span:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.annual-fold-toggle strong {
+    font-size: 14px;
+}
+
+.annual-fold-toggle small {
+    color: #9299a5;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+.annual-fold-arrow {
+    font-size: 18px;
+    transition: transform 0.2s ease;
+}
+
+.annual-fold-toggle.is-open .annual-fold-arrow {
+    transform: rotate(180deg);
+}
+
+.annual-fold-content {
+    padding: 0 0 18px;
+}
+
+.annual-monthly-list,
+.annual-tag-list {
+    overflow: hidden;
+    border: 1px solid #ececf0;
+    border-radius: 13px;
+    background: #fbfbfc;
+}
+
+.annual-monthly-row {
+    display: grid;
+    grid-template-columns: 42px 1fr 1fr auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 14px;
+    border-bottom: 1px solid #ececf0;
+    color: #6e7785;
+    font-size: 11px;
+}
+
+.annual-monthly-row > strong {
+    color: #40516b;
+}
+
+.annual-monthly-row > b,
+.annual-cumulative-row > b {
+    text-align: right;
+    font-size: 12px;
+}
+
+.annual-cumulative-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    color: #334762;
+    background: #f1edf9;
+    font-size: 12px;
+}
+
+.is-positive {
+    color: #2d815e;
+}
+
+.is-negative {
+    color: #b04b5d;
+}
+
+.annual-tag-list > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 43px;
+    padding: 0 14px;
+    border-bottom: 1px solid #ececf0;
+    color: #5e6878;
+    font-size: 12px;
+}
+
+.annual-tag-list > div:last-child {
+    border-bottom: 0;
+}
+
+.annual-tag-list strong {
+    color: #344863;
+}
+
+.annual-start-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: #ffffff;
+}
+
+.annual-start-section h2 {
+    margin-bottom: 3px;
+    color: #444;
+    font-size: 14px;
+}
+
+.annual-start-section p {
+    color: #999;
+    font-size: 11px;
+}
+
+.annual-start-form {
+    display: flex;
+    flex-shrink: 0;
+    gap: 7px;
+}
+
+.annual-start-form input {
+    width: 145px;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.annual-entry-section {
+    margin-bottom: 40px;
+}
+
+.annual-auto-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eeeeef;
+    background: #faf9fc;
+}
+
+.annual-auto-row strong {
+    color: #555;
+    font-size: 12px;
+}
+
+.annual-auto-row p {
+    margin-top: 2px;
+    color: #999;
+    font-size: 10px;
+}
+
+.annual-income {
+    color: var(--primary);
+}
+
+.annual-expense {
+    color: #555;
+}
+
+.delete-annual-entry-btn {
+    padding: 5px 8px;
+    border-radius: 7px;
+    background: #f5eeee;
+    color: var(--danger);
+    font-size: 10px;
+}
+
+@media (max-width: 600px) {
+    .monthly-group-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .annual-spending-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .annual-spending-card {
+        min-height: 156px;
+        padding: 15px;
+    }
+
+    .annual-spending-card > strong {
+        font-size: 20px;
+    }
+
+    .annual-monthly-row {
+        grid-template-columns: 34px 1fr 1fr;
+        gap: 5px;
+        min-height: 48px;
+        padding: 6px 11px;
+    }
+
+    .annual-monthly-row > b {
+        grid-column: 2 / -1;
+        text-align: left;
+    }
+
+    .annual-start-section {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .annual-start-form {
+        width: 100%;
+    }
+
+.annual-start-form input {
+        width: 100%;
+    }
+}
+
+
+/* 개인 자산 상세 관리 */
+.annual-asset-detail-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: #ffffff;
+}
+
+.annual-asset-detail-link h2 {
+    margin-bottom: 3px;
+    color: #444;
+    font-size: 14px;
+}
+
+.annual-asset-detail-link p {
+    color: #999;
+    font-size: 11px;
+}
+
+.asset-detail-list {
+    overflow: hidden;
+    margin-bottom: 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.asset-detail-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 14px 15px;
+    border-bottom: 1px solid #eeeeef;
+}
+
+.asset-detail-item:last-child {
+    border-bottom: none;
+}
+
+.asset-detail-item strong,
+.asset-detail-item span {
+    display: block;
+}
+
+.asset-detail-item strong {
+    color: #555;
+    font-size: 12px;
+}
+
+.asset-detail-item span {
+    margin-top: 2px;
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.delete-asset-btn {
+    padding: 5px 8px;
+    border-radius: 7px;
+    background: #f5eeee;
+    color: var(--danger);
+    font-size: 10px;
+}
+
+.asset-add-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.asset-add-form input {
+    width: 100%;
+    height: 43px;
+    padding: 0 12px;
+    border: 1px solid var(--border-dark);
+    border-radius: 9px;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.asset-add-form .secondary-btn {
+    grid-column: span 2;
+}
+
+.asset-add-form .primary-btn {
+    grid-column: span 2;
+}
+
+.view-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 13px;
+    background: #f1f1f4;
+}
+
+.header-actions .view-switch-btn {
+    min-width: 48px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #71809a;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+.header-actions .view-switch-btn.active {
+    background: #ffffff;
+    color: #243956;
+    box-shadow: 0 1px 3px rgba(30, 39, 57, 0.1);
+}
+
+.header-actions .view-switch-btn:disabled {
+    opacity: 1;
+    cursor: default;
+}
+
+@media (max-width: 600px) {
+    .annual-asset-card {
+        padding: 22px 20px;
+    }
+
+    .annual-asset-heading > div > strong {
+        font-size: 28px;
+    }
+}
+
+/* 현재 월 제목 버튼 */
+.month-selector .current-month-button {
+    width: auto;
+    height: auto;
+    min-width: 0;
+
+    padding: 6px 8px;
+
+    border: none;
+    border-radius: 0;
+
+    background: transparent;
+
+    color: inherit;
+
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+
+    cursor: pointer;
+
+    box-shadow: none;
+}
+
+.month-selector .current-month-button:hover,
+.month-selector .current-month-button:active {
+    background: transparent;
+}
+
+.month-picker-arrow {
+    display: inline-block;
+
+    margin-left: 3px;
+
+    color: #aaa;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    vertical-align: 2px;
+}
+.month-selector {
+    position: relative;
 }

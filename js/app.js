@@ -162,6 +162,8 @@ let monthlySettings = {
 
   sharedBudget: 0,
 
+  groupBudgets: {},
+
   personalBudgets: {}
 
 };
@@ -185,6 +187,33 @@ let editingExpenseId =
 
 let detailUserUid =
   null;
+
+
+let annualEntries =
+  [];
+
+
+let annualSettings = {
+
+  startAsset: 0,
+
+  assets: [],
+
+  annualBudgets: {}
+
+};
+
+
+let selectedAnnualYear =
+  today.getFullYear();
+
+
+let assetDraft =
+  null;
+
+
+let budgetModalMode =
+  "shared";
 
 
 // 최근 거래는 처음 15개만 표시
@@ -226,6 +255,14 @@ let unsubscribePartnerProfile =
 
 
 let unsubscribePrivateDetails =
+  null;
+
+
+let unsubscribeAnnualEntries =
+  null;
+
+
+let unsubscribeAnnualSettings =
   null;
 
 
@@ -280,6 +317,10 @@ const personDetailScreen =
   $("person-detail-screen");
 
 
+const annualScreen =
+  $("annual-screen");
+
+
 const allScreens = [
 
   loginScreen,
@@ -290,6 +331,7 @@ const allScreens = [
   inviteScreen,
   joinCoupleScreen,
   appScreen,
+  annualScreen,
   personDetailScreen
 
 ].filter(
@@ -495,6 +537,47 @@ const budgetSettingBtn =
   $("budget-setting-btn");
 
 
+const monthlyGroupList =
+  $("monthly-group-list");
+
+
+const monthlyGroupBudgetBtn =
+  $("monthly-group-budget-btn");
+
+
+// 화면에서는 각자 생활비 다음에 개인 지출현황을 보여줍니다.
+const personalOverviewSection =
+  document.querySelector(
+    ".personal-overview-section"
+  );
+
+
+const monthlyGroupsSection =
+  document.querySelector(
+    ".monthly-groups-section"
+  );
+
+
+const themeHelpModal =
+  $("theme-help-modal");
+
+
+const themeHelpIcon =
+  $("theme-help-icon");
+
+
+const themeHelpTitle =
+  $("theme-help-title");
+
+
+const themeHelpText =
+  $("theme-help-text");
+
+
+const closeThemeHelpModalBtn =
+  $("close-theme-help-modal-btn");
+
+
 // =====================================================
 // 월 진행률
 // =====================================================
@@ -601,6 +684,30 @@ const sharedCategoryList =
 
 const addExpenseBtn =
   $("add-expense-btn");
+
+
+const monthlyIncomeAddBtn =
+  $("monthly-income-add-btn");
+
+
+const monthlyIncomeHistoryBtn =
+  $("monthly-income-history-btn");
+
+
+const monthlyIncomeHistoryModal =
+  $("monthly-income-history-modal");
+
+
+const closeMonthlyIncomeHistoryBtn =
+  $("close-monthly-income-history-btn");
+
+
+const monthlyIncomeList =
+  $("monthly-income-list");
+
+
+const monthlyIncomePeriod =
+  $("monthly-income-period");
 
 
 const transactionList =
@@ -729,6 +836,10 @@ const categoryInput =
   $("expense-category");
 
 
+const expenseGroupInput =
+  $("expense-group");
+
+
 const descriptionInput =
   $("expense-description");
 
@@ -775,6 +886,26 @@ const budgetModal =
   $("budget-modal");
 
 
+const budgetModalTitle =
+  $("budget-modal-title");
+
+
+const budgetModalDescription =
+  $("budget-modal-description");
+
+
+const sharedBudgetSettingSection =
+  $("shared-budget-setting-section");
+
+
+const groupBudgetSettingSection =
+  $("group-budget-setting-section");
+
+
+const personalBudgetSettingSection =
+  $("personal-budget-setting-section");
+
+
 const closeBudgetModal =
   $("close-budget-modal");
 
@@ -789,6 +920,18 @@ const myBudgetInput =
 
 const partnerBudgetInput =
   $("partner-budget-input");
+
+
+const fixedBudgetInput =
+  $("fixed-budget-input");
+
+
+const preparedBudgetInput =
+  $("prepared-budget-input");
+
+
+const specialBudgetInput =
+  $("special-budget-input");
 
 
 const budgetMyIcon =
@@ -809,6 +952,10 @@ const budgetPartnerName =
 
 const saveBudgetBtn =
   $("save-budget-btn");
+
+
+const personalBudgetSettingBtn =
+  $("personal-budget-setting-btn");
 
 
 // =====================================================
@@ -878,6 +1025,198 @@ const settingsPartnerName =
 
 
 // =====================================================
+// 개인 연간 자산
+// =====================================================
+
+const annualBtn =
+  $("annual-btn");
+
+
+const annualBackBtn =
+  $("annual-back-btn");
+
+
+const annualSettingsBtn =
+  $("annual-settings-btn");
+
+
+const annualLogoutBtn =
+  $("annual-logout-btn");
+
+
+const annualYearTitle =
+  $("annual-year-title");
+
+
+const prevAnnualYearBtn =
+  $("prev-annual-year-btn");
+
+
+const nextAnnualYearBtn =
+  $("next-annual-year-btn");
+
+
+const annualCurrentAsset =
+  $("annual-current-asset");
+
+
+const annualIncomeTotal =
+  $("annual-income-total");
+
+
+const annualExpenseTotal =
+  $("annual-expense-total");
+
+
+const annualSpendingGrid =
+  $("annual-spending-grid");
+
+
+const annualGoalSettingBtn =
+  $("annual-goal-setting-btn");
+
+
+const annualGoalModal =
+  $("annual-goal-modal");
+
+
+const closeAnnualGoalModalBtn =
+  $("close-annual-goal-modal-btn");
+
+
+const annualLivingBudgetInput =
+  $("annual-living-budget-input");
+
+
+const annualFixedBudgetInput =
+  $("annual-fixed-budget-input");
+
+
+const annualPreparedBudgetInput =
+  $("annual-prepared-budget-input");
+
+
+const annualSpecialBudgetInput =
+  $("annual-special-budget-input");
+
+
+const saveAnnualGoalsBtn =
+  $("save-annual-goals-btn");
+
+
+const annualMonthlyStatsToggle =
+  $("annual-monthly-stats-toggle");
+
+
+const annualMonthlyStatsContent =
+  $("annual-monthly-stats-content");
+
+
+const annualTagStatsToggle =
+  $("annual-tag-stats-toggle");
+
+
+const annualTagStatsContent =
+  $("annual-tag-stats-content");
+
+
+const annualStartAssetInput =
+  $("annual-start-asset-input");
+
+
+const saveAnnualStartAssetBtn =
+  $("save-annual-start-asset-btn");
+
+
+const assetDetailBtn =
+  $("asset-detail-btn");
+
+
+const assetDetailModal =
+  $("asset-detail-modal");
+
+
+const closeAssetDetailModalBtn =
+  $("close-asset-detail-modal-btn");
+
+
+const assetDetailList =
+  $("asset-detail-list");
+
+
+const assetNameInput =
+  $("asset-name-input");
+
+
+const assetAmountInput =
+  $("asset-amount-input");
+
+
+const addAssetBtn =
+  $("add-asset-btn");
+
+
+const saveAssetsBtn =
+  $("save-assets-btn");
+
+
+const monthlyViewBtn =
+  $("monthly-view-btn");
+
+
+const annualMonthlyViewBtn =
+  $("annual-monthly-view-btn");
+
+
+const annualEntryList =
+  $("annual-entry-list");
+
+
+const annualEntryAddBtn =
+  $("annual-entry-add-btn");
+
+
+const annualEntryModal =
+  $("annual-entry-modal");
+
+
+const annualEntryModalTitle =
+  $("annual-entry-modal-title");
+
+
+const annualEntryTypeGroup =
+  $("annual-entry-type-group");
+
+
+const closeAnnualEntryModalBtn =
+  $("close-annual-entry-modal-btn");
+
+
+const annualEntryDate =
+  $("annual-entry-date");
+
+
+const annualEntryType =
+  $("annual-entry-type");
+
+
+const annualEntryCategory =
+  $("annual-entry-category");
+
+
+const annualEntryAmount =
+  $("annual-entry-amount");
+
+
+const annualEntryDescription =
+  $("annual-entry-description");
+
+
+const saveAnnualEntryBtn =
+  $("save-annual-entry-btn");
+
+
+// =====================================================
 // 공통 함수
 // =====================================================
 
@@ -913,7 +1252,12 @@ function closeAllModals() {
     expenseModal,
     budgetModal,
     categoryModal,
-    settingsModal
+    settingsModal,
+    annualEntryModal,
+    monthlyIncomeHistoryModal,
+    annualGoalModal,
+    assetDetailModal,
+    themeHelpModal
   ]
     .filter(
       Boolean
@@ -1211,6 +1555,51 @@ function getUsagePercent(
       budget
     ) *
     100
+  );
+
+}
+
+
+// =====================================================
+// 월간 지출 바구니
+// 기존 지출에는 expenseGroup 값이 없으므로 생활비로 처리합니다.
+// =====================================================
+
+const monthlyGroups = [
+
+  { key: "fixed", label: "고정지출", emoji: "📌", help: "기름값, 보험, 휴대폰 요금, 구독료처럼 매달 반복되는 돈이에요." },
+  { key: "prepared", label: "준비지출", emoji: "🌿", help: "명절·부모님 용돈·경조사처럼 미리 예상해 준비하는 돈이에요." },
+  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." }
+
+];
+
+
+function getExpenseGroup(
+  expense
+) {
+
+  return expense?.expenseGroup || "living";
+
+}
+
+
+function getGroupBudget(
+  groupKey
+) {
+
+  if (
+    groupKey === "living"
+  ) {
+
+    return Number(
+      monthlySettings.sharedBudget || 0
+    );
+
+  }
+
+
+  return Number(
+    monthlySettings.groupBudgets?.[groupKey] || 0
   );
 
 }
@@ -1760,6 +2149,25 @@ function privateDetailDocRef(
     uid,
     "privateExpenseDetails",
     expenseId
+  );
+
+}
+
+
+function annualEntriesCollectionRef() {
+
+  // Firebase 규칙을 새로 건드리지 않아도 되도록, 월간 개인 내역과
+  // 동일한 개인 보관함 안에 연간 기록을 저장합니다.
+  return privateDetailsCollectionRef();
+
+}
+
+
+function annualSettingsDocRef() {
+
+  return doc(
+    privateDetailsCollectionRef(),
+    `annual-settings-${selectedAnnualYear}`
   );
 
 }
@@ -3310,7 +3718,9 @@ function clearSubscriptions() {
     unsubscribeCategories,
     unsubscribeCouple,
     unsubscribePartnerProfile,
-    unsubscribePrivateDetails
+    unsubscribePrivateDetails,
+    unsubscribeAnnualEntries,
+    unsubscribeAnnualSettings
 
   ]
     .filter(
@@ -3348,6 +3758,14 @@ function clearSubscriptions() {
 
 
   unsubscribePrivateDetails =
+    null;
+
+
+  unsubscribeAnnualEntries =
+    null;
+
+
+  unsubscribeAnnualSettings =
     null;
 
 }
@@ -3390,6 +3808,21 @@ onAuthStateChanged(
 
     privateDetails =
       {};
+
+
+    annualEntries =
+      [];
+
+
+    annualSettings = {
+
+      startAsset: 0,
+
+      assets: [],
+
+      annualBudgets: {}
+
+    };
 
 
     monthlySettings = {
@@ -3552,6 +3985,10 @@ async function startCoupleApp() {
   subscribeCategories();
 
   subscribePrivateDetails();
+
+  subscribeAnnualEntries();
+
+  subscribeAnnualSettings();
 
 
   showScreen(
@@ -3949,6 +4386,10 @@ function subscribeMonthlySettings() {
                 0
               ),
 
+            groupBudgets:
+              data.groupBudgets ||
+              {},
+
             personalBudgets:
               data.personalBudgets ||
               {}
@@ -3963,6 +4404,9 @@ function subscribeMonthlySettings() {
 
             sharedBudget:
               0,
+
+            groupBudgets:
+              {},
 
             personalBudgets:
               {}
@@ -4143,6 +4587,131 @@ function subscribePrivateDetails() {
 
       }
 
+    );
+
+}
+
+
+// =====================================================
+// 개인 연간 자산 실시간 구독
+// users/{uid} 아래에만 저장해 상대방에게 공유되지 않습니다.
+// =====================================================
+
+function subscribeAnnualEntries() {
+
+  if (
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    unsubscribeAnnualEntries
+  ) {
+
+    unsubscribeAnnualEntries();
+
+  }
+
+
+  unsubscribeAnnualEntries =
+    onSnapshot(
+      annualEntriesCollectionRef(),
+      (snapshot) => {
+
+        annualEntries =
+          snapshot.docs
+            .filter(
+              (entryDoc) =>
+                entryDoc.data().recordKind ===
+                "annual-entry"
+            )
+            .map(
+              (entryDoc) => ({
+
+                id: entryDoc.id,
+
+                ...entryDoc.data()
+
+              })
+            );
+
+
+        renderAnnualScreen();
+
+      },
+      (error) => {
+
+        console.error(
+          "연간 기록 구독 실패:",
+          error
+        );
+
+      }
+    );
+
+}
+
+
+function subscribeAnnualSettings() {
+
+  if (
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    unsubscribeAnnualSettings
+  ) {
+
+    unsubscribeAnnualSettings();
+
+  }
+
+
+  unsubscribeAnnualSettings =
+    onSnapshot(
+      annualSettingsDocRef(),
+      (snapshot) => {
+
+        annualSettings = {
+
+          startAsset:
+            Number(
+              snapshot.data()?.startAsset || 0
+            ),
+
+          assets:
+            Array.isArray(
+              snapshot.data()?.assets
+            )
+              ? snapshot.data().assets
+              : [],
+
+          annualBudgets:
+            snapshot.data()?.annualBudgets || {}
+
+        };
+
+
+        renderAnnualScreen();
+
+      },
+      (error) => {
+
+        console.error(
+          "연초 자산 구독 실패:",
+          error
+        );
+
+      }
     );
 
 }
@@ -4634,6 +5203,16 @@ function prepareExpenseModal() {
 
 
   if (
+    expenseGroupInput
+  ) {
+
+    expenseGroupInput.value =
+      "living";
+
+  }
+
+
+  if (
     categories.length
   ) {
 
@@ -4762,6 +5341,18 @@ function openEditExpense(
   renderCategoryOptions();
 
 
+  if (
+    expenseGroupInput
+  ) {
+
+    expenseGroupInput.value =
+      getExpenseGroup(
+        expense
+      );
+
+  }
+
+
   categoryInput.value =
     expense.category
 
@@ -4841,6 +5432,11 @@ async function saveExpense() {
 
   const category =
     categoryInput.value;
+
+
+  const expenseGroup =
+    expenseGroupInput?.value ||
+    "living";
 
 
   const description =
@@ -4935,6 +5531,44 @@ async function saveExpense() {
     );
 
 
+  // 고정·준비·특별지출은 개인 연간 기록에만 저장합니다.
+  if (
+    expenseGroup !== "living" &&
+    !wasEditing
+  ) {
+
+    try {
+
+        await setDoc(
+          doc(annualEntriesCollectionRef()),
+          {
+            recordKind: "annual-entry",
+            date,
+            year: Number(date.slice(0, 4)),
+          type: "expense",
+          expenseGroup,
+          category,
+          amount,
+          description,
+          createdAt: serverTimestamp()
+        }
+      );
+
+      expenseModal.classList.remove("show");
+      transactionVisibleCount = 15;
+      return;
+
+    } catch (error) {
+
+      console.error("개인 지출 저장 실패:", error);
+      alert("개인 지출을 저장하지 못했어요.");
+      return;
+
+    }
+
+  }
+
+
   try {
 
     saveExpenseBtn.disabled =
@@ -5016,6 +5650,8 @@ async function saveExpense() {
           type,
 
           category,
+
+          expenseGroup,
 
           payerUid,
 
@@ -5108,6 +5744,8 @@ async function saveExpense() {
           type,
 
           category,
+
+          expenseGroup,
 
           payerUid,
 
@@ -5435,6 +6073,12 @@ function renderApp() {
   updateMonthTitle();
 
 
+  // 공동·각자 생활비 다음에 개인 지출현황이 오도록 항상 위치를 맞춥니다.
+  personalOverviewSection?.after(
+    monthlyGroupsSection
+  );
+
+
   const monthlyExpenses =
     getCurrentMonthExpenses();
 
@@ -5456,7 +6100,9 @@ function renderApp() {
     monthlyExpenses.filter(
       (expense) =>
         expense.type ===
-        "together"
+        "together" &&
+        getExpenseGroup(expense) ===
+        "living"
     );
 
 
@@ -5558,6 +6204,11 @@ function renderApp() {
   );
 
 
+  renderMonthlyGroups(
+    monthlyExpenses
+  );
+
+
   // ===================================================
   // 개인 생활비 카드
   // ===================================================
@@ -5583,6 +6234,8 @@ function renderApp() {
 
   renderTransactions();
 
+  renderMonthlyIncomeList();
+
 
   // ===================================================
   // 달력
@@ -5607,7 +6260,111 @@ function renderApp() {
 
   }
 
+
+  renderAnnualScreen();
+
 }
+
+
+function renderMonthlyGroups(
+  monthlyExpenses
+) {
+
+  if (
+    !monthlyGroupList
+  ) {
+
+    return;
+
+  }
+
+
+  monthlyGroupList.innerHTML =
+    monthlyGroups.map(
+      (group) => {
+
+        const used =
+          annualEntries
+            .filter(
+              (entry) =>
+                entry.type === "expense" &&
+                entry.expenseGroup === group.key &&
+                String(entry.date || "").startsWith(getMonthKey())
+            )
+            .reduce(
+              (sum, entry) =>
+                sum + Number(entry.amount || 0),
+              0
+            );
+
+
+        const budget =
+          getGroupBudget(group.key);
+
+
+        const percent =
+          getUsagePercent(used, budget);
+
+
+        const budgetText =
+          budget > 0
+            ? `${formatWon(budget)} 중 ${percent}%`
+            : "예산을 설정해보세요";
+
+
+        return `
+          <article class="monthly-group-card">
+            <div class="monthly-group-heading">
+              <span>${group.emoji} ${group.label} <button type="button" class="theme-help-btn" data-help="${group.help}" data-title="${group.label}" data-icon="${group.emoji}" aria-label="${group.label} 설명">?</button></span>
+              <small>${budgetText}</small>
+            </div>
+            <strong>${formatWon(used)}</strong>
+            <div class="progress-track">
+              <div class="progress-bar" style="width:${Math.min(percent, 100)}%"></div>
+            </div>
+          </article>
+        `;
+
+      }
+    ).join("");
+
+}
+
+
+monthlyGroupList?.addEventListener(
+  "click",
+  (event) => {
+
+    const helpButton =
+      event.target.closest(
+        ".theme-help-btn"
+      );
+
+
+    if (helpButton) {
+
+      themeHelpIcon.textContent =
+        helpButton.dataset.icon;
+      themeHelpTitle.textContent =
+        helpButton.dataset.title;
+      themeHelpText.textContent =
+        helpButton.dataset.help;
+      themeHelpModal.classList.add("show");
+
+    }
+
+  }
+);
+
+
+function closeThemeHelpModal() {
+
+  themeHelpModal?.classList.remove("show");
+
+}
+
+
+closeThemeHelpModalBtn?.addEventListener("click", closeThemeHelpModal);
 
 
 // =====================================================
@@ -6494,6 +7251,79 @@ function renderTransactions() {
   }
 
 }
+
+
+function renderMonthlyIncomeList() {
+
+  if (monthlyIncomePeriod) {
+
+    monthlyIncomePeriod.textContent =
+      `${selectedYear}년 ${selectedMonth}월`;
+
+  }
+
+
+  if (!monthlyIncomeList) {
+
+    return;
+
+  }
+
+
+  const incomes =
+    annualEntries
+      .filter(
+        (entry) =>
+          entry.type === "income" &&
+          String(entry.date || "").startsWith(
+            getMonthKey()
+          )
+      )
+      .sort(
+        (a, b) =>
+          String(b.date || "").localeCompare(
+            String(a.date || "")
+          )
+      );
+
+
+  monthlyIncomeList.innerHTML =
+    incomes.length
+      ? incomes.map(
+          (entry) => `
+            <div class="transaction-item income-history-item">
+              <div class="transaction-info">
+                <h3>${escapeHtml(entry.category || "수입")}</h3>
+                <p>${escapeHtml(entry.date || "")} · ${escapeHtml(entry.description || "메모 없음")}</p>
+              </div>
+              <div class="transaction-right">
+                <strong class="transaction-amount annual-income">+${formatWon(entry.amount)}</strong>
+              </div>
+            </div>
+          `
+        ).join("")
+      : `
+        <div class="empty-message">
+          이번 달에 등록한 수입이 없어요.
+        </div>
+      `;
+
+}
+
+
+monthlyIncomeHistoryBtn?.addEventListener("click", () => {
+
+  renderMonthlyIncomeList();
+  monthlyIncomeHistoryModal.classList.add("show");
+
+});
+
+
+closeMonthlyIncomeHistoryBtn?.addEventListener("click", () => {
+
+  monthlyIncomeHistoryModal.classList.remove("show");
+
+});
 
 
 // =====================================================
@@ -7536,7 +8366,7 @@ function renderPersonDetail() {
 // 예산 설정 모달 열기
 // =====================================================
 
-function openBudgetModal() {
+function openBudgetModal(mode = "shared") {
 
   if (
     !currentUser ||
@@ -7546,6 +8376,10 @@ function openBudgetModal() {
     return;
 
   }
+
+
+  budgetModalMode =
+    mode;
 
 
   const myUid =
@@ -7572,6 +8406,42 @@ function openBudgetModal() {
         monthlySettings
           .sharedBudget ||
         0
+      );
+
+  }
+
+
+  if (
+    fixedBudgetInput
+  ) {
+
+    fixedBudgetInput.value =
+      formatMoneyInput(
+        getGroupBudget("fixed")
+      );
+
+  }
+
+
+  if (
+    preparedBudgetInput
+  ) {
+
+    preparedBudgetInput.value =
+      formatMoneyInput(
+        getGroupBudget("prepared")
+      );
+
+  }
+
+
+  if (
+    specialBudgetInput
+  ) {
+
+    specialBudgetInput.value =
+      formatMoneyInput(
+        getGroupBudget("special")
       );
 
   }
@@ -7659,6 +8529,29 @@ function openBudgetModal() {
   }
 
 
+  const modalCopy = {
+    shared: {
+      title: "이번 달 생활비 예산",
+      description: "같이 쓰는 생활비 예산을 설정해주세요."
+    },
+    groups: {
+      title: "지출별 예산 설정",
+      description: "고정·준비·특별지출 예산을 각각 설정해주세요."
+    },
+    personal: {
+      title: "각자 생활비 예산",
+      description: "각자의 한 달 생활비 예산을 설정해주세요."
+    }
+  }[mode];
+
+
+  budgetModalTitle.textContent = modalCopy.title;
+  budgetModalDescription.textContent = modalCopy.description;
+  sharedBudgetSettingSection.hidden = mode !== "shared";
+  groupBudgetSettingSection.hidden = mode !== "groups";
+  personalBudgetSettingSection.hidden = mode !== "personal";
+
+
   budgetModal.classList.add(
     "show"
   );
@@ -7676,10 +8569,16 @@ if (
 
   budgetSettingBtn.addEventListener(
     "click",
-    openBudgetModal
+    () => openBudgetModal("shared")
   );
 
 }
+
+
+personalBudgetSettingBtn?.addEventListener(
+  "click",
+  () => openBudgetModal("personal")
+);
 
 
 if (
@@ -7743,7 +8642,29 @@ async function saveBudget() {
     );
 
 
+  const groupBudgets = {
+
+    fixed:
+      parseMoney(
+        fixedBudgetInput?.value
+      ),
+
+    prepared:
+      parseMoney(
+        preparedBudgetInput?.value
+      ),
+
+    special:
+      parseMoney(
+        specialBudgetInput?.value
+      )
+
+  };
+
+
   const personalBudgets = {
+
+    ...(monthlySettings.personalBudgets || {}),
 
     [myUid]:
       myBudget
@@ -7763,6 +8684,32 @@ async function saveBudget() {
   }
 
 
+  const updates = {
+    updatedAt: serverTimestamp()
+  };
+
+
+  if (budgetModalMode === "shared") {
+
+    updates.sharedBudget = sharedBudget;
+
+  }
+
+
+  if (budgetModalMode === "groups") {
+
+    updates.groupBudgets = groupBudgets;
+
+  }
+
+
+  if (budgetModalMode === "personal") {
+
+    updates.personalBudgets = personalBudgets;
+
+  }
+
+
   try {
 
     saveBudgetBtn.disabled =
@@ -7775,16 +8722,7 @@ async function saveBudget() {
 
     await setDoc(
       monthlySettingsDocRef(),
-      {
-
-        sharedBudget,
-
-        personalBudgets,
-
-        updatedAt:
-          serverTimestamp()
-
-      },
+      updates,
       {
         merge:
           true
@@ -7836,6 +8774,940 @@ if (
   );
 
 }
+
+
+monthlyGroupBudgetBtn?.addEventListener(
+  "click",
+  () => openBudgetModal("groups")
+);
+
+
+// =====================================================
+// 개인 연간 자산
+// =====================================================
+
+function getAnnualExpensesFromMonthly() {
+
+  const yearPrefix =
+    `${selectedAnnualYear}-`;
+
+
+  return expenses
+    .filter(
+      (expense) =>
+        expense.payerUid === currentUser?.uid &&
+        String(expense.date || "").startsWith(yearPrefix)
+    )
+    .reduce(
+      (sum, expense) =>
+        sum + Number(expense.amount || 0),
+      0
+    );
+
+}
+
+
+function getAnnualEntriesForSelectedYear() {
+
+  return annualEntries.filter(
+    (entry) =>
+      Number(entry.year) === selectedAnnualYear ||
+      String(entry.date || "").startsWith(`${selectedAnnualYear}-`)
+  );
+
+}
+
+
+function getAnnualAssets() {
+
+  const savedAssets =
+    Array.isArray(annualSettings.assets)
+      ? annualSettings.assets
+      : [];
+
+
+  if (savedAssets.length) {
+
+    return savedAssets;
+
+  }
+
+
+  // 이전 버전의 연초 자산 값은 첫 자산 항목으로 안전하게 이어받습니다.
+  return annualSettings.startAsset > 0
+    ? [{ id: "legacy", name: "기존 자산", amount: annualSettings.startAsset }]
+    : [];
+
+}
+
+
+const annualSpendingGroups = [
+  { key: "living", label: "생활비", emoji: "🏠" },
+  { key: "fixed", label: "고정지출", emoji: "📌" },
+  { key: "prepared", label: "준비지출", emoji: "🌿" },
+  { key: "special", label: "특별지출", emoji: "✨" }
+];
+
+
+function getAnnualGroupAmount(groupKey) {
+
+  const yearPrefix =
+    `${selectedAnnualYear}-`;
+
+
+  const monthlyAmount =
+    expenses
+      .filter(
+        (expense) =>
+          expense.payerUid === currentUser?.uid &&
+          String(expense.date || "").startsWith(yearPrefix) &&
+          getExpenseGroup(expense) === groupKey
+      )
+      .reduce(
+        (sum, expense) => sum + Number(expense.amount || 0),
+        0
+      );
+
+
+  const privateAmount =
+    getAnnualEntriesForSelectedYear()
+      .filter(
+        (entry) =>
+          entry.type === "expense" &&
+          entry.expenseGroup === groupKey
+      )
+      .reduce(
+        (sum, entry) => sum + Number(entry.amount || 0),
+        0
+      );
+
+
+  return monthlyAmount + privateAmount;
+
+}
+
+
+function getAnnualGroupBudget(groupKey) {
+
+  return Number(
+    annualSettings.annualBudgets?.[groupKey] || 0
+  );
+
+}
+
+
+function renderAnnualSpendingOverview() {
+
+  if (!annualSpendingGrid) {
+
+    return;
+
+  }
+
+
+  annualSpendingGrid.innerHTML =
+    annualSpendingGroups.map(
+      (group) => {
+
+        const used =
+          getAnnualGroupAmount(group.key);
+
+
+        const budget =
+          getAnnualGroupBudget(group.key);
+
+
+        const percent =
+          getUsagePercent(used, budget);
+
+
+        return `
+          <article class="annual-spending-card">
+            <span class="annual-spending-label">${group.emoji} ${group.label}</span>
+            <strong>${formatWon(used)}</strong>
+            <p>${budget > 0 ? `목표 ${formatWon(budget)}` : "연간 목표를 설정해보세요"}</p>
+            <div class="progress-track">
+              <div class="progress-bar" style="width:${Math.min(percent, 100)}%"></div>
+            </div>
+            <b>${budget > 0 ? `${percent}%` : ""}</b>
+          </article>
+        `;
+
+      }
+    ).join("");
+
+}
+
+
+function getAnnualMonthlyRows(selectedEntries) {
+
+  let cumulative = 0;
+
+
+  return Array.from({ length: 12 }, (_, index) => {
+
+    const month = index + 1;
+    const monthKey =
+      `${selectedAnnualYear}-${String(month).padStart(2, "0")}`;
+
+
+    const income =
+      selectedEntries
+        .filter(
+          (entry) =>
+            entry.type === "income" &&
+            String(entry.date || "").startsWith(monthKey)
+        )
+        .reduce(
+          (sum, entry) => sum + Number(entry.amount || 0),
+          0
+        );
+
+
+    const monthlyExpenses =
+      expenses
+        .filter(
+          (expense) =>
+            expense.payerUid === currentUser?.uid &&
+            String(expense.date || "").startsWith(monthKey)
+        )
+        .reduce(
+          (sum, expense) => sum + Number(expense.amount || 0),
+          0
+        );
+
+
+    const privateExpenses =
+      selectedEntries
+        .filter(
+          (entry) =>
+            entry.type === "expense" &&
+            String(entry.date || "").startsWith(monthKey)
+        )
+        .reduce(
+          (sum, entry) => sum + Number(entry.amount || 0),
+          0
+        );
+
+
+    const expense =
+      monthlyExpenses + privateExpenses;
+
+
+    const net =
+      income - expense;
+
+
+    cumulative += net;
+
+
+    return {
+      month,
+      income,
+      expense,
+      net,
+      cumulative
+    };
+
+  });
+
+}
+
+
+function renderAnnualMonthlyStats(selectedEntries) {
+
+  if (!annualMonthlyStatsContent) {
+
+    return;
+
+  }
+
+
+  const rows =
+    getAnnualMonthlyRows(selectedEntries);
+
+
+  const finalCumulative =
+    rows.at(-1)?.cumulative || 0;
+
+
+  annualMonthlyStatsContent.innerHTML = `
+    <div class="annual-monthly-list">
+      ${rows.map((row) => `
+        <div class="annual-monthly-row">
+          <strong>${row.month}월</strong>
+          <span>수입 ${formatWon(row.income)}</span>
+          <span>지출 ${formatWon(row.expense)}</span>
+          <b class="${row.net >= 0 ? "is-positive" : "is-negative"}">${row.net >= 0 ? "+" : "−"}${formatWon(Math.abs(row.net))}</b>
+        </div>
+      `).join("")}
+      <div class="annual-cumulative-row">
+        <strong>연간 누적</strong>
+        <b class="${finalCumulative >= 0 ? "is-positive" : "is-negative"}">${finalCumulative >= 0 ? "+" : "−"}${formatWon(Math.abs(finalCumulative))}</b>
+      </div>
+    </div>
+  `;
+
+}
+
+
+function renderAnnualTagStats(selectedEntries) {
+
+  if (!annualTagStatsContent) {
+
+    return;
+
+  }
+
+
+  const yearPrefix =
+    `${selectedAnnualYear}-`;
+
+
+  const records = [
+    ...expenses.filter(
+      (expense) =>
+        expense.payerUid === currentUser?.uid &&
+        String(expense.date || "").startsWith(yearPrefix)
+    ),
+    ...selectedEntries.filter(
+      (entry) => entry.type === "expense"
+    )
+  ];
+
+
+  const totals =
+    records.reduce(
+      (map, record) => {
+
+        const label =
+          record.category || "기타";
+
+
+        map[label] =
+          (map[label] || 0) + Number(record.amount || 0);
+
+
+        return map;
+
+      },
+      {}
+    );
+
+
+  const rows =
+    Object.entries(totals)
+      .sort((a, b) => b[1] - a[1]);
+
+
+  annualTagStatsContent.innerHTML =
+    rows.length
+      ? `<div class="annual-tag-list">${rows.map(([label, amount]) => `
+          <div>
+            <span>${escapeHtml(label)}</span>
+            <strong>${formatWon(amount)}</strong>
+          </div>
+        `).join("")}</div>`
+      : `<div class="empty-message">아직 분류할 지출이 없어요.</div>`;
+
+}
+
+
+function renderAnnualScreen() {
+
+  if (
+    !annualScreen ||
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    annualYearTitle
+  ) {
+
+    annualYearTitle.textContent =
+      `${selectedAnnualYear}년`;
+
+  }
+
+
+  const selectedEntries =
+    getAnnualEntriesForSelectedYear();
+
+
+  const income =
+    selectedEntries
+      .filter((entry) => entry.type === "income")
+      .reduce(
+        (sum, entry) => sum + Number(entry.amount || 0),
+        0
+      );
+
+
+  const personalOutgo =
+    selectedEntries
+      .filter((entry) => entry.type === "expense")
+      .reduce(
+        (sum, entry) => sum + Number(entry.amount || 0),
+        0
+      );
+
+
+  const monthlyOutgo =
+    getAnnualExpensesFromMonthly();
+
+
+  const totalOutgo =
+    personalOutgo + monthlyOutgo;
+
+
+  const currentAsset =
+    getAnnualAssets().reduce(
+      (sum, asset) =>
+        sum + Number(asset.amount || 0),
+      0
+    );
+
+
+  if (annualCurrentAsset) {
+
+    annualCurrentAsset.textContent =
+      formatWon(currentAsset);
+
+  }
+
+
+  if (annualIncomeTotal) {
+
+    annualIncomeTotal.textContent =
+      formatWon(income);
+
+  }
+
+
+  if (annualExpenseTotal) {
+
+    annualExpenseTotal.textContent =
+      formatWon(totalOutgo);
+
+  }
+
+
+  renderAnnualSpendingOverview();
+  renderAnnualMonthlyStats(selectedEntries);
+  renderAnnualTagStats(selectedEntries);
+
+}
+
+
+function openAnnualScreen() {
+
+  selectedAnnualYear =
+    selectedYear;
+
+
+  subscribeAnnualSettings();
+
+  renderAnnualScreen();
+
+  showScreen(annualScreen);
+
+}
+
+
+function changeAnnualYear(amount) {
+
+  selectedAnnualYear += amount;
+
+  subscribeAnnualSettings();
+
+  renderAnnualScreen();
+
+}
+
+
+annualBtn?.addEventListener("click", openAnnualScreen);
+
+annualBackBtn?.addEventListener("click", () => {
+
+  showScreen(appScreen);
+
+  renderApp();
+
+});
+
+
+annualSettingsBtn?.addEventListener("click", () => {
+
+  settingsBtn.click();
+
+});
+
+
+annualLogoutBtn?.addEventListener("click", logout);
+
+
+annualGoalSettingBtn?.addEventListener("click", () => {
+
+  annualLivingBudgetInput.value =
+    formatMoneyInput(getAnnualGroupBudget("living"));
+  annualFixedBudgetInput.value =
+    formatMoneyInput(getAnnualGroupBudget("fixed"));
+  annualPreparedBudgetInput.value =
+    formatMoneyInput(getAnnualGroupBudget("prepared"));
+  annualSpecialBudgetInput.value =
+    formatMoneyInput(getAnnualGroupBudget("special"));
+  annualGoalModal.classList.add("show");
+
+});
+
+
+closeAnnualGoalModalBtn?.addEventListener("click", () => {
+
+  annualGoalModal.classList.remove("show");
+
+});
+
+
+saveAnnualGoalsBtn?.addEventListener("click", async () => {
+
+  try {
+
+    saveAnnualGoalsBtn.disabled = true;
+
+    await setDoc(
+      annualSettingsDocRef(),
+      {
+        recordKind: "annual-settings",
+        annualBudgets: {
+          living: parseMoney(annualLivingBudgetInput.value),
+          fixed: parseMoney(annualFixedBudgetInput.value),
+          prepared: parseMoney(annualPreparedBudgetInput.value),
+          special: parseMoney(annualSpecialBudgetInput.value)
+        },
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    annualGoalModal.classList.remove("show");
+
+  } catch (error) {
+
+    console.error("연간 목표 저장 실패:", error);
+    alert("연간 목표를 저장하지 못했어요.");
+
+  } finally {
+
+    saveAnnualGoalsBtn.disabled = false;
+
+  }
+
+});
+
+
+[annualLivingBudgetInput, annualFixedBudgetInput, annualPreparedBudgetInput, annualSpecialBudgetInput].forEach(
+  (input) => {
+
+    input?.addEventListener("input", () => {
+
+      input.value =
+        formatMoneyInput(parseMoney(input.value));
+
+    });
+
+  }
+);
+
+
+function toggleAnnualFold(button, content) {
+
+  const willOpen =
+    content.hidden;
+
+
+  content.hidden =
+    !willOpen;
+  button.setAttribute("aria-expanded", String(willOpen));
+  button.classList.toggle("is-open", willOpen);
+
+}
+
+
+annualMonthlyStatsToggle?.addEventListener("click", () => {
+
+  toggleAnnualFold(
+    annualMonthlyStatsToggle,
+    annualMonthlyStatsContent
+  );
+
+});
+
+
+annualTagStatsToggle?.addEventListener("click", () => {
+
+  toggleAnnualFold(
+    annualTagStatsToggle,
+    annualTagStatsContent
+  );
+
+});
+
+
+monthlyViewBtn?.addEventListener("click", () => {
+
+  showScreen(appScreen);
+  renderApp();
+
+});
+
+
+annualMonthlyViewBtn?.addEventListener("click", () => {
+
+  showScreen(appScreen);
+  renderApp();
+
+});
+
+prevAnnualYearBtn?.addEventListener("click", () => changeAnnualYear(-1));
+
+nextAnnualYearBtn?.addEventListener("click", () => changeAnnualYear(1));
+
+
+saveAnnualStartAssetBtn?.addEventListener("click", async () => {
+
+  if (!currentUser) {
+
+    return;
+
+  }
+
+
+  try {
+
+    await setDoc(
+      annualSettingsDocRef(),
+      {
+        recordKind: "annual-settings",
+        startAsset: parseMoney(annualStartAssetInput?.value),
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+  } catch (error) {
+
+    console.error("연초 자산 저장 실패:", error);
+    alert("연초 자산을 저장하지 못했어요.");
+
+  }
+
+});
+
+
+annualEntryAddBtn?.addEventListener("click", () => {
+
+  annualEntryModalTitle.textContent =
+    "연간 기록 추가";
+  annualEntryTypeGroup.hidden = false;
+  annualEntryDate.value =
+    `${selectedAnnualYear}-01-01`;
+  annualEntryType.value = "income";
+  annualEntryCategory.value = "";
+  annualEntryAmount.value = "";
+  annualEntryDescription.value = "";
+  annualEntryCategory.placeholder =
+    "예: 상여금, 경조사비";
+  annualEntryDescription.placeholder =
+    "예: 부모님 용돈";
+  annualEntryModal.classList.add("show");
+  annualEntryCategory.focus();
+
+});
+
+
+function openMonthlyIncomeModal() {
+
+  annualEntryModalTitle.textContent =
+    "수입 추가";
+  annualEntryTypeGroup.hidden = true;
+  annualEntryDate.value =
+    getDefaultDate();
+  annualEntryType.value =
+    "income";
+  annualEntryCategory.value =
+    "";
+  annualEntryAmount.value =
+    "";
+  annualEntryDescription.value =
+    "";
+  annualEntryCategory.placeholder =
+    "예: 급여, 추가수당";
+  annualEntryDescription.placeholder =
+    "예: 추석상여";
+  annualEntryModal.classList.add("show");
+  annualEntryCategory.focus();
+
+}
+
+
+monthlyIncomeAddBtn?.addEventListener(
+  "click",
+  openMonthlyIncomeModal
+);
+
+
+closeAnnualEntryModalBtn?.addEventListener("click", () => {
+
+  annualEntryModal.classList.remove("show");
+
+});
+
+
+saveAnnualEntryBtn?.addEventListener("click", async () => {
+
+  const date = annualEntryDate.value;
+  const category = annualEntryCategory.value.trim();
+  const amount = parseMoney(annualEntryAmount.value);
+
+
+  if (!date || !category || amount <= 0) {
+
+    alert("날짜, 항목, 금액을 모두 입력해주세요.");
+    return;
+
+  }
+
+
+  try {
+
+    saveAnnualEntryBtn.disabled = true;
+
+    await setDoc(
+      doc(annualEntriesCollectionRef()),
+      {
+        recordKind: "annual-entry",
+        date,
+        year: Number(date.slice(0, 4)),
+        type: annualEntryType.value,
+        category,
+        amount,
+        description: annualEntryDescription.value.trim(),
+        createdAt: serverTimestamp()
+      }
+    );
+
+    annualEntryModal.classList.remove("show");
+
+  } catch (error) {
+
+    console.error("연간 기록 저장 실패:", error);
+    alert("연간 기록을 저장하지 못했어요.");
+
+  } finally {
+
+    saveAnnualEntryBtn.disabled = false;
+
+  }
+
+});
+
+
+annualEntryList?.addEventListener("click", async (event) => {
+
+  const button = event.target.closest(".delete-annual-entry-btn");
+
+
+  if (!button || !confirm("이 연간 기록을 삭제할까요?")) {
+
+    return;
+
+  }
+
+
+  try {
+
+    await deleteDoc(
+      doc(
+        privateDetailsCollectionRef(),
+        button.dataset.entryId
+      )
+    );
+
+  } catch (error) {
+
+    console.error("연간 기록 삭제 실패:", error);
+    alert("연간 기록을 삭제하지 못했어요.");
+
+  }
+
+});
+
+
+function renderAssetDetailList() {
+
+  if (!assetDetailList) {
+
+    return;
+
+  }
+
+
+  const assets =
+    assetDraft ||
+    getAnnualAssets();
+
+
+  assetDetailList.innerHTML =
+    assets.length
+      ? assets.map(
+          (asset, index) => `
+            <div class="asset-detail-item">
+              <div>
+                <strong>${escapeHtml(asset.name || "자산")}</strong>
+                <span>${formatWon(asset.amount)}</span>
+              </div>
+              <button type="button" class="delete-asset-btn" data-asset-index="${index}">삭제</button>
+            </div>
+          `
+        ).join("")
+      : `
+        <div class="empty-message">
+          아직 등록한 자산이 없어요. 현재 가진 잔액부터 적어보세요.
+        </div>
+      `;
+
+}
+
+
+assetDetailBtn?.addEventListener("click", () => {
+
+  assetDraft =
+    getAnnualAssets().map(
+      (asset) => ({ ...asset })
+    );
+
+  renderAssetDetailList();
+  assetNameInput.value = "";
+  assetAmountInput.value = "";
+  assetDetailModal.classList.add("show");
+
+});
+
+
+closeAssetDetailModalBtn?.addEventListener("click", () => {
+
+  assetDetailModal.classList.remove("show");
+
+});
+
+
+addAssetBtn?.addEventListener("click", () => {
+
+  const name =
+    assetNameInput.value.trim();
+  const amount =
+    parseMoney(assetAmountInput.value);
+
+
+  if (!name || amount < 0) {
+
+    alert("자산 이름과 현재 잔액을 입력해주세요.");
+    return;
+
+  }
+
+
+  assetDraft = [
+    ...(assetDraft || getAnnualAssets()).filter((asset) => asset.id !== "legacy"),
+    {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      name,
+      amount
+    }
+  ];
+
+
+  renderAssetDetailList();
+  assetNameInput.value = "";
+  assetAmountInput.value = "";
+
+});
+
+
+assetDetailList?.addEventListener("click", (event) => {
+
+  const button =
+    event.target.closest(".delete-asset-btn");
+
+
+  if (!button || !confirm("이 자산 항목을 삭제할까요?")) {
+
+    return;
+
+  }
+
+
+  assetDraft =
+    [...(assetDraft || getAnnualAssets())];
+
+
+  assetDraft.splice(
+    Number(button.dataset.assetIndex),
+    1
+  );
+
+
+  renderAssetDetailList();
+
+});
+
+
+saveAssetsBtn?.addEventListener("click", async () => {
+
+  try {
+
+    await setDoc(
+      annualSettingsDocRef(),
+      {
+        recordKind: "annual-settings",
+        assets: assetDraft || [],
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    assetDraft = null;
+    assetDetailModal.classList.remove("show");
+
+  } catch (error) {
+
+    console.error("자산 저장 실패:", error);
+    alert("자산을 저장하지 못했어요.");
+
+  }
+
+});
+
+
+[assetAmountInput, annualEntryAmount].forEach(
+  (input) => {
+
+    input?.addEventListener("input", () => {
+
+      input.value =
+        formatMoneyInput(
+          parseMoney(input.value)
+        );
+
+    });
+
+  }
+);
 
 
 // =====================================================
