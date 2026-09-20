@@ -622,7 +622,7 @@ select {
 
     text-align: center;
 
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #222;
 
@@ -2001,7 +2001,7 @@ select {
     .month-selector h2 {
         min-width: 115px;
 
-        font-size: 16px;
+        font-size: 20px;
     }
 
     /* ---------------------------------
@@ -2077,7 +2077,7 @@ select {
     .subtle-btn {
         padding: 7px 8px;
 
-        font-size: 9px;
+        font-size: 11px;
     }
 
 
@@ -3246,7 +3246,9 @@ textarea {
 
 /* 상단 설정 / 로그아웃 */
 body.app-mode #settings-btn,
-body.app-mode #logout-btn {
+body.app-mode #logout-btn,
+body.app-mode #annual-settings-btn,
+body.app-mode #annual-logout-btn {
     font-size: 13px;
 }
 
@@ -3425,9 +3427,10 @@ body.app-mode .person-remaining strong {
 }
 
 .monthly-group-card {
-    padding: 17px;
-    border: 1px solid var(--border);
-    border-radius: 15px;
+    min-height: 144px;
+    padding: 18px;
+    border: 1px solid #e8e4ee;
+    border-radius: 17px;
     background: #ffffff;
 }
 
@@ -3435,14 +3438,25 @@ body.app-mode .person-remaining strong {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: nowrap;
     gap: 8px;
     margin-bottom: 9px;
 }
 
 .monthly-group-heading span {
-    color: #555;
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 1 auto;
+    color: #465772;
+    font-size: 14px;
     font-weight: 700;
+    line-height: 17px;
+    white-space: nowrap;
+}
+
+.monthly-group-heading small {
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .theme-help-btn {
@@ -3517,14 +3531,34 @@ body.app-mode .person-remaining strong {
 
 .monthly-group-card > strong {
     display: block;
-    margin-bottom: 12px;
-    color: #333;
-    font-size: 19px;
-    letter-spacing: -0.4px;
+    margin: 13px 0 0;
+    color: #263c5b;
+    font-size: 26px;
+    letter-spacing: -0.6px;
 }
 
 .monthly-group-card .progress-track {
+    margin-top: 12px;
     height: 6px;
+}
+
+.monthly-group-progress-caption {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 14px;
+    margin-top: 6px;
+}
+
+.monthly-group-progress-caption small {
+    color: #8b94a3;
+    font-size: 12px;
+}
+
+.monthly-group-percent {
+    display: block;
+    color: #4f3b91;
+    font-size: 12px;
 }
 
 .budget-group-settings {
@@ -3565,6 +3599,38 @@ body.app-mode .person-remaining strong {
     max-width: 760px;
 }
 
+.annual-summary-card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.annual-summary-card > div {
+    padding: 21px 22px;
+    border: 1px solid #e4e1ea;
+    border-radius: 17px;
+    background: #ffffff;
+}
+
+.annual-summary-card span,
+.annual-summary-card strong {
+    display: block;
+}
+
+.annual-summary-card span {
+    color: #798294;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.annual-summary-card strong {
+    margin-top: 7px;
+    color: #263c5b;
+    font-size: 25px;
+    letter-spacing: -0.7px;
+}
+
 .annual-asset-card {
     margin-bottom: 22px;
     padding: 27px 29px;
@@ -3599,6 +3665,7 @@ body.app-mode .person-remaining strong {
 
 .annual-asset-heading .subtle-btn {
     flex: 0 0 auto;
+    font-size: 12px;
 }
 
 .annual-stat-grid {
@@ -3655,21 +3722,21 @@ body.app-mode .person-remaining strong {
 
 .annual-spending-label {
     color: #465772;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
 }
 
 .annual-spending-card > strong {
     margin-top: 13px;
     color: #263c5b;
-    font-size: 23px;
+    font-size: 26px;
     letter-spacing: -0.6px;
 }
 
 .annual-spending-card > p {
     margin-top: 8px;
     color: #8b94a3;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .annual-spending-card .progress-track {
@@ -3679,7 +3746,7 @@ body.app-mode .person-remaining strong {
 .annual-spending-card > b {
     margin-top: 6px;
     color: #4f3b91;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .annual-special-card {
@@ -3907,15 +3974,33 @@ body.app-mode .person-remaining strong {
     }
 
     .annual-monthly-row {
-        grid-template-columns: 34px 1fr 1fr;
-        gap: 5px;
-        min-height: 48px;
+        grid-template-columns: 48px repeat(3, minmax(0, 1fr));
+        column-gap: 4px;
+        min-height: 50px;
         padding: 6px 11px;
     }
 
+    .annual-monthly-row > strong {
+        color: #344863;
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+    .annual-monthly-row > span,
     .annual-monthly-row > b {
-        grid-column: 2 / -1;
-        text-align: left;
+        min-width: 0;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .annual-monthly-row > span {
+        color: #5e6878;
+        text-align: center;
+    }
+
+    .annual-monthly-row > b {
+        justify-self: end;
+        text-align: right;
     }
 
     .annual-start-section {
@@ -4066,7 +4151,7 @@ body.app-mode .person-remaining strong {
     }
 
     .annual-asset-heading > div > strong {
-        font-size: 28px;
+        font-size: 29px;
     }
 }
 
@@ -4098,6 +4183,13 @@ body.app-mode .person-remaining strong {
 .month-selector .current-month-button:hover,
 .month-selector .current-month-button:active {
     background: transparent;
+}
+
+
+/* 연간 제목도 월간의 연·월 제목과 같은 크기로 표시 */
+#annual-year-title {
+    font-size: 20px;
+    line-height: 1.2;
 }
 
 .month-picker-arrow {
@@ -4182,4 +4274,232 @@ body.app-mode .person-remaining strong {
 
 .month-picker-select-row button:hover {
     background: #20334b;
+}
+
+
+/* Android 앱 잠금 */
+
+.app-lock-settings-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.app-lock-settings-heading h3 {
+    margin: 0 0 4px;
+}
+
+.app-lock-settings-heading p {
+    margin: 0;
+    color: #85899a;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.app-lock-status {
+    flex: 0 0 auto;
+    padding: 5px 9px;
+    border-radius: 99px;
+    background: #f1f2f5;
+    color: #848899;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.app-lock-status.enabled {
+    background: #eee7ff;
+    color: #6d4bc0;
+}
+
+.app-lock-modal {
+    position: fixed;
+    z-index: 200;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(25, 28, 42, 0.62);
+    backdrop-filter: blur(8px);
+}
+
+.app-lock-modal[hidden] {
+    display: none;
+}
+
+.app-lock-card {
+    width: min(100%, 360px);
+    padding: 34px 28px 28px;
+    border-radius: 26px;
+    background: #ffffff;
+    text-align: center;
+    box-shadow: 0 22px 50px rgba(20, 24, 38, 0.22);
+}
+
+.app-lock-symbol {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    place-items: center;
+    margin: 0 auto 16px;
+    border-radius: 18px;
+    background: #f0eaff;
+    font-size: 26px;
+}
+
+.app-lock-card h2 {
+    margin: 0;
+    color: #202b3d;
+    font-size: 22px;
+}
+
+.app-lock-card > p {
+    margin: 9px 0 22px;
+    color: #7b8190;
+    font-size: 14px;
+}
+
+.app-lock-form input {
+    width: 100%;
+    height: 52px;
+    box-sizing: border-box;
+    border: 1px solid #dedee7;
+    border-radius: 14px;
+    color: #29344a;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 8px;
+    text-align: center;
+}
+
+.app-lock-form input:focus {
+    outline: none;
+    border-color: #7450bf;
+    box-shadow: 0 0 0 3px rgba(116, 80, 191, 0.12);
+}
+
+.app-lock-message {
+    min-height: 18px;
+    margin: 9px 0 11px;
+    color: #d05d6b;
+    font-size: 12px;
+}
+
+.app-lock-form .primary-btn {
+    width: 100%;
+    min-height: 50px;
+}
+
+.app-lock-biometric-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border: 0;
+    border-radius: 12px;
+    background: #f5f3f9;
+    color: #5d496f;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* 월간·연간 예산 설정 버튼은 같은 글자 크기로 유지 */
+.budget-setting-trigger {
+    font-size: 12px;
+}
+
+
+/* 웹에서는 연간 지출 카드를 읽기 좋은 너비로 유지하고 가로로 볼 수 있게 합니다. */
+body:not(.app-mode) .annual-spending-grid {
+    grid-template-columns: repeat(4, minmax(174px, 1fr));
+    justify-content: start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 0 0 9px;
+    scroll-snap-type: x proximity;
+}
+
+body:not(.app-mode) .annual-spending-card {
+    scroll-snap-align: start;
+}
+
+
+/* 월간 지출현황도 웹에서는 카드가 좁아지지 않게 유지합니다. */
+body:not(.app-mode) .monthly-group-grid {
+    grid-template-columns: repeat(3, minmax(174px, 1fr));
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 0 0 9px;
+    scroll-snap-type: x proximity;
+}
+
+body:not(.app-mode) .monthly-group-card {
+    scroll-snap-align: start;
+}
+
+/* 넓은 웹 화면에서도 앱과 비슷한 밀도로 읽히게 글자를 조금 키웁니다. */
+body:not(.app-mode) .monthly-group-heading span {
+    font-size: 15px;
+}
+
+body:not(.app-mode) .monthly-group-card > strong {
+    font-size: 28px;
+}
+
+body:not(.app-mode) .monthly-group-progress-caption small,
+body:not(.app-mode) .monthly-group-percent {
+    font-size: 13px;
+}
+
+/* 앱에서는 금액과 '사용'을 한 줄로 유지합니다. */
+body.app-mode .person-main-number {
+    display: flex;
+    align-items: baseline;
+}
+
+body.app-mode .person-main-number strong {
+    display: inline;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+}
+
+/* 웹의 생활비 카드 보조 정보도 앱처럼 또렷하게 표시합니다. */
+body:not(.app-mode) .person-main-number span {
+    font-size: 13px;
+}
+
+body:not(.app-mode) .person-budget-text {
+    font-size: 13px;
+}
+
+body:not(.app-mode) .person-remaining span {
+    font-size: 14px;
+}
+
+body:not(.app-mode) .person-remaining strong {
+    font-size: 15px;
+}
+
+body:not(.app-mode) .detail-btn {
+    font-size: 13px;
+}
+
+/* 상세보기의 혼자·같이 비율 정보 */
+.expense-type-card span {
+    font-size: 14px;
+}
+
+.expense-type-card small {
+    font-size: 12px;
+}
+
+body:not(.app-mode) .expense-type-card strong {
+    font-size: 20px;
+}
+
+body.app-mode .expense-type-card strong {
+    font-size: 22px;
 }

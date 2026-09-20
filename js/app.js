@@ -39,8 +39,46 @@ const isAppPreview =
     params.get("app") === "1";
 
 const isNativeApp =
-    window.location.hostname === "localhost" &&
-    !window.location.port;
+  Boolean(
+    window.Capacitor?.isNativePlatform?.()
+  );
+
+
+const nativeBiometric =
+  isNativeApp
+    ? window.Capacitor?.Plugins?.NativeBiometric ||
+      (
+        typeof window.Capacitor?.registerPlugin === "function"
+          ? window.Capacitor.registerPlugin(
+            "NativeBiometric"
+          )
+          : null
+      )
+    : null;
+
+
+const APP_LOCK_KEY =
+  "wallet-keeper-app-lock-v1";
+
+
+let appLockData =
+  null;
+
+
+let appLockResolver =
+  null;
+
+
+let appLockMode =
+  "unlock";
+
+
+let pendingAppLockPin =
+  "";
+
+
+let appShouldLockOnResume =
+  false;
 
 if (isNativeApp || isAppPreview) {
     document.body.classList.add("app-mode");
@@ -1042,6 +1080,50 @@ const settingsInviteCode =
 
 const settingsPartnerName =
   $("settings-partner-name");
+
+
+const appLockSettingsSection =
+  $("app-lock-settings-section");
+
+
+const appLockStatus =
+  $("app-lock-status");
+
+
+const appLockSettingsBtn =
+  $("app-lock-settings-btn");
+
+
+const appLockModal =
+  $("app-lock-modal");
+
+
+const appLockTitle =
+  $("app-lock-title");
+
+
+const appLockDescription =
+  $("app-lock-description");
+
+
+const appLockForm =
+  $("app-lock-form");
+
+
+const appLockPinInput =
+  $("app-lock-pin-input");
+
+
+const appLockMessage =
+  $("app-lock-message");
+
+
+const appLockSubmitBtn =
+  $("app-lock-submit-btn");
+
+
+const appLockBiometricBtn =
+  $("app-lock-biometric-btn");
 
 
 // =====================================================
@@ -3692,9 +3774,187 @@ inviteContinueBtn.addEventListener(
 // 로그아웃
 // =====================================================
 
+function appLockIsAvailable() {
+
+  return Boolean(isNativeApp && nativeBiometric);
+
+}
+
+
+async function makeAppLockPinHash(pin, salt) {
+
+  const encoded = new TextEncoder().encode(`${salt}:${pin}`);
+  const digest = await crypto.subtle.digest("SHA-256", encoded);
+
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+
+}
+
+
+async function readAppLockData() {
+
+  if (!appLockIsAvailable()) return null;
+
+  try {
+
+    const saved = await nativeBiometric.isDataSaved({ key: APP_LOCK_KEY });
+
+    if (!saved.isSaved) return null;
+
+    const result = await nativeBiometric.getData({ key: APP_LOCK_KEY });
+
+    return JSON.parse(result.value);
+
+  } catch (error) {
+
+    console.error("앱 잠금 정보를 불러오지 못했어요.", error);
+    return null;
+
+  }
+
+}
+
+
+async function saveAppLockData(pin) {
+
+  const salt = crypto.randomUUID();
+  const pinHash = await makeAppLockPinHash(pin, salt);
+  const data = { salt, pinHash, enabledAt: Date.now() };
+
+  await nativeBiometric.setData({
+    key: APP_LOCK_KEY,
+    value: JSON.stringify(data)
+  });
+
+  appLockData = data;
+
+}
+
+
+function renderAppLockSettings() {
+
+  if (!appLockSettingsSection) return;
+
+  appLockSettingsSection.hidden = !appLockIsAvailable();
+
+  if (!appLockIsAvailable()) return;
+
+  const enabled = Boolean(appLockData);
+
+  appLockStatus.textContent = enabled ? "켜짐" : "꺼짐";
+  appLockStatus.classList.toggle("enabled", enabled);
+  appLockSettingsBtn.textContent = enabled ? "앱 잠금 해제" : "앱 잠금 설정";
+
+}
+
+
+function configureAppLockModal(mode) {
+
+  appLockMode = mode;
+  appLockPinInput.value = "";
+  appLockMessage.textContent = "";
+  appLockBiometricBtn.hidden = true;
+
+  const copy = {
+    unlock: { title: "지갑지킴이가 잠겨 있어요", description: "4자리 PIN을 입력해 주세요.", button: "PIN으로 열기" },
+    "setup-first": { title: "앱 잠금 설정", description: "새로 사용할 4자리 PIN을 입력해 주세요.", button: "다음" },
+    "setup-confirm": { title: "PIN을 한 번 더 입력해 주세요", description: "같은 4자리 PIN을 다시 입력하면 설정돼요.", button: "앱 잠금 켜기" },
+    disable: { title: "앱 잠금 해제", description: "현재 4자리 PIN을 입력하면 잠금이 꺼져요.", button: "앱 잠금 해제" }
+  }[mode];
+
+  appLockTitle.textContent = copy.title;
+  appLockDescription.textContent = copy.description;
+  appLockSubmitBtn.textContent = copy.button;
+  appLockModal.hidden = false;
+
+  requestAnimationFrame(() => appLockPinInput.focus());
+
+}
+
+
+function hideAppLock() {
+
+  if (appLockModal) appLockModal.hidden = true;
+
+}
+
+
+function finishAppUnlock() {
+
+  hideAppLock();
+
+  const resolve = appLockResolver;
+  appLockResolver = null;
+
+  if (resolve) resolve();
+
+}
+
+
+async function showBiometricAppUnlock() {
+
+  if (!appLockData || !appLockIsAvailable()) return;
+
+  try {
+
+    const available = await nativeBiometric.isAvailable();
+    appLockBiometricBtn.hidden = !available.isAvailable;
+
+  } catch {
+
+    appLockBiometricBtn.hidden = true;
+
+  }
+
+}
+
+
+async function presentAppLock() {
+
+  if (!appLockData) return;
+
+  configureAppLockModal("unlock");
+  await showBiometricAppUnlock();
+
+}
+
+
+async function waitForAppLockIfNeeded() {
+
+  if (!appLockIsAvailable()) return;
+
+  appLockData = await readAppLockData();
+  renderAppLockSettings();
+
+  if (!appLockData) return;
+
+  await new Promise((resolve) => {
+    appLockResolver = resolve;
+    presentAppLock();
+  });
+
+}
+
+
+async function verifyAppLockPin(pin) {
+
+  if (!appLockData) return false;
+
+  const pinHash = await makeAppLockPinHash(pin, appLockData.salt);
+
+  return pinHash === appLockData.pinHash;
+
+}
+
+
 async function logout() {
 
   closeAllModals();
+
+
+  hideAppLock();
 
 
   try {
@@ -3874,6 +4134,8 @@ onAuthStateChanged(
       !user
     ) {
 
+      hideAppLock();
+
       showScreen(
         loginScreen
       );
@@ -3885,6 +4147,8 @@ onAuthStateChanged(
 
 
     try {
+
+      await waitForAppLockIfNeeded();
 
       await loadMyProfile();
 
@@ -6439,19 +6703,22 @@ function renderMonthlyGroups(
 
         const budgetText =
           budget > 0
-            ? `${formatWon(budget)} 중 ${percent}%`
+            ? `${formatWon(budget)} 중`
             : "예산을 설정해보세요";
 
 
         return `
           <article class="monthly-group-card">
             <div class="monthly-group-heading">
-              <span>${group.emoji} ${group.label} <button type="button" class="theme-help-btn" data-help="${group.help}" data-title="${group.label}" data-icon="${group.emoji}" aria-label="${group.label} 설명">?</button></span>
-              <small>${budgetText}</small>
+              <span class="monthly-group-label">${group.emoji} ${group.label}<button type="button" class="theme-help-btn" data-help="${group.help}" data-title="${group.label}" data-icon="${group.emoji}" aria-label="${group.label} 설명">?</button></span>
             </div>
             <strong>${formatWon(used)}</strong>
             <div class="progress-track">
               <div class="progress-bar" style="width:${Math.min(percent, 100)}%"></div>
+            </div>
+            <div class="monthly-group-progress-caption">
+              <small>${budgetText}</small>
+              <b class="monthly-group-percent">${budget > 0 ? `${percent}%` : ""}</b>
             </div>
           </article>
         `;
@@ -8973,10 +9240,10 @@ function getAnnualAssets() {
 
 
 const annualSpendingGroups = [
-  { key: "living", label: "생활비", emoji: "🏠" },
-  { key: "fixed", label: "고정지출", emoji: "📌" },
-  { key: "prepared", label: "준비지출", emoji: "🌿" },
-  { key: "special", label: "특별지출", emoji: "✨" }
+  { key: "living", label: "생활비", emoji: "🏠", help: "식비, 장보기처럼 함께 쓰는 일상 생활비예요." },
+  { key: "fixed", label: "고정지출", emoji: "📌", help: "기름값, 보험, 휴대폰 요금, 구독료처럼 매달 반복되는 돈이에요." },
+  { key: "prepared", label: "준비지출", emoji: "🌿", help: "명절·부모님 용돈·경조사처럼 미리 예상해 준비하는 돈이에요." },
+  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." }
 ];
 
 
@@ -9027,7 +9294,7 @@ function getAnnualGroupBudget(groupKey) {
 }
 
 
-function renderAnnualSpendingOverview() {
+function renderAnnualSpendingOverview(totalOutgo = 0) {
 
   if (!annualSpendingGrid) {
 
@@ -9044,23 +9311,23 @@ function renderAnnualSpendingOverview() {
           getAnnualGroupAmount(group.key);
 
 
-        const budget =
-          getAnnualGroupBudget(group.key);
-
-
         const percent =
-          getUsagePercent(used, budget);
+          totalOutgo > 0
+            ? Math.round(
+              (used / totalOutgo) * 100
+            )
+            : 0;
 
 
         return `
           <article class="annual-spending-card">
-            <span class="annual-spending-label">${group.emoji} ${group.label}</span>
+            <span class="annual-spending-label">${group.emoji} ${group.label} <button type="button" class="theme-help-btn" data-help="${group.help}" data-title="${group.label}" data-icon="${group.emoji}" aria-label="${group.label} 설명">?</button></span>
             <strong>${formatWon(used)}</strong>
-            <p>${budget > 0 ? `목표 ${formatWon(budget)}` : "연간 목표를 설정해보세요"}</p>
+            <p>전체 지출 중</p>
             <div class="progress-track">
               <div class="progress-bar" style="width:${Math.min(percent, 100)}%"></div>
             </div>
-            <b>${budget > 0 ? `${percent}%` : ""}</b>
+            <b>${percent}%</b>
           </article>
         `;
 
@@ -9068,6 +9335,20 @@ function renderAnnualSpendingOverview() {
     ).join("");
 
 }
+
+
+annualSpendingGrid?.addEventListener("click", (event) => {
+
+  const helpButton = event.target.closest(".theme-help-btn");
+
+  if (!helpButton) return;
+
+  themeHelpIcon.textContent = helpButton.dataset.icon;
+  themeHelpTitle.textContent = helpButton.dataset.title;
+  themeHelpText.textContent = helpButton.dataset.help;
+  themeHelpModal.classList.add("show");
+
+});
 
 
 function getAnnualMonthlyRows(selectedEntries) {
@@ -9296,22 +9577,6 @@ function renderAnnualScreen() {
     personalOutgo + monthlyOutgo;
 
 
-  const currentAsset =
-    getAnnualAssets().reduce(
-      (sum, asset) =>
-        sum + Number(asset.amount || 0),
-      0
-    );
-
-
-  if (annualCurrentAsset) {
-
-    annualCurrentAsset.textContent =
-      formatWon(currentAsset);
-
-  }
-
-
   if (annualIncomeTotal) {
 
     annualIncomeTotal.textContent =
@@ -9328,7 +9593,7 @@ function renderAnnualScreen() {
   }
 
 
-  renderAnnualSpendingOverview();
+  renderAnnualSpendingOverview(totalOutgo);
   renderAnnualMonthlyStats(selectedEntries);
   renderAnnualTagStats(selectedEntries);
 
@@ -10399,6 +10664,9 @@ function openSettingsModal() {
   }
 
 
+  renderAppLockSettings();
+
+
   settingsModal.classList.add(
     "show"
   );
@@ -10652,6 +10920,133 @@ if (
   );
 
 }
+
+
+// =====================================================
+// Android 앱 잠금
+// =====================================================
+
+if (appLockPinInput) {
+
+  appLockPinInput.addEventListener("input", () => {
+    appLockPinInput.value = appLockPinInput.value.replace(/\D/g, "").slice(0, 4);
+  });
+
+}
+
+
+if (appLockSettingsBtn) {
+
+  appLockSettingsBtn.addEventListener("click", () => {
+    pendingAppLockPin = "";
+    configureAppLockModal(appLockData ? "disable" : "setup-first");
+  });
+
+}
+
+
+if (appLockForm) {
+
+  appLockForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const pin = appLockPinInput.value;
+
+    if (!/^\d{4}$/.test(pin)) {
+      appLockMessage.textContent = "숫자 4자리를 입력해 주세요.";
+      return;
+    }
+
+    if (appLockMode === "setup-first") {
+      pendingAppLockPin = pin;
+      configureAppLockModal("setup-confirm");
+      return;
+    }
+
+    if (appLockMode === "setup-confirm") {
+      if (pin !== pendingAppLockPin) {
+        pendingAppLockPin = "";
+        appLockMessage.textContent = "PIN이 달라요. 처음부터 다시 입력해 주세요.";
+        appLockMode = "setup-first";
+        appLockTitle.textContent = "앱 잠금 설정";
+        appLockDescription.textContent = "새로 사용할 4자리 PIN을 입력해 주세요.";
+        appLockSubmitBtn.textContent = "다음";
+        appLockPinInput.value = "";
+        return;
+      }
+
+      try {
+        await saveAppLockData(pin);
+        pendingAppLockPin = "";
+        hideAppLock();
+        renderAppLockSettings();
+      } catch (error) {
+        console.error("앱 잠금을 설정하지 못했어요.", error);
+        appLockMessage.textContent = "앱 잠금을 설정하지 못했어요. 다시 시도해 주세요.";
+      }
+
+      return;
+    }
+
+    const isCorrect = await verifyAppLockPin(pin);
+
+    if (!isCorrect) {
+      appLockPinInput.value = "";
+      appLockMessage.textContent = "PIN이 맞지 않아요. 다시 입력해 주세요.";
+      return;
+    }
+
+    if (appLockMode === "disable") {
+      try {
+        await nativeBiometric.deleteData({ key: APP_LOCK_KEY });
+        appLockData = null;
+        hideAppLock();
+        renderAppLockSettings();
+      } catch (error) {
+        console.error("앱 잠금을 해제하지 못했어요.", error);
+        appLockMessage.textContent = "앱 잠금을 해제하지 못했어요. 다시 시도해 주세요.";
+      }
+
+      return;
+    }
+
+    finishAppUnlock();
+  });
+
+}
+
+
+if (appLockBiometricBtn) {
+
+  appLockBiometricBtn.addEventListener("click", async () => {
+    try {
+      await nativeBiometric.verifyIdentity({
+        reason: "지갑지킴이를 열기 위해 지문을 확인해요.",
+        title: "지갑지킴이 잠금 해제",
+        negativeButtonText: "PIN 입력"
+      });
+      finishAppUnlock();
+    } catch {
+      appLockMessage.textContent = "지문 확인을 완료하지 못했어요. PIN으로 열 수 있어요.";
+    }
+  });
+
+}
+
+
+document.addEventListener("visibilitychange", () => {
+  if (!appLockData || !currentUser) return;
+
+  if (document.hidden) {
+    appShouldLockOnResume = true;
+    return;
+  }
+
+  if (appShouldLockOnResume) {
+    appShouldLockOnResume = false;
+    presentAppLock();
+  }
+});
 
 
 // =====================================================

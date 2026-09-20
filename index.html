@@ -904,7 +904,7 @@
 
             <button
                 id="budget-setting-btn"
-                class="small-setting-btn"
+                class="small-setting-btn budget-setting-trigger"
                 type="button"
             >
                 이번 달 예산 설정
@@ -934,7 +934,7 @@
 
                 <button
                     id="monthly-group-budget-btn"
-                    class="subtle-btn"
+                    class="subtle-btn budget-setting-trigger"
                     type="button"
                 >
                     지출별 예산 설정
@@ -966,7 +966,7 @@
 
                 <button
                     id="personal-budget-setting-btn"
-                    class="subtle-btn"
+                    class="subtle-btn budget-setting-trigger"
                     type="button"
                 >
                     생활비 예산 설정
@@ -1469,58 +1469,16 @@
 
         </div>
 
-        <section class="annual-asset-card">
+        <section class="annual-summary-card">
 
-            <div class="annual-asset-heading">
-
-                <div>
-
-                    <span class="dashboard-eyebrow">
-                        현재자산
-                    </span>
-
-                    <strong id="annual-current-asset">
-                        0원
-                    </strong>
-
-                </div>
-
-                <button
-                    id="asset-detail-btn"
-                    class="subtle-btn"
-                    type="button"
-                >
-                    자산 상세보기
-                </button>
-
+            <div>
+                <span>총 수입</span>
+                <strong id="annual-income-total">0원</strong>
             </div>
 
-            <div class="annual-stat-grid">
-
-                <div>
-
-                    <span>
-                        총 수입
-                    </span>
-
-                    <strong id="annual-income-total">
-                        0원
-                    </strong>
-
-                </div>
-
-                <div>
-
-                    <span>
-                        총 지출
-                    </span>
-
-                    <strong id="annual-expense-total">
-                        0원
-                    </strong>
-
-                </div>
-
+            <div>
+                <span>총 지출</span>
+                <strong id="annual-expense-total">0원</strong>
             </div>
 
         </section>
@@ -1536,18 +1494,10 @@
                     </h2>
 
                     <p class="section-description">
-                        생활비와 개인 지출을 한 해 기준으로 확인해요.
+                        전체 지출에서 항목별로 얼마나 썼는지 확인해요.
                     </p>
 
                 </div>
-
-                <button
-                    id="annual-goal-setting-btn"
-                    class="subtle-btn"
-                    type="button"
-                >
-                    목표 설정
-                </button>
 
             </div>
 
@@ -2844,6 +2794,29 @@
 
 
 
+        <section
+            id="app-lock-settings-section"
+            class="settings-section app-lock-settings"
+            hidden
+        >
+
+            <div class="app-lock-settings-heading">
+                <div>
+                    <h3>앱 잠금</h3>
+                    <p>이 기기에서만 PIN 또는 지문으로 앱을 열어요.</p>
+                </div>
+
+                <span id="app-lock-status" class="app-lock-status">꺼짐</span>
+            </div>
+
+            <button id="app-lock-settings-btn" class="secondary-btn" type="button">
+                앱 잠금 설정
+            </button>
+
+        </section>
+
+
+
         <!-- 커플 정보 -->
 
         <section class="settings-section">
@@ -2880,6 +2853,49 @@
 
         </section>
 
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     Android 앱 잠금
+===================================================== -->
+
+<div id="app-lock-modal" class="app-lock-modal" hidden>
+
+    <div class="app-lock-card">
+
+        <div class="app-lock-symbol">🔒</div>
+
+        <h2 id="app-lock-title">지갑지킴이가 잠겨 있어요</h2>
+
+        <p id="app-lock-description">4자리 PIN을 입력해 주세요.</p>
+
+        <form id="app-lock-form" class="app-lock-form">
+            <input
+                id="app-lock-pin-input"
+                type="password"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="4"
+                pattern="[0-9]{4}"
+                placeholder="• • • •"
+                aria-label="4자리 PIN"
+            >
+
+            <p id="app-lock-message" class="app-lock-message" aria-live="polite"></p>
+
+            <button id="app-lock-submit-btn" class="primary-btn" type="submit">
+                PIN으로 열기
+            </button>
+        </form>
+
+        <button id="app-lock-biometric-btn" class="app-lock-biometric-btn" type="button" hidden>
+            지문으로 열기
+        </button>
 
     </div>
 
