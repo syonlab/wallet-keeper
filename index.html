@@ -757,7 +757,6 @@
                 aria-label="연도와 월 선택"
             >
                 2026년 8월
-                <span class="month-picker-arrow">⌄</span>
             </button>
 
             <!-- 연도 / 월 빠른 선택 -->
@@ -766,50 +765,32 @@
                 class="month-picker"
                 hidden
             >
-            <div class="month-picker-header">
+                <div class="month-picker-select-row">
 
-                    <button
-                        id="month-picker-prev-year"
-                        type="button"
-                        aria-label="이전 연도"
-                    >
-                        ‹
-            </button>
+                    <select id="month-picker-year-select" aria-label="연도 선택">
+                    </select>
 
-        <strong id="month-picker-year">
-            2026년
-        </strong>
+                    <select id="month-picker-month-select" aria-label="월 선택">
+                        <option value="1">1월</option>
+                        <option value="2">2월</option>
+                        <option value="3">3월</option>
+                        <option value="4">4월</option>
+                        <option value="5">5월</option>
+                        <option value="6">6월</option>
+                        <option value="7">7월</option>
+                        <option value="8">8월</option>
+                        <option value="9">9월</option>
+                        <option value="10">10월</option>
+                        <option value="11">11월</option>
+                        <option value="12">12월</option>
+                    </select>
 
-        <button
-            id="month-picker-next-year"
-            type="button"
-            aria-label="다음 연도"
-        >
-            ›
-        </button>
+                    <button id="month-picker-apply-btn" type="button">
+                        이동
+                    </button>
 
-    </div>
-
-    <div class="month-picker-grid">
-
-        <button type="button" data-month="1">1월</button>
-        <button type="button" data-month="2">2월</button>
-        <button type="button" data-month="3">3월</button>
-
-        <button type="button" data-month="4">4월</button>
-        <button type="button" data-month="5">5월</button>
-        <button type="button" data-month="6">6월</button>
-
-        <button type="button" data-month="7">7월</button>
-        <button type="button" data-month="8">8월</button>
-        <button type="button" data-month="9">9월</button>
-
-        <button type="button" data-month="10">10월</button>
-        <button type="button" data-month="11">11월</button>
-        <button type="button" data-month="12">12월</button>
-
-    </div>
-</div>
+                </div>
+            </div>
 
 
             <button

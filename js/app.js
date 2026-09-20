@@ -181,6 +181,10 @@ let selectedMonth =
   today.getMonth() + 1;
 
 
+let monthPickerSelectedYear =
+  selectedYear;
+
+
 let editingExpenseId =
   null;
 
@@ -507,6 +511,22 @@ const nextMonthBtn =
 
 const currentMonthTitle =
   $("current-month-title");
+
+
+const monthPicker =
+  $("month-picker");
+
+
+const monthPickerYearSelect =
+  $("month-picker-year-select");
+
+
+const monthPickerMonthSelect =
+  $("month-picker-month-select");
+
+
+const monthPickerApplyBtn =
+  $("month-picker-apply-btn");
 
 
 // =====================================================
@@ -1413,6 +1433,10 @@ function updateMonthTitle() {
   ) {
 
     currentMonthTitle.textContent =
+      "";
+
+
+    currentMonthTitle.innerHTML =
       `${selectedYear}년 ${selectedMonth}월`;
 
   }
@@ -4721,6 +4745,74 @@ function subscribeAnnualSettings() {
 // 월 변경
 // =====================================================
 
+function renderMonthPicker() {
+
+  if (!monthPicker) {
+
+    return;
+
+  }
+
+
+  const startYear =
+    monthPickerSelectedYear - 8;
+
+
+  const endYear =
+    monthPickerSelectedYear + 8;
+
+
+  monthPickerYearSelect.innerHTML =
+    Array.from(
+      { length: endYear - startYear + 1 },
+      (_, index) => {
+
+        const year =
+          startYear + index;
+
+
+        return `<option value="${year}">${year}년</option>`;
+
+      }
+    ).join("");
+
+
+  monthPickerYearSelect.value =
+    String(monthPickerSelectedYear);
+  monthPickerMonthSelect.value =
+    String(selectedMonth);
+
+}
+
+
+function closeMonthPicker() {
+
+  if (!monthPicker) {
+
+    return;
+
+  }
+
+
+  monthPicker.hidden = true;
+  currentMonthTitle?.setAttribute("aria-expanded", "false");
+
+}
+
+
+function refreshSelectedMonth() {
+
+  transactionVisibleCount =
+    15;
+
+
+  updateMonthTitle();
+  subscribeMonthlySettings();
+  renderApp();
+
+}
+
+
 function changeMonth(
   amount
 ) {
@@ -4758,17 +4850,7 @@ function changeMonth(
   }
 
 
-  transactionVisibleCount =
-    15;
-
-
-  updateMonthTitle();
-
-
-  subscribeMonthlySettings();
-
-
-  renderApp();
+  refreshSelectedMonth();
 
 }
 
@@ -4795,6 +4877,55 @@ nextMonthBtn.addEventListener(
 
   }
 );
+
+
+currentMonthTitle?.addEventListener("click", () => {
+
+  const willOpen =
+    monthPicker.hidden;
+
+
+  if (!willOpen) {
+
+    closeMonthPicker();
+    return;
+
+  }
+
+
+  monthPickerSelectedYear =
+    selectedYear;
+  renderMonthPicker();
+  monthPicker.hidden = false;
+  currentMonthTitle.setAttribute("aria-expanded", "true");
+
+});
+
+
+monthPickerApplyBtn?.addEventListener("click", () => {
+
+  selectedYear =
+    Number(monthPickerYearSelect.value);
+  selectedMonth =
+    Number(monthPickerMonthSelect.value);
+  closeMonthPicker();
+  refreshSelectedMonth();
+
+});
+
+
+document.addEventListener("click", (event) => {
+
+  if (
+    !monthPicker?.hidden &&
+    !event.target.closest(".month-selector")
+  ) {
+
+    closeMonthPicker();
+
+  }
+
+});
 
 
 // =====================================================
