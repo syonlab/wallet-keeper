@@ -3537,6 +3537,25 @@ body.app-mode .person-remaining strong {
     letter-spacing: -0.6px;
 }
 
+.monthly-group-detail-btn {
+    margin-top: 18px;
+}
+
+.group-expense-detail-total {
+    margin-bottom: 12px;
+    padding: 14px 15px;
+    border: 1px solid #e8e4ee;
+    border-radius: 12px;
+    background: #faf9fc;
+    color: #263c5b;
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.group-expense-detail-item .transaction-meta {
+    margin-top: 4px;
+}
+
 .monthly-group-card .progress-track {
     margin-top: 12px;
     height: 6px;
@@ -3828,10 +3847,11 @@ body.app-mode .person-remaining strong {
 
 .annual-monthly-row > strong {
     color: #40516b;
+    font-size: 12px;
+    font-weight: 750;
 }
 
-.annual-monthly-row > b,
-.annual-cumulative-row > b {
+.annual-monthly-row > b {
     text-align: right;
     font-size: 12px;
 }
@@ -3843,7 +3863,16 @@ body.app-mode .person-remaining strong {
     padding: 14px;
     color: #334762;
     background: #f1edf9;
+}
+
+.annual-cumulative-row > strong {
     font-size: 12px;
+    font-weight: 750;
+}
+
+.annual-cumulative-row > b {
+    text-align: right;
+    font-size: 14px;
 }
 
 .is-positive {
@@ -4001,6 +4030,14 @@ body.app-mode .person-remaining strong {
     .annual-monthly-row > b {
         justify-self: end;
         text-align: right;
+    }
+
+    .annual-cumulative-row > strong {
+        font-size: 14px;
+    }
+
+    .annual-cumulative-row > b {
+        font-size: 16px;
     }
 
     .annual-start-section {
@@ -4502,4 +4539,13 @@ body:not(.app-mode) .expense-type-card strong {
 
 body.app-mode .expense-type-card strong {
     font-size: 22px;
+}
+
+/* 상단 보기 전환과 설정 메뉴의 글자 크기 통일 */
+.header-actions .view-switch-btn,
+.header-actions #settings-btn,
+.header-actions #logout-btn,
+.header-actions #annual-settings-btn,
+.header-actions #annual-logout-btn {
+    font-size: 13px;
 }

@@ -902,6 +902,14 @@ const descriptionInput =
   $("expense-description");
 
 
+const expenseCategoryGroup =
+  $("expense-category-group");
+
+
+const expenseDescriptionLabel =
+  $("expense-description-label");
+
+
 const privateExpenseGroup =
   $("private-expense-group");
 
@@ -934,6 +942,28 @@ const payerPartnerName =
 
 const saveExpenseBtn =
   $("save-expense");
+
+
+const groupExpenseDetailModal =
+  $("group-expense-detail-modal");
+
+const closeGroupExpenseDetailModalBtn =
+  $("close-group-expense-detail-modal-btn");
+
+const groupExpenseDetailTitle =
+  $("group-expense-detail-title");
+
+const groupExpenseDetailPeriod =
+  $("group-expense-detail-period");
+
+const groupExpenseDetailTotal =
+  $("group-expense-detail-total");
+
+const groupExpenseDetailList =
+  $("group-expense-detail-list");
+
+let openedExpenseGroupDetail =
+  null;
 
 
 // =====================================================
@@ -1675,7 +1705,8 @@ const monthlyGroups = [
 
   { key: "fixed", label: "고정지출", emoji: "📌", help: "기름값, 보험, 휴대폰 요금, 구독료처럼 매달 반복되는 돈이에요." },
   { key: "prepared", label: "준비지출", emoji: "🌿", help: "명절·부모님 용돈·경조사처럼 미리 예상해 준비하는 돈이에요." },
-  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." }
+  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." },
+  { key: "wedding", label: "결혼준비", emoji: "💍", help: "예식, 신혼집, 혼수처럼 결혼을 준비하며 드는 비용을 따로 기록해요." }
 
 ];
 
@@ -1921,8 +1952,10 @@ function getCurrentMonthExpenses() {
 
   return expenses.filter(
     (expense) =>
-      expense.monthKey ===
-      monthKey
+      expense.monthKey === monthKey &&
+      isLivingExpenseGroup(
+        getExpenseGroup(expense)
+      )
   );
 
 }
@@ -3781,6 +3814,46 @@ function appLockIsAvailable() {
 }
 
 
+function isLivingExpenseGroup(groupKey) {
+
+  return groupKey === "living";
+
+}
+
+
+function updateExpenseFormForGroup() {
+
+  const isLiving =
+    isLivingExpenseGroup(
+      expenseGroupInput?.value || "living"
+    );
+
+  if (expenseCategoryGroup) {
+    expenseCategoryGroup.hidden = !isLiving;
+  }
+
+  if (expenseDescriptionLabel) {
+    expenseDescriptionLabel.textContent =
+      isLiving ? "내용" : "품목";
+  }
+
+  if (descriptionInput) {
+    descriptionInput.placeholder =
+      isLiving
+        ? "예: 친구와 카페"
+        : "예: 예식장 계약금, 자동차 보험";
+  }
+
+  if (privateExpenseGroup && !isLiving) {
+    privateExpenseGroup.hidden = true;
+    privateExpenseToggle.checked = false;
+  } else if (privateExpenseGroup) {
+    privateExpenseGroup.hidden = false;
+  }
+
+}
+
+
 async function makeAppLockPinHash(pin, salt) {
 
   const encoded = new TextEncoder().encode(`${salt}:${pin}`);
@@ -5607,6 +5680,9 @@ function prepareExpenseModal() {
   }
 
 
+  updateExpenseFormForGroup();
+
+
   if (
     categories.length
   ) {
@@ -5639,6 +5715,12 @@ function prepareExpenseModal() {
 addExpenseBtn.addEventListener(
   "click",
   prepareExpenseModal
+);
+
+
+expenseGroupInput?.addEventListener(
+  "change",
+  updateExpenseFormForGroup
 );
 
 
@@ -5748,6 +5830,9 @@ function openEditExpense(
   }
 
 
+  updateExpenseFormForGroup();
+
+
   categoryInput.value =
     expense.category
 
@@ -5825,13 +5910,15 @@ async function saveExpense() {
     getSelectedExpenseType();
 
 
-  const category =
-    categoryInput.value;
-
-
   const expenseGroup =
     expenseGroupInput?.value ||
     "living";
+
+
+  const category =
+    isLivingExpenseGroup(expenseGroup)
+      ? categoryInput.value
+      : "";
 
 
   const description =
@@ -5886,6 +5973,7 @@ async function saveExpense() {
 
 
   if (
+    isLivingExpenseGroup(expenseGroup) &&
     !category
   ) {
 
@@ -5893,6 +5981,22 @@ async function saveExpense() {
       "카테고리를 선택해주세요."
     );
 
+
+    return;
+
+  }
+
+
+  if (
+    !isLivingExpenseGroup(expenseGroup) &&
+    !description
+  ) {
+
+    alert(
+      "품목을 입력해주세요."
+    );
+
+    descriptionInput.focus();
 
     return;
 
@@ -5924,44 +6028,6 @@ async function saveExpense() {
     Boolean(
       editingExpenseId
     );
-
-
-  // 고정·준비·특별지출은 개인 연간 기록에만 저장합니다.
-  if (
-    expenseGroup !== "living" &&
-    !wasEditing
-  ) {
-
-    try {
-
-        await setDoc(
-          doc(annualEntriesCollectionRef()),
-          {
-            recordKind: "annual-entry",
-            date,
-            year: Number(date.slice(0, 4)),
-          type: "expense",
-          expenseGroup,
-          category,
-          amount,
-          description,
-          createdAt: serverTimestamp()
-        }
-      );
-
-      expenseModal.classList.remove("show");
-      transactionVisibleCount = 15;
-      return;
-
-    } catch (error) {
-
-      console.error("개인 지출 저장 실패:", error);
-      alert("개인 지출을 저장하지 못했어요.");
-      return;
-
-    }
-
-  }
 
 
   try {
@@ -6603,6 +6669,10 @@ function renderApp() {
     monthlyExpenses
   );
 
+  if (openedExpenseGroupDetail) {
+    openGroupExpenseDetail(openedExpenseGroupDetail);
+  }
+
 
   // ===================================================
   // 개인 생활비 카드
@@ -6679,32 +6749,14 @@ function renderMonthlyGroups(
       (group) => {
 
         const used =
-          annualEntries
-            .filter(
-              (entry) =>
-                entry.type === "expense" &&
-                entry.expenseGroup === group.key &&
-                String(entry.date || "").startsWith(getMonthKey())
-            )
+          getGroupExpensesForCurrentMonth(
+            group.key
+          )
             .reduce(
-              (sum, entry) =>
-                sum + Number(entry.amount || 0),
+              (sum, expense) =>
+                sum + Number(expense.amount || 0),
               0
             );
-
-
-        const budget =
-          getGroupBudget(group.key);
-
-
-        const percent =
-          getUsagePercent(used, budget);
-
-
-        const budgetText =
-          budget > 0
-            ? `${formatWon(budget)} 중`
-            : "예산을 설정해보세요";
 
 
         return `
@@ -6713,13 +6765,7 @@ function renderMonthlyGroups(
               <span class="monthly-group-label">${group.emoji} ${group.label}<button type="button" class="theme-help-btn" data-help="${group.help}" data-title="${group.label}" data-icon="${group.emoji}" aria-label="${group.label} 설명">?</button></span>
             </div>
             <strong>${formatWon(used)}</strong>
-            <div class="progress-track">
-              <div class="progress-bar" style="width:${Math.min(percent, 100)}%"></div>
-            </div>
-            <div class="monthly-group-progress-caption">
-              <small>${budgetText}</small>
-              <b class="monthly-group-percent">${budget > 0 ? `${percent}%` : ""}</b>
-            </div>
+            <button type="button" class="detail-btn monthly-group-detail-btn" data-group="${group.key}">상세보기</button>
           </article>
         `;
 
@@ -6732,6 +6778,16 @@ function renderMonthlyGroups(
 monthlyGroupList?.addEventListener(
   "click",
   (event) => {
+
+    const detailButton =
+      event.target.closest(
+        ".monthly-group-detail-btn"
+      );
+
+    if (detailButton) {
+      openGroupExpenseDetail(detailButton.dataset.group);
+      return;
+    }
 
     const helpButton =
       event.target.closest(
@@ -6751,6 +6807,15 @@ monthlyGroupList?.addEventListener(
 
     }
 
+  }
+);
+
+
+closeGroupExpenseDetailModalBtn?.addEventListener(
+  "click",
+  () => {
+    openedExpenseGroupDetail = null;
+    groupExpenseDetailModal?.classList.remove("show");
   }
 );
 
@@ -7156,6 +7221,105 @@ function renderPersonalBudgetCards(
     partnerBudgetProgress,
     partnerPercent
   );
+
+}
+
+
+function getGroupExpensesForCurrentMonth(groupKey) {
+
+  const monthKey =
+    getMonthKey();
+
+
+  const sharedExpenses =
+    expenses.filter(
+      (expense) =>
+        expense.monthKey === monthKey &&
+        getExpenseGroup(expense) === groupKey
+    );
+
+
+  // 이전 버전에서 저장한 생활비 외 지출도 상세보기와 합계에 남겨둡니다.
+  const legacyEntries =
+    annualEntries
+      .filter(
+        (entry) =>
+          entry.type === "expense" &&
+          entry.expenseGroup === groupKey &&
+          String(entry.date || "").startsWith(monthKey)
+      )
+      .map(
+        (entry) => ({
+          ...entry,
+          payerUid: entry.payerUid || currentUser?.uid,
+          isLegacyEntry: true
+        })
+      );
+
+
+  return [
+    ...sharedExpenses,
+    ...legacyEntries
+  ];
+
+}
+
+
+function openGroupExpenseDetail(groupKey) {
+
+  const group =
+    monthlyGroups.find(
+      (item) => item.key === groupKey
+    );
+
+  if (!group || !groupExpenseDetailModal) {
+    return;
+  }
+
+  openedExpenseGroupDetail = groupKey;
+
+  const records =
+    sortExpenseList(
+      getGroupExpensesForCurrentMonth(groupKey),
+      "date-desc"
+    );
+
+  const total =
+    records.reduce(
+      (sum, record) => sum + Number(record.amount || 0),
+      0
+    );
+
+  groupExpenseDetailTitle.textContent =
+    `${group.emoji} ${group.label} 상세보기`;
+  groupExpenseDetailPeriod.textContent =
+    `${selectedYear}년 ${selectedMonth}월`;
+  groupExpenseDetailTotal.textContent =
+    `총 지출 ${formatWon(total)}`;
+
+  groupExpenseDetailList.innerHTML =
+    records.length
+      ? records.map((record) => {
+          const payer =
+            getProfileByUid(record.payerUid);
+          const payerName =
+            payer?.nickname || "기록한 사람";
+          const itemName =
+            getPublicDescription(record) || "품목 미입력";
+
+          return `
+            <article class="transaction-item group-expense-detail-item">
+              <div class="transaction-info">
+                <h3>${escapeHtml(itemName)}</h3>
+                <p class="transaction-meta">${escapeHtml(record.date || "")} · 결제자 ${escapeHtml(payerName)}</p>
+              </div>
+              <strong class="transaction-amount">-${formatWon(record.amount)}</strong>
+            </article>
+          `;
+        }).join("")
+      : `<div class="empty-message">이번 달에 등록한 ${group.label} 내역이 없어요.</div>`;
+
+  groupExpenseDetailModal.classList.add("show");
 
 }
 
@@ -9243,7 +9407,8 @@ const annualSpendingGroups = [
   { key: "living", label: "생활비", emoji: "🏠", help: "식비, 장보기처럼 함께 쓰는 일상 생활비예요." },
   { key: "fixed", label: "고정지출", emoji: "📌", help: "기름값, 보험, 휴대폰 요금, 구독료처럼 매달 반복되는 돈이에요." },
   { key: "prepared", label: "준비지출", emoji: "🌿", help: "명절·부모님 용돈·경조사처럼 미리 예상해 준비하는 돈이에요." },
-  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." }
+  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." },
+  { key: "wedding", label: "결혼준비", emoji: "💍", help: "예식, 신혼집, 혼수처럼 결혼을 준비하며 드는 비용을 따로 기록해요." }
 ];
 
 
@@ -9454,8 +9619,8 @@ function renderAnnualMonthlyStats(selectedEntries) {
         </div>
       `).join("")}
       <div class="annual-cumulative-row">
-        <strong>연간 누적</strong>
-        <b class="${finalCumulative >= 0 ? "is-positive" : "is-negative"}">${finalCumulative >= 0 ? "+" : "−"}${formatWon(Math.abs(finalCumulative))}</b>
+        <strong style="font-size: 14px; font-weight: 750;">연간 누적</strong>
+        <b class="${finalCumulative >= 0 ? "is-positive" : "is-negative"}" style="font-size: 16px;">${finalCumulative >= 0 ? "+" : "−"}${formatWon(Math.abs(finalCumulative))}</b>
       </div>
     </div>
   `;

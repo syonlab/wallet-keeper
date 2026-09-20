@@ -927,7 +927,7 @@
                     </h2>
 
                     <p class="section-description">
-                        내 고정·준비·특별지출을 정리해요.
+                        생활비 외 지출은 항목별로 따로 모아 관리해요.
                     </p>
 
                 </div>
@@ -2077,6 +2077,10 @@
                     ✨ 특별소비
                 </option>
 
+                <option value="wedding">
+                    💍 결혼준비
+                </option>
+
             </select>
 
         </div>
@@ -2085,7 +2089,7 @@
 
         <!-- 카테고리 -->
 
-        <div class="form-group">
+        <div id="expense-category-group" class="form-group">
 
             <label for="expense-category">
                 카테고리
@@ -2125,7 +2129,7 @@
 
         <div class="form-group">
 
-            <label for="expense-description">
+            <label id="expense-description-label" for="expense-description">
                 내용
             </label>
 
@@ -2899,6 +2903,22 @@
 
     </div>
 
+</div>
+
+
+<!-- 생활비 외 지출 상세보기 -->
+<div id="group-expense-detail-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h2 id="group-expense-detail-title">지출 상세보기</h2>
+                <p id="group-expense-detail-period" class="modal-description"></p>
+            </div>
+            <button id="close-group-expense-detail-modal-btn" type="button">×</button>
+        </div>
+        <div id="group-expense-detail-total" class="group-expense-detail-total">총 지출 0원</div>
+        <div id="group-expense-detail-list" class="transaction-list"></div>
+    </div>
 </div>
 
 
