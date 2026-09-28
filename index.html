@@ -708,6 +708,14 @@
                     연간
                 </button>
 
+                <button
+                    id="wedding-btn"
+                    class="view-switch-btn"
+                    type="button"
+                >
+                    결혼
+                </button>
+
                 </div>
 
                 <button
@@ -1421,6 +1429,14 @@
                     연간
                 </button>
 
+                <button
+                    id="annual-wedding-view-btn"
+                    class="view-switch-btn"
+                    type="button"
+                >
+                    결혼
+                </button>
+
                 </div>
 
                 <button
@@ -1561,6 +1577,90 @@
 
 </div>
 
+
+
+<!-- =====================================================
+     결혼 준비 전용 화면
+===================================================== -->
+<div id="wedding-screen" class="app-screen" hidden>
+    <header class="header">
+        <div class="header-inner">
+            <div>
+                <h1>💍 결혼준비</h1>
+                <p>우리의 결혼 비용과 예산을 함께 관리해요</p>
+            </div>
+            <div class="header-actions">
+                <div class="view-switch" role="group" aria-label="가계부 보기">
+                    <button id="wedding-monthly-view-btn" class="view-switch-btn" type="button">월간</button>
+                    <button id="wedding-annual-view-btn" class="view-switch-btn" type="button">연간</button>
+                    <button class="view-switch-btn active" type="button" disabled>결혼</button>
+                </div>
+                <button id="wedding-settings-btn" type="button">설정</button>
+                <button id="wedding-logout-btn" type="button">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container wedding-container">
+        <section class="wedding-summary-card">
+            <div><span>현재까지 지출</span><strong id="wedding-total-expense">0원</strong></div>
+            <div><span>남은 예산</span><strong id="wedding-remaining-budget">0원</strong><small id="wedding-deposit-total">입금 합계 0원</small></div>
+        </section>
+
+        <section class="wedding-section">
+            <div class="section-title">
+                <div><h2>결혼 지출현황</h2><p class="section-description">항목별 또는 부담 구분별 지출 비율을 확인해요.</p></div>
+                <div class="wedding-chart-switch view-switch" role="group" aria-label="결혼 지출 통계 보기">
+                    <button class="view-switch-btn active" type="button" data-wedding-chart="category">항목</button>
+                    <button class="view-switch-btn" type="button" data-wedding-chart="allocation">🩷</button>
+                </div>
+            </div>
+            <div id="wedding-chart-list" class="wedding-chart-list"></div>
+        </section>
+
+        <section class="wedding-section">
+            <div class="section-title">
+                <div><h2>지출내역</h2><p class="section-description">날짜, 내용, 항목, 결제자를 확인하고 수정할 수 있어요.</p></div>
+                <button id="wedding-add-expense-btn" class="subtle-btn" type="button">＋ 지출 추가</button>
+            </div>
+            <div id="wedding-expense-list" class="transaction-list"></div>
+        </section>
+
+        <section class="wedding-section">
+            <div class="section-title">
+                <div><h2>입금내역</h2><p class="section-description">각자 결혼 예산으로 넣은 금액이에요.</p></div>
+                <button id="wedding-add-deposit-btn" class="subtle-btn" type="button">＋ 입금 추가</button>
+            </div>
+            <div id="wedding-deposit-list" class="transaction-list"></div>
+        </section>
+    </main>
+</div>
+
+
+<!-- 결혼 입금 / 지출 추가 및 수정 -->
+<div id="wedding-record-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div><h2 id="wedding-record-modal-title">결혼 지출 추가</h2><p id="wedding-record-modal-description" class="modal-description"></p></div>
+            <button id="close-wedding-record-modal-btn" type="button">×</button>
+        </div>
+        <div class="form-group"><label for="wedding-record-date">날짜</label><input id="wedding-record-date" type="date"></div>
+        <div class="form-group"><label id="wedding-record-description-label" for="wedding-record-description">내용</label><input id="wedding-record-description" type="text" maxlength="60" placeholder="예: 웨딩홀 계약금" autocomplete="off"></div>
+        <div class="form-group"><label for="wedding-record-memo">메모 (선택)</label><input id="wedding-record-memo" type="text" maxlength="100" placeholder="예: 계약일은 10월 3일" autocomplete="off"></div>
+        <div class="form-group"><label for="wedding-record-amount">금액</label><input id="wedding-record-amount" type="text" inputmode="numeric" placeholder="금액을 입력하세요" autocomplete="off"></div>
+        <div id="wedding-category-group" class="form-group"><label for="wedding-record-category">항목</label><input id="wedding-record-category" type="text" maxlength="30" placeholder="예: 대관료, 예물, 신혼여행" autocomplete="off"></div>
+        <div id="wedding-allocation-group" class="form-group">
+            <label>부담 구분</label>
+            <div class="type-buttons wedding-allocation-buttons">
+                <button class="type-btn active" type="button" data-wedding-allocation="together">🩷 같이</button>
+                <button class="type-btn" type="button" data-wedding-allocation="bride">👰 신부</button>
+                <button class="type-btn" type="button" data-wedding-allocation="groom">🤵 신랑</button>
+            </div>
+        </div>
+        <div class="form-group"><label for="wedding-record-payer">결제자</label><select id="wedding-record-payer"></select></div>
+        <button id="save-wedding-record-btn" class="primary-btn" type="button">저장하기</button>
+    </div>
+</div>
 
 
 <!-- 월간 지출 테마 안내 -->
@@ -2077,10 +2177,6 @@
                     ✨ 특별소비
                 </option>
 
-                <option value="wedding">
-                    💍 결혼준비
-                </option>
-
             </select>
 
         </div>
@@ -2449,6 +2545,10 @@
 
 
         <div id="group-budget-setting-section" class="budget-group-settings">
+
+            <p id="group-budget-owner-copy" class="budget-group-owner-copy">
+                내 지출별 예산을 설정해주세요.
+            </p>
 
             <div class="budget-group-grid">
 

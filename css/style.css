@@ -3541,6 +3541,49 @@ body.app-mode .person-remaining strong {
     margin-top: 18px;
 }
 
+.monthly-group-person-amounts {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+    color: #8a93a1;
+    font-size: 13px;
+}
+
+.monthly-group-person-amounts span:last-child {
+    text-align: right;
+}
+
+.monthly-group-person-amounts b {
+    margin-left: 3px;
+    color: #596679;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.monthly-group-my-budget {
+    margin-top: 10px;
+}
+
+.monthly-group-my-budget .progress-track {
+    height: 5px;
+    margin: 0;
+}
+
+.monthly-group-my-budget > span {
+    display: block;
+    margin-top: 5px;
+    color: #7f8999;
+    font-size: 11px;
+}
+
+.budget-group-owner-copy {
+    margin: 0 0 10px;
+    color: #7a8493;
+    font-size: 12px;
+}
+
 .group-expense-detail-total {
     margin-bottom: 12px;
     padding: 14px 15px;
@@ -4524,6 +4567,188 @@ body:not(.app-mode) .detail-btn {
     font-size: 13px;
 }
 
+/* 결혼 준비 전용 화면 */
+.wedding-container {
+    padding-bottom: 56px;
+}
+
+.wedding-summary-card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    margin: 28px 0 34px;
+    border: 1px solid #e5dff0;
+    border-radius: 18px;
+    background: #e5dff0;
+}
+
+.wedding-summary-card > div {
+    min-height: 148px;
+    padding: 24px;
+    background: #fff;
+}
+
+.wedding-summary-card span,
+.wedding-summary-card small {
+    display: block;
+    color: #788396;
+    font-size: 13px;
+}
+
+.wedding-summary-card strong {
+    display: block;
+    margin-top: 10px;
+    color: #263c5b;
+    font-size: 30px;
+    letter-spacing: -1px;
+}
+
+.wedding-summary-card small {
+    margin-top: 9px;
+}
+
+.wedding-section {
+    margin-top: 32px;
+    padding: 22px;
+    border: 1px solid #e8e4ee;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(49, 40, 76, 0.035);
+}
+
+.wedding-chart-switch {
+    display: inline-flex;
+    width: fit-content;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 4px;
+    border: 0;
+    border-radius: 13px;
+    background: #f1f1f4;
+}
+
+.wedding-chart-switch .view-switch-btn {
+    min-width: 64px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #71809a;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+.wedding-chart-switch .view-switch-btn.active {
+    background: #ffffff;
+    color: #243956;
+    box-shadow: 0 1px 3px rgba(30, 39, 57, 0.1);
+}
+
+.wedding-chart-list {
+    overflow: hidden;
+    border: 1px solid #e8e4ee;
+    border-radius: 15px;
+    background: #fff;
+}
+
+.wedding-section .transaction-list {
+    border: 1px solid #efedf2;
+    border-radius: 14px;
+}
+
+.wedding-allocation-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.wedding-allocation-buttons .type-btn {
+    min-width: 0;
+    padding: 8px 5px;
+    white-space: nowrap;
+}
+
+/* 모든 일반 지출 입력은 날짜 → 내용 → 금액 → 카테고리 순서로 보여요. */
+#expense-modal .modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+#expense-modal .modal-header { order: 0; }
+#expense-modal .form-group:has(#expense-date) { order: 1; }
+#expense-modal .form-group:has(#expense-description) { order: 2; }
+#expense-modal .form-group:has(#expense-amount) { order: 3; }
+#expense-modal .form-group:has(#expense-category) { order: 4; }
+#expense-modal .form-group:has(.type-buttons) { order: 5; }
+#expense-modal .form-group:has(#expense-group) { order: 6; }
+#expense-modal #private-expense-group { order: 7; }
+#expense-modal .form-group:has(.payer-buttons) { order: 8; }
+#expense-modal #save-expense { order: 9; }
+
+.wedding-chart-row {
+    padding: 16px 18px;
+    border-bottom: 1px solid #efedf2;
+}
+
+.wedding-chart-row:last-child {
+    border-bottom: 0;
+}
+
+.wedding-chart-row > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    color: #334762;
+    font-size: 14px;
+}
+
+.wedding-chart-row span {
+    color: #657086;
+}
+
+.wedding-chart-row .progress-track {
+    margin-top: 10px;
+}
+
+.wedding-record-item .transaction-meta {
+    line-height: 1.65;
+}
+
+@media (max-width: 600px) {
+    .wedding-summary-card {
+        margin-top: 18px;
+    }
+
+    .wedding-summary-card > div {
+        min-height: 126px;
+        padding: 18px 15px;
+    }
+
+    .wedding-summary-card strong {
+        font-size: 24px;
+    }
+
+    .wedding-summary-card span,
+    .wedding-summary-card small {
+        font-size: 12px;
+    }
+
+    .wedding-chart-row {
+        padding: 14px;
+    }
+
+    .wedding-section {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 15px;
+    }
+
+    .wedding-allocation-buttons .type-btn {
+        font-size: 12px;
+    }
+}
+
 /* 상세보기의 혼자·같이 비율 정보 */
 .expense-type-card span {
     font-size: 14px;
@@ -4546,6 +4771,8 @@ body.app-mode .expense-type-card strong {
 .header-actions #settings-btn,
 .header-actions #logout-btn,
 .header-actions #annual-settings-btn,
-.header-actions #annual-logout-btn {
+.header-actions #annual-logout-btn,
+.header-actions #wedding-settings-btn,
+.header-actions #wedding-logout-btn {
     font-size: 13px;
 }

@@ -202,6 +202,8 @@ let monthlySettings = {
 
   groupBudgets: {},
 
+  personalGroupBudgets: {},
+
   personalBudgets: {}
 
 };
@@ -224,6 +226,10 @@ let monthPickerSelectedYear =
 
 
 let editingExpenseId =
+  null;
+
+
+let editingLegacyAnnualExpenseId =
   null;
 
 
@@ -363,6 +369,10 @@ const annualScreen =
   $("annual-screen");
 
 
+const weddingScreen =
+  $("wedding-screen");
+
+
 const allScreens = [
 
   loginScreen,
@@ -374,6 +384,7 @@ const allScreens = [
   joinCoupleScreen,
   appScreen,
   annualScreen,
+  weddingScreen,
   personDetailScreen
 
 ].filter(
@@ -990,6 +1001,10 @@ const groupBudgetSettingSection =
   $("group-budget-setting-section");
 
 
+const groupBudgetOwnerCopy =
+  $("group-budget-owner-copy");
+
+
 const personalBudgetSettingSection =
   $("personal-budget-setting-section");
 
@@ -1160,6 +1175,167 @@ const appLockBiometricBtn =
 // 개인 연간 자산
 // =====================================================
 
+function isWeddingRecord(record) {
+  return record?.recordKind === "wedding-expense" ||
+    record?.recordKind === "wedding-deposit" ||
+    record?.expenseGroup === "wedding";
+}
+
+
+function getWeddingExpenses() {
+  return expenses.filter((record) =>
+    record.recordKind === "wedding-expense" ||
+    record.expenseGroup === "wedding"
+  );
+}
+
+
+function getWeddingDeposits() {
+  return expenses.filter((record) => record.recordKind === "wedding-deposit");
+}
+
+
+function getWeddingPayerName(uid) {
+  return getProfileByUid(uid)?.nickname || "기록한 사람";
+}
+
+
+function getWeddingAllocationLabel(allocation) {
+  return ({ together: "🩷 같이", bride: "👰 신부", groom: "🤵 신랑" })[allocation] || "🩷 같이";
+}
+
+
+function renderWeddingRecordList(container, records, mode) {
+  if (!container) return;
+
+  const sorted = sortExpenseList(records, "date-desc");
+  if (!sorted.length) {
+    container.innerHTML = `<div class="empty-message">등록된 ${mode === "deposit" ? "입금" : "지출"} 내역이 없어요.</div>`;
+    return;
+  }
+
+  container.innerHTML = sorted.map((record) => {
+    const title = mode === "deposit"
+      ? (record.description || `${getWeddingPayerName(record.payerUid)} 입금`)
+      : (getPublicDescription(record) || record.description || record.category || "항목 미입력");
+    const baseMeta = mode === "deposit"
+      ? `${record.date || ""} · 입금자 ${getWeddingPayerName(record.payerUid)}`
+      : `${record.date || ""} · ${record.category || "항목 미입력"} · 결제자 ${getWeddingPayerName(record.payerUid)} · ${getWeddingAllocationLabel(record.allocation)}`;
+    const meta = record.memo
+      ? `${baseMeta} · 메모: ${record.memo}`
+      : baseMeta;
+
+    return `
+      <article class="transaction-item wedding-record-item">
+        <div class="transaction-info">
+          <h3>${escapeHtml(title)}</h3>
+          <p class="transaction-meta">${escapeHtml(meta)}</p>
+        </div>
+        <div class="transaction-right">
+          <strong class="transaction-amount ${mode === "deposit" ? "is-positive" : ""}">${mode === "deposit" ? "+" : "−"}${formatWon(record.amount)}</strong>
+          <div class="transaction-actions">
+            <button class="edit-wedding-record-btn" type="button" data-id="${escapeHtml(record.id)}">수정</button>
+            <button class="delete-wedding-record-btn" type="button" data-id="${escapeHtml(record.id)}">삭제</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+
+function renderWeddingChart(expensesOnly) {
+  if (!weddingChartList) return;
+
+  const labels = weddingChartMode === "category"
+    ? expensesOnly.reduce((map, record) => {
+        const key = record.category || "미분류";
+        map[key] = (map[key] || 0) + Number(record.amount || 0);
+        return map;
+      }, {})
+    : expensesOnly.reduce((map, record) => {
+        const key = record.allocation || "together";
+        map[key] = (map[key] || 0) + Number(record.amount || 0);
+        return map;
+      }, {});
+
+  const total = expensesOnly.reduce((sum, record) => sum + Number(record.amount || 0), 0);
+  const rows = Object.entries(labels).sort(([, a], [, b]) => b - a);
+
+  weddingChartList.innerHTML = rows.length
+    ? rows.map(([key, amount]) => {
+        const percent = total ? Math.round((amount / total) * 100) : 0;
+        const label = weddingChartMode === "category" ? key : getWeddingAllocationLabel(key);
+        return `<div class="wedding-chart-row"><div><strong>${escapeHtml(label)}</strong><span>${formatWon(amount)} · ${percent}%</span></div><div class="progress-track"><div class="progress-bar" style="width:${percent}%"></div></div></div>`;
+      }).join("")
+    : `<div class="empty-message">아직 결혼 지출이 없어요.</div>`;
+}
+
+
+function renderWeddingScreen() {
+  if (!weddingScreen) return;
+
+  const weddingExpenses = getWeddingExpenses();
+  const deposits = getWeddingDeposits();
+  const totalExpense = weddingExpenses.reduce((sum, record) => sum + Number(record.amount || 0), 0);
+  const totalDeposit = deposits.reduce((sum, record) => sum + Number(record.amount || 0), 0);
+
+  weddingTotalExpense.textContent = formatWon(totalExpense);
+  weddingRemainingBudget.textContent = formatWon(totalDeposit - totalExpense);
+  weddingDepositTotal.textContent = `입금 합계 ${formatWon(totalDeposit)}`;
+
+  renderWeddingChart(weddingExpenses);
+  renderWeddingRecordList(weddingDepositList, deposits, "deposit");
+  renderWeddingRecordList(weddingExpenseList, weddingExpenses, "expense");
+}
+
+
+function renderWeddingPayerOptions(selectedUid) {
+  if (!weddingRecordPayer) return;
+  const profiles = [myProfile, partnerProfile].filter(Boolean);
+  weddingRecordPayer.innerHTML = profiles.map((profile) =>
+    `<option value="${escapeHtml(profile.uid)}">${escapeHtml(profile.icon || "💜")} ${escapeHtml(profile.nickname || "사용자")}</option>`
+  ).join("");
+  weddingRecordPayer.value = selectedUid || currentUser?.uid || "";
+}
+
+
+function setWeddingAllocation(allocation = "together") {
+  weddingAllocationButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.weddingAllocation === allocation);
+  });
+}
+
+
+function openWeddingRecordModal(mode, record = null) {
+  weddingRecordMode = mode;
+  editingWeddingRecordId = record?.id || null;
+  const isDeposit = mode === "deposit";
+
+  weddingRecordModalTitle.textContent = `${isDeposit ? "입금" : "지출"} ${record ? "수정" : "추가"}`;
+  weddingRecordModalDescription.textContent = isDeposit
+    ? "결혼 예산으로 넣은 금액을 기록해요."
+    : "결혼 준비에 쓴 비용을 기록해요.";
+  weddingCategoryGroup.hidden = isDeposit;
+  weddingAllocationGroup.hidden = isDeposit;
+  weddingRecordDescriptionLabel.textContent = "내용";
+  weddingRecordDate.value = record?.date || getDefaultDate();
+  weddingRecordAmount.value = record ? formatMoneyInput(record.amount) : "";
+  weddingRecordCategory.value = record?.category || "";
+  weddingRecordDescription.value = record?.description || "";
+  weddingRecordMemo.value = record?.memo || "";
+  renderWeddingPayerOptions(record?.payerUid);
+  setWeddingAllocation(record?.allocation || "together");
+  saveWeddingRecordBtn.textContent = record ? "수정하기" : "저장하기";
+  weddingRecordModal.classList.add("show");
+}
+
+
+function openWeddingScreen() {
+  renderWeddingScreen();
+  showScreen(weddingScreen);
+}
+
 const annualBtn =
   $("annual-btn");
 
@@ -1304,6 +1480,46 @@ const annualEntryList =
   $("annual-entry-list");
 
 
+// =====================================================
+// 결혼 준비 화면
+// =====================================================
+
+const weddingBtn = $("wedding-btn");
+const annualWeddingViewBtn = $("annual-wedding-view-btn");
+const weddingMonthlyViewBtn = $("wedding-monthly-view-btn");
+const weddingAnnualViewBtn = $("wedding-annual-view-btn");
+const weddingSettingsBtn = $("wedding-settings-btn");
+const weddingLogoutBtn = $("wedding-logout-btn");
+const weddingTotalExpense = $("wedding-total-expense");
+const weddingRemainingBudget = $("wedding-remaining-budget");
+const weddingDepositTotal = $("wedding-deposit-total");
+const weddingChartList = $("wedding-chart-list");
+const weddingDepositList = $("wedding-deposit-list");
+const weddingExpenseList = $("wedding-expense-list");
+const weddingAddExpenseBtn = $("wedding-add-expense-btn");
+const weddingAddDepositBtn = $("wedding-add-deposit-btn");
+const weddingRecordModal = $("wedding-record-modal");
+const closeWeddingRecordModalBtn = $("close-wedding-record-modal-btn");
+const weddingRecordModalTitle = $("wedding-record-modal-title");
+const weddingRecordModalDescription = $("wedding-record-modal-description");
+const weddingRecordDate = $("wedding-record-date");
+const weddingRecordAmount = $("wedding-record-amount");
+const weddingRecordCategory = $("wedding-record-category");
+const weddingRecordDescription = $("wedding-record-description");
+const weddingRecordDescriptionLabel = $("wedding-record-description-label");
+const weddingRecordMemo = $("wedding-record-memo");
+const weddingRecordPayer = $("wedding-record-payer");
+const weddingCategoryGroup = $("wedding-category-group");
+const weddingAllocationGroup = $("wedding-allocation-group");
+const saveWeddingRecordBtn = $("save-wedding-record-btn");
+const weddingChartButtons = document.querySelectorAll("[data-wedding-chart]");
+const weddingAllocationButtons = document.querySelectorAll("[data-wedding-allocation]");
+
+let weddingChartMode = "category";
+let editingWeddingRecordId = null;
+let weddingRecordMode = "expense";
+
+
 const annualEntryAddBtn =
   $("annual-entry-add-btn");
 
@@ -1389,7 +1605,8 @@ function closeAllModals() {
     monthlyIncomeHistoryModal,
     annualGoalModal,
     assetDetailModal,
-    themeHelpModal
+    themeHelpModal,
+    weddingRecordModal
   ]
     .filter(
       Boolean
@@ -1705,8 +1922,7 @@ const monthlyGroups = [
 
   { key: "fixed", label: "고정지출", emoji: "📌", help: "기름값, 보험, 휴대폰 요금, 구독료처럼 매달 반복되는 돈이에요." },
   { key: "prepared", label: "준비지출", emoji: "🌿", help: "명절·부모님 용돈·경조사처럼 미리 예상해 준비하는 돈이에요." },
-  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." },
-  { key: "wedding", label: "결혼준비", emoji: "💍", help: "예식, 신혼집, 혼수처럼 결혼을 준비하며 드는 비용을 따로 기록해요." }
+  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." }
 
 ];
 
@@ -1737,6 +1953,29 @@ function getGroupBudget(
 
   return Number(
     monthlySettings.groupBudgets?.[groupKey] || 0
+  );
+
+}
+
+
+function getPersonalGroupBudget(
+  uid,
+  groupKey
+) {
+
+  if (!uid) {
+    return 0;
+  }
+
+  const personalBudget =
+    monthlySettings
+      .personalGroupBudgets?.[uid]?.[groupKey];
+
+  // 기존에 설정해둔 공동 지출 예산은 개인 예산을 처음 설정하기 전까지 보여줘요.
+  return Number(
+    personalBudget ??
+    monthlySettings.groupBudgets?.[groupKey] ??
+    0
   );
 
 }
@@ -4751,6 +4990,10 @@ function subscribeMonthlySettings() {
               data.groupBudgets ||
               {},
 
+            personalGroupBudgets:
+              data.personalGroupBudgets ||
+              {},
+
             personalBudgets:
               data.personalBudgets ||
               {}
@@ -4767,6 +5010,9 @@ function subscribeMonthlySettings() {
               0,
 
             groupBudgets:
+              {},
+
+            personalGroupBudgets:
               {},
 
             personalBudgets:
@@ -5635,6 +5881,9 @@ function prepareExpenseModal() {
   editingExpenseId =
     null;
 
+  editingLegacyAnnualExpenseId =
+    null;
+
 
   expenseModalTitle.textContent =
     "지출 추가";
@@ -5740,6 +5989,9 @@ closeModalBtn.addEventListener(
     editingExpenseId =
       null;
 
+    editingLegacyAnnualExpenseId =
+      null;
+
   }
 );
 
@@ -5752,12 +6004,21 @@ function openEditExpense(
   expenseId
 ) {
 
-  const expense =
+  const sharedExpense =
     expenses.find(
       (item) =>
-        item.id ===
-        expenseId
+        item.id === expenseId
     );
+
+  const legacyExpense =
+    annualEntries.find(
+      (item) =>
+        item.id === expenseId &&
+        item.type === "expense"
+    );
+
+  const expense =
+    sharedExpense || legacyExpense;
 
 
   if (
@@ -5775,6 +6036,10 @@ function openEditExpense(
 
 
   if (
+    sharedExpense &&
+    isLivingExpenseGroup(
+      getExpenseGroup(expense)
+    ) &&
     !canCurrentUserManageExpense(
       expense
     )
@@ -5791,7 +6056,10 @@ function openEditExpense(
 
 
   editingExpenseId =
-    expense.id;
+    sharedExpense ? expense.id : null;
+
+  editingLegacyAnnualExpenseId =
+    legacyExpense ? expense.id : null;
 
 
   expenseModalTitle.textContent =
@@ -6026,7 +6294,8 @@ async function saveExpense() {
 
   const wasEditing =
     Boolean(
-      editingExpenseId
+      editingExpenseId ||
+      editingLegacyAnnualExpenseId
     );
 
 
@@ -6046,7 +6315,29 @@ async function saveExpense() {
     // 기존 지출 수정
     // =================================================
 
-    if (
+    if (editingLegacyAnnualExpenseId) {
+
+      await updateDoc(
+        doc(
+          annualEntriesCollectionRef(),
+          editingLegacyAnnualExpenseId
+        ),
+        {
+          date,
+          year: Number(date.slice(0, 4)),
+          type: "expense",
+          expenseGroup,
+          category,
+          amount,
+          description,
+          payerUid,
+          updatedAt: serverTimestamp()
+        }
+      );
+
+    }
+
+    else if (
       editingExpenseId
     ) {
 
@@ -6073,6 +6364,9 @@ async function saveExpense() {
 
 
       if (
+        isLivingExpenseGroup(
+          getExpenseGroup(oldExpense)
+        ) &&
         !canCurrentUserManageExpense(
           oldExpense
         )
@@ -6262,6 +6556,9 @@ async function saveExpense() {
 
 
     editingExpenseId =
+      null;
+
+    editingLegacyAnnualExpenseId =
       null;
 
 
@@ -6728,6 +7025,8 @@ function renderApp() {
 
   renderAnnualScreen();
 
+  renderWeddingScreen();
+
 }
 
 
@@ -6748,15 +7047,63 @@ function renderMonthlyGroups(
     monthlyGroups.map(
       (group) => {
 
-        const used =
+        const groupExpenses =
           getGroupExpensesForCurrentMonth(
             group.key
-          )
+          );
+
+
+        const used =
+          groupExpenses
             .reduce(
               (sum, expense) =>
                 sum + Number(expense.amount || 0),
               0
             );
+
+
+        const myUsed =
+          groupExpenses
+            .filter(
+              (expense) =>
+                expense.payerUid === currentUser?.uid
+            )
+            .reduce(
+              (sum, expense) =>
+                sum + Number(expense.amount || 0),
+              0
+            );
+
+
+        const partnerUsed =
+          groupExpenses
+            .filter(
+              (expense) =>
+                expense.payerUid &&
+                expense.payerUid !== currentUser?.uid
+            )
+            .reduce(
+              (sum, expense) =>
+                sum + Number(expense.amount || 0),
+              0
+            );
+
+
+        const myBudget =
+          getPersonalGroupBudget(
+            currentUser?.uid,
+            group.key
+          );
+
+        const myPercent =
+          getUsagePercent(myUsed, myBudget);
+
+
+        const myName =
+          myProfile?.nickname || "나";
+
+        const partnerName =
+          partnerProfile?.nickname || "상대방";
 
 
         return `
@@ -6765,6 +7112,14 @@ function renderMonthlyGroups(
               <span class="monthly-group-label">${group.emoji} ${group.label}<button type="button" class="theme-help-btn" data-help="${group.help}" data-title="${group.label}" data-icon="${group.emoji}" aria-label="${group.label} 설명">?</button></span>
             </div>
             <strong>${formatWon(used)}</strong>
+            <div class="monthly-group-person-amounts">
+              <span>${escapeHtml(myName)} <b>${formatWon(myUsed)}</b></span>
+              <span>${escapeHtml(partnerName)} <b>${formatWon(partnerUsed)}</b></span>
+            </div>
+            <div class="monthly-group-my-budget">
+              <div class="progress-track"><div class="progress-bar" style="width:${myBudget ? Math.min(myPercent, 100) : 0}%"></div></div>
+              <span>${formatWon(myUsed)} / ${myBudget ? formatWon(myBudget) : "예산 미설정"}${myBudget ? ` · ${myPercent}%` : ""}</span>
+            </div>
             <button type="button" class="detail-btn monthly-group-detail-btn" data-group="${group.key}">상세보기</button>
           </article>
         `;
@@ -6816,6 +7171,44 @@ closeGroupExpenseDetailModalBtn?.addEventListener(
   () => {
     openedExpenseGroupDetail = null;
     groupExpenseDetailModal?.classList.remove("show");
+  }
+);
+
+
+groupExpenseDetailList?.addEventListener(
+  "click",
+  async (event) => {
+
+    const editButton =
+      event.target.closest(".edit-group-expense-btn");
+
+    if (editButton) {
+      openEditExpense(editButton.dataset.id);
+      return;
+    }
+
+    const deleteButton =
+      event.target.closest(".delete-group-expense-btn");
+
+    if (!deleteButton || !confirm("이 지출을 삭제할까요?")) {
+      return;
+    }
+
+    try {
+      const collectionRef =
+        deleteButton.dataset.legacy === "true"
+          ? annualEntriesCollectionRef()
+          : expensesCollectionRef();
+
+      await deleteDoc(
+        doc(collectionRef, deleteButton.dataset.id)
+      );
+    }
+
+    catch (error) {
+      console.error("지출 삭제 실패:", error);
+      alert("지출을 삭제하지 못했어요.");
+    }
   }
 );
 
@@ -7307,13 +7700,24 @@ function openGroupExpenseDetail(groupKey) {
           const itemName =
             getPublicDescription(record) || "품목 미입력";
 
+          // 생활비 외 지출은 두 사람이 함께 관리하는 공용 기록이에요.
+          const canManage = true;
+
           return `
             <article class="transaction-item group-expense-detail-item">
               <div class="transaction-info">
                 <h3>${escapeHtml(itemName)}</h3>
                 <p class="transaction-meta">${escapeHtml(record.date || "")} · 결제자 ${escapeHtml(payerName)}</p>
               </div>
-              <strong class="transaction-amount">-${formatWon(record.amount)}</strong>
+              <div class="transaction-right">
+                <strong class="transaction-amount">-${formatWon(record.amount)}</strong>
+                ${canManage ? `
+                  <div class="transaction-actions">
+                    <button type="button" class="edit-group-expense-btn" data-id="${escapeHtml(record.id)}">수정</button>
+                    <button type="button" class="delete-group-expense-btn" data-id="${escapeHtml(record.id)}" data-legacy="${record.isLegacyEntry ? "true" : "false"}">삭제</button>
+                  </div>
+                ` : ""}
+              </div>
             </article>
           `;
         }).join("")
@@ -8979,7 +9383,10 @@ function openBudgetModal(mode = "shared") {
 
     fixedBudgetInput.value =
       formatMoneyInput(
-        getGroupBudget("fixed")
+        getPersonalGroupBudget(
+          myUid,
+          "fixed"
+        )
       );
 
   }
@@ -8991,7 +9398,10 @@ function openBudgetModal(mode = "shared") {
 
     preparedBudgetInput.value =
       formatMoneyInput(
-        getGroupBudget("prepared")
+        getPersonalGroupBudget(
+          myUid,
+          "prepared"
+        )
       );
 
   }
@@ -9003,7 +9413,10 @@ function openBudgetModal(mode = "shared") {
 
     specialBudgetInput.value =
       formatMoneyInput(
-        getGroupBudget("special")
+        getPersonalGroupBudget(
+          myUid,
+          "special"
+        )
       );
 
   }
@@ -9098,7 +9511,7 @@ function openBudgetModal(mode = "shared") {
     },
     groups: {
       title: "지출별 예산 설정",
-      description: "고정·준비·특별지출 예산을 각각 설정해주세요."
+      description: "고정·준비·특별지출의 내 예산을 각각 설정해주세요."
     },
     personal: {
       title: "각자 생활비 예산",
@@ -9109,6 +9522,10 @@ function openBudgetModal(mode = "shared") {
 
   budgetModalTitle.textContent = modalCopy.title;
   budgetModalDescription.textContent = modalCopy.description;
+  if (groupBudgetOwnerCopy) {
+    groupBudgetOwnerCopy.textContent =
+      `${myProfile.nickname || "나"}의 지출별 예산을 설정해주세요.`;
+  }
   sharedBudgetSettingSection.hidden = mode !== "shared";
   groupBudgetSettingSection.hidden = mode !== "groups";
   personalBudgetSettingSection.hidden = mode !== "personal";
@@ -9234,6 +9651,12 @@ async function saveBudget() {
   };
 
 
+  const personalGroupBudgets = {
+    ...(monthlySettings.personalGroupBudgets || {}),
+    [myUid]: groupBudgets
+  };
+
+
   if (
     partnerUid
   ) {
@@ -9260,7 +9683,7 @@ async function saveBudget() {
 
   if (budgetModalMode === "groups") {
 
-    updates.groupBudgets = groupBudgets;
+    updates.personalGroupBudgets = personalGroupBudgets;
 
   }
 
@@ -9358,6 +9781,7 @@ function getAnnualExpensesFromMonthly() {
     .filter(
       (expense) =>
         expense.payerUid === currentUser?.uid &&
+        !isWeddingRecord(expense) &&
         String(expense.date || "").startsWith(yearPrefix)
     )
     .reduce(
@@ -9407,8 +9831,7 @@ const annualSpendingGroups = [
   { key: "living", label: "생활비", emoji: "🏠", help: "식비, 장보기처럼 함께 쓰는 일상 생활비예요." },
   { key: "fixed", label: "고정지출", emoji: "📌", help: "기름값, 보험, 휴대폰 요금, 구독료처럼 매달 반복되는 돈이에요." },
   { key: "prepared", label: "준비지출", emoji: "🌿", help: "명절·부모님 용돈·경조사처럼 미리 예상해 준비하는 돈이에요." },
-  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." },
-  { key: "wedding", label: "결혼준비", emoji: "💍", help: "예식, 신혼집, 혼수처럼 결혼을 준비하며 드는 비용을 따로 기록해요." }
+  { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." }
 ];
 
 
@@ -9546,6 +9969,7 @@ function getAnnualMonthlyRows(selectedEntries) {
         .filter(
           (expense) =>
             expense.payerUid === currentUser?.uid &&
+            !isWeddingRecord(expense) &&
             String(expense.date || "").startsWith(monthKey)
         )
         .reduce(
@@ -9645,6 +10069,7 @@ function renderAnnualTagStats(selectedEntries) {
     ...expenses.filter(
       (expense) =>
         expense.payerUid === currentUser?.uid &&
+        !isWeddingRecord(expense) &&
         String(expense.date || "").startsWith(yearPrefix)
     ),
     ...selectedEntries.filter(
@@ -9792,6 +10217,99 @@ function changeAnnualYear(amount) {
 
 
 annualBtn?.addEventListener("click", openAnnualScreen);
+
+weddingBtn?.addEventListener("click", openWeddingScreen);
+annualWeddingViewBtn?.addEventListener("click", openWeddingScreen);
+weddingMonthlyViewBtn?.addEventListener("click", () => {
+  showScreen(appScreen);
+  renderApp();
+});
+weddingAnnualViewBtn?.addEventListener("click", openAnnualScreen);
+weddingSettingsBtn?.addEventListener("click", () => settingsBtn.click());
+weddingLogoutBtn?.addEventListener("click", logout);
+
+weddingAddExpenseBtn?.addEventListener("click", () => openWeddingRecordModal("expense"));
+weddingAddDepositBtn?.addEventListener("click", () => openWeddingRecordModal("deposit"));
+closeWeddingRecordModalBtn?.addEventListener("click", () => weddingRecordModal.classList.remove("show"));
+
+weddingChartButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    weddingChartMode = button.dataset.weddingChart;
+    weddingChartButtons.forEach((item) => item.classList.toggle("active", item === button));
+    renderWeddingScreen();
+  });
+});
+
+weddingAllocationButtons.forEach((button) => {
+  button.addEventListener("click", () => setWeddingAllocation(button.dataset.weddingAllocation));
+});
+
+saveWeddingRecordBtn?.addEventListener("click", async () => {
+  const date = weddingRecordDate.value;
+  const amount = parseMoney(weddingRecordAmount.value);
+  const category = weddingRecordCategory.value.trim();
+  const description = weddingRecordDescription.value.trim();
+  const memo = weddingRecordMemo.value.trim();
+  const payerUid = weddingRecordPayer.value;
+  const allocation = [...weddingAllocationButtons].find((button) => button.classList.contains("active"))?.dataset.weddingAllocation || "together";
+  const isDeposit = weddingRecordMode === "deposit";
+
+  if (!date || amount <= 0 || !payerUid || (!isDeposit && (!category || !description))) {
+    alert(isDeposit ? "날짜, 금액, 입금자를 모두 입력해주세요." : "날짜, 내용, 금액, 항목을 모두 입력해주세요.");
+    return;
+  }
+
+  const payload = {
+    recordKind: isDeposit ? "wedding-deposit" : "wedding-expense",
+    expenseGroup: "wedding",
+    date,
+    monthKey: date.slice(0, 7),
+    amount,
+    category: isDeposit ? "" : category,
+    description,
+    memo,
+    allocation: isDeposit ? "" : allocation,
+    payerUid,
+    createdByUid: currentUser.uid,
+    updatedAt: serverTimestamp()
+  };
+
+  try {
+    saveWeddingRecordBtn.disabled = true;
+    if (editingWeddingRecordId) {
+      await updateDoc(doc(expensesCollectionRef(), editingWeddingRecordId), payload);
+    } else {
+      await setDoc(doc(expensesCollectionRef()), { ...payload, createdAt: serverTimestamp() });
+    }
+    weddingRecordModal.classList.remove("show");
+  } catch (error) {
+    console.error("결혼 기록 저장 실패:", error);
+    alert("결혼 기록을 저장하지 못했어요.");
+  } finally {
+    saveWeddingRecordBtn.disabled = false;
+  }
+});
+
+function handleWeddingRecordAction(event) {
+  const button = event.target.closest(".edit-wedding-record-btn, .delete-wedding-record-btn");
+  if (!button) return;
+  const record = expenses.find((item) => item.id === button.dataset.id);
+  if (!record) return;
+
+  if (button.classList.contains("edit-wedding-record-btn")) {
+    openWeddingRecordModal(record.recordKind === "wedding-deposit" ? "deposit" : "expense", record);
+    return;
+  }
+
+  if (!confirm("이 결혼 기록을 삭제할까요?")) return;
+  deleteDoc(doc(expensesCollectionRef(), record.id)).catch((error) => {
+    console.error("결혼 기록 삭제 실패:", error);
+    alert("결혼 기록을 삭제하지 못했어요.");
+  });
+}
+
+weddingDepositList?.addEventListener("click", handleWeddingRecordAction);
+weddingExpenseList?.addEventListener("click", handleWeddingRecordAction);
 
 annualBackBtn?.addEventListener("click", () => {
 
