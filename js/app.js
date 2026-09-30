@@ -338,6 +338,10 @@ const loginScreen =
   $("login-screen");
 
 
+const appStartupScreen =
+  $("app-startup-screen");
+
+
 const signupScreen =
   $("signup-screen");
 
@@ -1667,6 +1671,16 @@ function showScreen(
     screen.hidden =
       false;
 
+    const isBudgetScreen =
+      screen === appScreen ||
+      screen === annualScreen ||
+      screen === weddingScreen;
+
+    document.body.classList.toggle(
+      "app-navigation-visible",
+      isBudgetScreen
+    );
+
     const appNavName =
       screen === appScreen
         ? "monthly"
@@ -1683,6 +1697,20 @@ function showScreen(
     }
 
   }
+
+}
+
+
+function finishAppStartup() {
+
+  document.body.classList.add(
+    "app-startup-ready"
+  );
+
+  appStartupScreen?.setAttribute(
+    "hidden",
+    ""
+  );
 
 }
 
@@ -4695,6 +4723,8 @@ onAuthStateChanged(
         loginScreen
       );
 
+      finishAppStartup();
+
 
       return;
 
@@ -4748,6 +4778,8 @@ onAuthStateChanged(
           profileScreen
         );
 
+        finishAppStartup();
+
 
         return;
 
@@ -4759,6 +4791,8 @@ onAuthStateChanged(
       ) {
 
         showCoupleSetupScreen();
+
+        finishAppStartup();
 
 
         return;
@@ -4785,6 +4819,9 @@ onAuthStateChanged(
       alert(
         "앱 정보를 불러오는 중 문제가 생겼어요."
       );
+
+      showScreen(loginScreen);
+      finishAppStartup();
 
     }
 
@@ -4840,6 +4877,8 @@ async function startCoupleApp() {
 
 
   renderApp();
+
+  finishAppStartup();
 
 }
 
@@ -10482,6 +10521,10 @@ weddingLogoutBtn?.addEventListener("click", logout);
 appBottomNavButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const viewName = button.dataset.appNav;
+
+    if (viewName !== "settings") {
+      settingsModal?.classList.remove("show");
+    }
 
     if (viewName === "monthly") {
       showScreen(appScreen);

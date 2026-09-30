@@ -521,6 +521,44 @@ select {
     background: var(--background);
 }
 
+.app-startup-screen {
+    position: fixed;
+    z-index: 150;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: #fbfafc;
+}
+
+.app-startup-screen[hidden] {
+    display: none;
+}
+
+.app-startup-content {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    color: #263c5b;
+    font-size: 18px;
+}
+
+.app-startup-icon {
+    font-size: 34px;
+}
+
+.app-startup-spinner {
+    width: 21px;
+    height: 21px;
+    border: 3px solid #e7e0f5;
+    border-top-color: #7752c8;
+    border-radius: 50%;
+    animation: app-startup-spin 0.8s linear infinite;
+}
+
+@keyframes app-startup-spin {
+    to { transform: rotate(360deg); }
+}
+
 
 /* =====================================================
    8. 헤더
@@ -4559,7 +4597,7 @@ body.app-mode .app-screen:not([hidden]) {
     padding-bottom: calc(86px + env(safe-area-inset-bottom));
 }
 
-body.app-mode .app-bottom-nav {
+body.app-mode.app-navigation-visible .app-bottom-nav {
     position: fixed;
     right: 0;
     bottom: 0;
@@ -4576,31 +4614,65 @@ body.app-mode .app-bottom-nav {
 }
 
 body.app-mode .app-bottom-nav-btn {
+    position: relative;
     display: grid;
     min-width: 0;
     place-items: center;
     gap: 2px;
+    padding: 5px 4px;
     border: 0;
-    border-radius: 12px;
+    border-radius: 0;
     background: transparent;
     color: #8b90a0;
     font-family: inherit;
     font-size: 12px;
     font-weight: 700;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
 }
 
 body.app-mode .app-bottom-nav-btn.active {
+    background: transparent;
     color: #6b4bbb;
 }
 
+body.app-mode .app-bottom-nav-btn:active {
+    background: transparent;
+    color: #5b3fa9;
+    transform: scale(0.97);
+}
+
+body.app-mode .app-bottom-nav-btn.active::after {
+    position: absolute;
+    right: 50%;
+    bottom: 1px;
+    width: 20px;
+    height: 3px;
+    border-radius: 999px;
+    background: #c8affd;
+    content: "";
+    transform: translateX(50%);
+}
+
 body.app-mode .app-bottom-nav-icon {
-    font-size: 19px;
-    font-weight: 700;
+    display: grid;
+    width: 23px;
+    height: 23px;
+    place-items: center;
     line-height: 1;
 }
 
+body.app-mode .app-bottom-nav-icon svg {
+    width: 21px;
+    height: 21px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 body.app-mode .app-bottom-nav-btn.active .app-bottom-nav-icon {
-    transform: translateY(-1px);
+    transform: translateY(-1px) scale(1.05);
 }
 
 body.app-mode .app-settings-logout-btn {
@@ -4615,6 +4687,39 @@ body.app-mode .app-settings-logout-btn {
     font-family: inherit;
     font-size: 14px;
     font-weight: 700;
+}
+
+/* 앱의 설정은 팝업 대신 하단 탭 위에서 열리는 한 페이지로 보여요. */
+body.app-mode #settings-modal.show {
+    display: block;
+    z-index: 60;
+    overflow-y: auto;
+    padding: 0;
+    background: #f7f6fa;
+}
+
+body.app-mode #settings-modal .modal-content {
+    width: 100%;
+    min-height: 100%;
+    max-height: none;
+    overflow: visible;
+    padding: 25px 20px calc(98px + env(safe-area-inset-bottom));
+    border-radius: 0;
+    background: #f7f6fa;
+    box-shadow: none;
+}
+
+body.app-mode #settings-modal .modal-header {
+    margin-bottom: 22px;
+}
+
+body.app-mode #settings-modal .modal-header h2 {
+    color: #263c5b;
+    font-size: 22px;
+}
+
+body.app-mode #close-settings-modal {
+    display: none;
 }
 
 /* 넓은 웹 화면에서도 앱과 비슷한 밀도로 읽히게 글자를 조금 키웁니다. */
