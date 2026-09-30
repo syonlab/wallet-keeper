@@ -3432,6 +3432,7 @@ body.app-mode .person-remaining strong {
     border: 1px solid #e8e4ee;
     border-radius: 17px;
     background: #ffffff;
+    container-type: inline-size;
 }
 
 .monthly-group-heading {
@@ -3533,8 +3534,11 @@ body.app-mode .person-remaining strong {
     display: block;
     margin: 13px 0 0;
     color: #263c5b;
-    font-size: 26px;
-    letter-spacing: -0.6px;
+    overflow: hidden;
+    font-size: 24px;
+    letter-spacing: -1.15px;
+    white-space: nowrap;
+    word-break: keep-all;
 }
 
 .monthly-group-detail-btn {
@@ -3560,6 +3564,20 @@ body.app-mode .person-remaining strong {
     color: #596679;
     font-size: 13px;
     font-weight: 700;
+}
+
+/* 카드 자체의 폭이 좁아질 때만 두 사람 금액을 한 줄씩 보여준다. */
+@container (max-width: 205px) {
+    .monthly-group-person-amounts {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 3px;
+    }
+
+    .monthly-group-person-amounts span,
+    .monthly-group-person-amounts span:last-child {
+        text-align: left;
+    }
 }
 
 .monthly-group-my-budget {
@@ -3773,6 +3791,7 @@ body.app-mode .person-remaining strong {
     border: 1px solid #e8e4ee;
     border-radius: 17px;
     background: #ffffff;
+    container-type: inline-size;
 }
 
 .annual-spending-label,
@@ -3791,8 +3810,12 @@ body.app-mode .person-remaining strong {
 .annual-spending-card > strong {
     margin-top: 13px;
     color: #263c5b;
-    font-size: 26px;
-    letter-spacing: -0.6px;
+    /* 큰 금액에서도 '원'이 다음 줄로 내려가지 않도록 카드 폭에 맞춘다. */
+    overflow: hidden;
+    font-size: clamp(18px, 12cqi, 26px);
+    letter-spacing: -1px;
+    white-space: nowrap;
+    word-break: keep-all;
 }
 
 .annual-spending-card > p {
@@ -4042,7 +4065,7 @@ body.app-mode .person-remaining strong {
     }
 
     .annual-spending-card > strong {
-        font-size: 20px;
+        font-size: clamp(18px, 12cqi, 22px);
     }
 
     .annual-monthly-row {
@@ -4519,13 +4542,88 @@ body:not(.app-mode) .monthly-group-card {
     scroll-snap-align: start;
 }
 
+
+/* =====================================================
+   앱 전용 하단 탭
+===================================================== */
+.app-bottom-nav,
+.app-settings-logout-btn {
+    display: none;
+}
+
+body.app-mode .header-actions {
+    display: none;
+}
+
+body.app-mode .app-screen:not([hidden]) {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
+}
+
+body.app-mode .app-bottom-nav {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 70;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-height: calc(70px + env(safe-area-inset-bottom));
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    border-top: 1px solid #e9e6ee;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -6px 20px rgba(45, 37, 58, 0.08);
+    backdrop-filter: blur(14px);
+}
+
+body.app-mode .app-bottom-nav-btn {
+    display: grid;
+    min-width: 0;
+    place-items: center;
+    gap: 2px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #8b90a0;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+body.app-mode .app-bottom-nav-btn.active {
+    color: #6b4bbb;
+}
+
+body.app-mode .app-bottom-nav-icon {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+body.app-mode .app-bottom-nav-btn.active .app-bottom-nav-icon {
+    transform: translateY(-1px);
+}
+
+body.app-mode .app-settings-logout-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px;
+    border: 1px solid #f0cfd4;
+    border-radius: 12px;
+    background: #fff8f8;
+    color: #c9505f;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+}
+
 /* 넓은 웹 화면에서도 앱과 비슷한 밀도로 읽히게 글자를 조금 키웁니다. */
 body:not(.app-mode) .monthly-group-heading span {
     font-size: 15px;
 }
 
 body:not(.app-mode) .monthly-group-card > strong {
-    font-size: 28px;
+    font-size: 24px;
 }
 
 body:not(.app-mode) .monthly-group-progress-caption small,
@@ -4570,6 +4668,11 @@ body:not(.app-mode) .detail-btn {
 /* 결혼 준비 전용 화면 */
 .wedding-container {
     padding-bottom: 56px;
+}
+
+#wedding-screen {
+    min-height: 100vh;
+    background: #fff6f8;
 }
 
 .wedding-summary-card {
@@ -4669,19 +4772,19 @@ body:not(.app-mode) .detail-btn {
     white-space: nowrap;
 }
 
-/* 모든 일반 지출 입력은 날짜 → 내용 → 금액 → 카테고리 순서로 보여요. */
+/* 월간 지출은 구분부터 고르고, 날짜 → 내용 → 금액 → 카테고리 순서로 입력해요. */
 #expense-modal .modal-content {
     display: flex;
     flex-direction: column;
 }
 
 #expense-modal .modal-header { order: 0; }
-#expense-modal .form-group:has(#expense-date) { order: 1; }
-#expense-modal .form-group:has(#expense-description) { order: 2; }
-#expense-modal .form-group:has(#expense-amount) { order: 3; }
-#expense-modal .form-group:has(#expense-category) { order: 4; }
-#expense-modal .form-group:has(.type-buttons) { order: 5; }
-#expense-modal .form-group:has(#expense-group) { order: 6; }
+#expense-modal .form-group:has(#expense-group) { order: 1; }
+#expense-modal .form-group:has(#expense-date) { order: 2; }
+#expense-modal .form-group:has(#expense-description) { order: 3; }
+#expense-modal .form-group:has(#expense-amount) { order: 4; }
+#expense-modal .form-group:has(#expense-category) { order: 5; }
+#expense-modal .form-group:has(.type-buttons) { order: 6; }
 #expense-modal #private-expense-group { order: 7; }
 #expense-modal .form-group:has(.payer-buttons) { order: 8; }
 #expense-modal #save-expense { order: 9; }
@@ -4713,6 +4816,97 @@ body:not(.app-mode) .detail-btn {
 
 .wedding-record-item .transaction-meta {
     line-height: 1.65;
+}
+
+.wedding-depositor-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+#wedding-depositor-group > label {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.wedding-depositor-option {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px;
+    min-width: 0;
+    min-height: 52px;
+    padding: 9px 12px;
+    border: 1px solid #e3ddea;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #49576a;
+    cursor: pointer;
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+}
+
+.wedding-depositor-option:has(input:checked) {
+    border-color: #cdbbea;
+    background: #faf7ff;
+    box-shadow: inset 0 0 0 1px rgba(118, 80, 200, 0.08);
+}
+
+.wedding-depositor-option input {
+    flex: 0 0 16px;
+    width: 16px;
+    min-height: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    accent-color: #7650c8;
+}
+
+.wedding-depositor-option > span {
+    display: grid !important;
+    flex: 0 0 25px;
+    width: 25px;
+    height: 25px;
+    place-items: center;
+    border-radius: 50%;
+    background: #f2edf8;
+    font-size: 14px;
+}
+
+.wedding-depositor-option b {
+    display: block !important;
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #354862;
+    font-size: 14px;
+}
+
+.wedding-depositor-hint {
+    color: #8b94a3;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.wedding-depositor-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+.wedding-depositor-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: #f4edf8;
+    color: #6a4d9f;
+    font-size: 10px;
+    font-weight: 700;
 }
 
 @media (max-width: 600px) {

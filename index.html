@@ -1587,7 +1587,7 @@
         <div class="header-inner">
             <div>
                 <h1>💍 결혼준비</h1>
-                <p>우리의 결혼 비용과 예산을 함께 관리해요</p>
+                <p>우리의 결혼비용을 관리해요</p>
             </div>
             <div class="header-actions">
                 <div class="view-switch" role="group" aria-label="가계부 보기">
@@ -1657,7 +1657,11 @@
                 <button class="type-btn" type="button" data-wedding-allocation="groom">🤵 신랑</button>
             </div>
         </div>
-        <div class="form-group"><label for="wedding-record-payer">결제자</label><select id="wedding-record-payer"></select></div>
+        <div id="wedding-depositor-group" class="form-group" hidden>
+            <label>입금자 <small class="wedding-depositor-hint">선택한 사람마다 위 금액이 각각 입금돼요.</small></label>
+            <div id="wedding-depositor-options" class="wedding-depositor-options"></div>
+        </div>
+        <div id="wedding-payer-group" class="form-group"><label for="wedding-record-payer">결제자</label><select id="wedding-record-payer"></select></div>
         <button id="save-wedding-record-btn" class="primary-btn" type="button">저장하기</button>
     </div>
 </div>
@@ -2957,6 +2961,14 @@
 
         </section>
 
+        <button
+            id="app-settings-logout-btn"
+            class="app-settings-logout-btn"
+            type="button"
+        >
+            로그아웃
+        </button>
+
 
     </div>
 
@@ -3040,6 +3052,26 @@
 >
     ↑
 </button>
+
+<!-- 앱에서만 보이는 하단 고정 탭 -->
+<nav id="app-bottom-nav" class="app-bottom-nav" aria-label="앱 메뉴">
+    <button type="button" class="app-bottom-nav-btn active" data-app-nav="monthly">
+        <span class="app-bottom-nav-icon" aria-hidden="true">◷</span>
+        <span>월간</span>
+    </button>
+    <button type="button" class="app-bottom-nav-btn" data-app-nav="annual">
+        <span class="app-bottom-nav-icon" aria-hidden="true">▦</span>
+        <span>연간</span>
+    </button>
+    <button type="button" class="app-bottom-nav-btn" data-app-nav="wedding">
+        <span class="app-bottom-nav-icon" aria-hidden="true">♡</span>
+        <span>결혼</span>
+    </button>
+    <button type="button" class="app-bottom-nav-btn" data-app-nav="settings">
+        <span class="app-bottom-nav-icon" aria-hidden="true">⚙</span>
+        <span>설정</span>
+    </button>
+</nav>
 
 </body>
 

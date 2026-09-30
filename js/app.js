@@ -61,6 +61,11 @@ const APP_LOCK_KEY =
   "wallet-keeper-app-lock-v1";
 
 
+// 새 지출을 연달아 적을 때만 마지막으로 입력한 날짜를 잠깐 기억합니다.
+const RECENT_EXPENSE_DATE_TTL_MS =
+  5 * 60 * 1000;
+
+
 let appLockData =
   null;
 
@@ -1185,7 +1190,10 @@ function isWeddingRecord(record) {
 function getWeddingExpenses() {
   return expenses.filter((record) =>
     record.recordKind === "wedding-expense" ||
-    record.expenseGroup === "wedding"
+    (
+      !record.recordKind &&
+      record.expenseGroup === "wedding"
+    )
   );
 }
 
@@ -1197,6 +1205,45 @@ function getWeddingDeposits() {
 
 function getWeddingPayerName(uid) {
   return getProfileByUid(uid)?.nickname || "기록한 사람";
+}
+
+
+function getWeddingDepositUids(record) {
+  const savedUids =
+    Array.isArray(record?.depositorUids)
+      ? record.depositorUids.filter(Boolean)
+      : [];
+
+  return savedUids.length
+    ? savedUids
+    : (record?.payerUid ? [record.payerUid] : []);
+}
+
+
+function getWeddingDepositTotal(record) {
+  return Number(record?.amount || 0) * getWeddingDepositUids(record).length;
+}
+
+
+function renderWeddingDepositorOptions(selectedUids = []) {
+  if (!weddingDepositorOptions) return;
+
+  const chosen = new Set(
+    selectedUids.length
+      ? selectedUids
+      : [currentUser?.uid].filter(Boolean)
+  );
+
+  weddingDepositorOptions.innerHTML =
+    [myProfile, partnerProfile]
+      .filter(Boolean)
+      .map((profile) => `
+        <label class="wedding-depositor-option">
+          <input type="checkbox" value="${escapeHtml(profile.uid)}" ${chosen.has(profile.uid) ? "checked" : ""}>
+          <span>${escapeHtml(profile.icon || "💜")}</span>
+          <b>${escapeHtml(profile.nickname || "사용자")}</b>
+        </label>
+      `).join("");
 }
 
 
@@ -1215,24 +1262,40 @@ function renderWeddingRecordList(container, records, mode) {
   }
 
   container.innerHTML = sorted.map((record) => {
+    const depositUids =
+      mode === "deposit"
+        ? getWeddingDepositUids(record)
+        : [];
+    const depositPeople =
+      depositUids.map((uid) => getProfileByUid(uid)).filter(Boolean);
     const title = mode === "deposit"
-      ? (record.description || `${getWeddingPayerName(record.payerUid)} 입금`)
+      ? (record.description || "결혼 예산 입금")
       : (getPublicDescription(record) || record.description || record.category || "항목 미입력");
     const baseMeta = mode === "deposit"
-      ? `${record.date || ""} · 입금자 ${getWeddingPayerName(record.payerUid)}`
+      ? `${record.date || ""} · 각 ${formatWon(record.amount)} 입금`
       : `${record.date || ""} · ${record.category || "항목 미입력"} · 결제자 ${getWeddingPayerName(record.payerUid)} · ${getWeddingAllocationLabel(record.allocation)}`;
     const meta = record.memo
       ? `${baseMeta} · 메모: ${record.memo}`
       : baseMeta;
 
+    const depositPeopleHtml =
+      mode === "deposit"
+        ? `<span class="wedding-depositor-chips">${depositPeople.map((profile) => `<span class="wedding-depositor-chip">${escapeHtml(profile.icon || "💜")} ${escapeHtml(profile.nickname || "사용자")}</span>`).join("")}</span>`
+        : "";
+
+    const displayAmount =
+      mode === "deposit"
+        ? getWeddingDepositTotal(record)
+        : Number(record.amount || 0);
+
     return `
       <article class="transaction-item wedding-record-item">
         <div class="transaction-info">
           <h3>${escapeHtml(title)}</h3>
-          <p class="transaction-meta">${escapeHtml(meta)}</p>
+          <p class="transaction-meta">${escapeHtml(meta)}${depositPeopleHtml}</p>
         </div>
         <div class="transaction-right">
-          <strong class="transaction-amount ${mode === "deposit" ? "is-positive" : ""}">${mode === "deposit" ? "+" : "−"}${formatWon(record.amount)}</strong>
+          <strong class="transaction-amount ${mode === "deposit" ? "is-positive" : ""}">${mode === "deposit" ? "+" : "−"}${formatWon(displayAmount)}</strong>
           <div class="transaction-actions">
             <button class="edit-wedding-record-btn" type="button" data-id="${escapeHtml(record.id)}">수정</button>
             <button class="delete-wedding-record-btn" type="button" data-id="${escapeHtml(record.id)}">삭제</button>
@@ -1278,7 +1341,10 @@ function renderWeddingScreen() {
   const weddingExpenses = getWeddingExpenses();
   const deposits = getWeddingDeposits();
   const totalExpense = weddingExpenses.reduce((sum, record) => sum + Number(record.amount || 0), 0);
-  const totalDeposit = deposits.reduce((sum, record) => sum + Number(record.amount || 0), 0);
+  const totalDeposit = deposits.reduce(
+    (sum, record) => sum + getWeddingDepositTotal(record),
+    0
+  );
 
   weddingTotalExpense.textContent = formatWon(totalExpense);
   weddingRemainingBudget.textContent = formatWon(totalDeposit - totalExpense);
@@ -1318,6 +1384,8 @@ function openWeddingRecordModal(mode, record = null) {
     : "결혼 준비에 쓴 비용을 기록해요.";
   weddingCategoryGroup.hidden = isDeposit;
   weddingAllocationGroup.hidden = isDeposit;
+  weddingPayerGroup.hidden = isDeposit;
+  weddingDepositorGroup.hidden = !isDeposit;
   weddingRecordDescriptionLabel.textContent = "내용";
   weddingRecordDate.value = record?.date || getDefaultDate();
   weddingRecordAmount.value = record ? formatMoneyInput(record.amount) : "";
@@ -1325,6 +1393,11 @@ function openWeddingRecordModal(mode, record = null) {
   weddingRecordDescription.value = record?.description || "";
   weddingRecordMemo.value = record?.memo || "";
   renderWeddingPayerOptions(record?.payerUid);
+  renderWeddingDepositorOptions(
+    isDeposit && record
+      ? getWeddingDepositUids(record)
+      : []
+  );
   setWeddingAllocation(record?.allocation || "together");
   saveWeddingRecordBtn.textContent = record ? "수정하기" : "저장하기";
   weddingRecordModal.classList.add("show");
@@ -1490,6 +1563,8 @@ const weddingMonthlyViewBtn = $("wedding-monthly-view-btn");
 const weddingAnnualViewBtn = $("wedding-annual-view-btn");
 const weddingSettingsBtn = $("wedding-settings-btn");
 const weddingLogoutBtn = $("wedding-logout-btn");
+const appBottomNavButtons = document.querySelectorAll(".app-bottom-nav-btn");
+const appSettingsLogoutBtn = $("app-settings-logout-btn");
 const weddingTotalExpense = $("wedding-total-expense");
 const weddingRemainingBudget = $("wedding-remaining-budget");
 const weddingDepositTotal = $("wedding-deposit-total");
@@ -1509,6 +1584,9 @@ const weddingRecordDescription = $("wedding-record-description");
 const weddingRecordDescriptionLabel = $("wedding-record-description-label");
 const weddingRecordMemo = $("wedding-record-memo");
 const weddingRecordPayer = $("wedding-record-payer");
+const weddingPayerGroup = $("wedding-payer-group");
+const weddingDepositorGroup = $("wedding-depositor-group");
+const weddingDepositorOptions = $("wedding-depositor-options");
 const weddingCategoryGroup = $("wedding-category-group");
 const weddingAllocationGroup = $("wedding-allocation-group");
 const saveWeddingRecordBtn = $("save-wedding-record-btn");
@@ -1589,7 +1667,36 @@ function showScreen(
     screen.hidden =
       false;
 
+    const appNavName =
+      screen === appScreen
+        ? "monthly"
+        : screen === annualScreen
+          ? "annual"
+          : screen === weddingScreen
+            ? "wedding"
+            : null;
+
+    if (appNavName) {
+
+      setAppBottomNavActive(appNavName);
+
+    }
+
   }
+
+}
+
+
+function setAppBottomNavActive(viewName) {
+
+  if (!isNativeApp && !isAppPreview) return;
+
+  appBottomNavButtons.forEach((button) => {
+    button.classList.toggle(
+      "active",
+      button.dataset.appNav === viewName
+    );
+  });
 
 }
 
@@ -1816,6 +1923,98 @@ function getDefaultDate() {
   return (
     `${selectedYear}-${month}-${day}`
   );
+
+}
+
+
+function getTodayDate() {
+
+  const now =
+    new Date();
+
+  const month =
+    String(now.getMonth() + 1).padStart(2, "0");
+
+  const day =
+    String(now.getDate()).padStart(2, "0");
+
+  return `${now.getFullYear()}-${month}-${day}`;
+
+}
+
+
+function getRecentExpenseDateStorageKey() {
+
+  return [
+    "wallet-keeper-recent-expense-date",
+    coupleId || "no-couple",
+    currentUser?.uid || "no-user"
+  ].join(":");
+
+}
+
+
+function getRecentExpenseDate() {
+
+  try {
+
+    const saved =
+      JSON.parse(
+        localStorage.getItem(
+          getRecentExpenseDateStorageKey()
+        ) || "null"
+      );
+
+    const isValidDate =
+      /^\d{4}-\d{2}-\d{2}$/.test(saved?.date || "");
+
+    const isRecent =
+      Number.isFinite(saved?.savedAt) &&
+      Date.now() - saved.savedAt >= 0 &&
+      Date.now() - saved.savedAt <= RECENT_EXPENSE_DATE_TTL_MS;
+
+    if (isValidDate && isRecent) {
+
+      return saved.date;
+
+    }
+
+
+    localStorage.removeItem(
+      getRecentExpenseDateStorageKey()
+    );
+
+  }
+
+  catch (error) {
+
+    // 브라우저 저장공간을 쓸 수 없어도 날짜 입력 기능은 정상 동작합니다.
+  }
+
+
+  return null;
+
+}
+
+
+function rememberRecentExpenseDate(date) {
+
+  try {
+
+    localStorage.setItem(
+      getRecentExpenseDateStorageKey(),
+      JSON.stringify({
+        date,
+        savedAt: Date.now()
+      })
+    );
+
+  }
+
+  catch (error) {
+
+    // 저장공간 접근이 막힌 환경에서는 오늘 날짜를 기본값으로 사용합니다.
+  }
 
 }
 
@@ -2048,6 +2247,36 @@ function getProfileByUid(
 
 
   return null;
+
+}
+
+
+// 화면에 표시할 이름은 설정에서 정한 별명을 우선 사용하고,
+// 별명이 비어 있는 기존 계정만 아이디(이메일 앞부분)로 보완한다.
+function getProfileDisplayName(
+  profile,
+  fallback
+) {
+
+  const nickname =
+    String(profile?.nickname || "").trim();
+
+  if (
+    nickname
+  ) {
+
+    return nickname;
+
+  }
+
+
+  const accountId =
+    String(profile?.email || "")
+      .split("@")
+      .shift()
+      ?.trim();
+
+  return accountId || fallback;
 
 }
 
@@ -4062,9 +4291,12 @@ function isLivingExpenseGroup(groupKey) {
 
 function updateExpenseFormForGroup() {
 
+  const expenseGroup =
+    expenseGroupInput?.value || "living";
+
   const isLiving =
     isLivingExpenseGroup(
-      expenseGroupInput?.value || "living"
+      expenseGroup
     );
 
   if (expenseCategoryGroup) {
@@ -4077,10 +4309,15 @@ function updateExpenseFormForGroup() {
   }
 
   if (descriptionInput) {
+    const itemPlaceholderByGroup = {
+      living: "예: 친구와 카페",
+      fixed: "예: 월세, 보험료",
+      prepared: "예: 축의금 등",
+      special: ""
+    };
+
     descriptionInput.placeholder =
-      isLiving
-        ? "예: 친구와 카페"
-        : "예: 예식장 계약금, 자동차 보험";
+      itemPlaceholderByGroup[expenseGroup] || "";
   }
 
   if (privateExpenseGroup && !isLiving) {
@@ -4290,6 +4527,12 @@ async function logout() {
 
 
 logoutBtn.addEventListener(
+  "click",
+  logout
+);
+
+
+appSettingsLogoutBtn?.addEventListener(
   "click",
   logout
 );
@@ -5890,7 +6133,7 @@ function prepareExpenseModal() {
 
 
   dateInput.value =
-    getDefaultDate();
+    getRecentExpenseDate() || getTodayDate();
 
 
   amountInput.value =
@@ -5956,7 +6199,8 @@ function prepareExpenseModal() {
   );
 
 
-  amountInput.focus();
+  // 새 지출은 생활비가 기본값인 지출구분부터 확인할 수 있게 한다.
+  expenseGroupInput?.focus();
 
 }
 
@@ -6550,6 +6794,13 @@ async function saveExpense() {
     }
 
 
+    if (!wasEditing) {
+
+      rememberRecentExpenseDate(date);
+
+    }
+
+
     expenseModal.classList.remove(
       "show"
     );
@@ -7100,10 +7351,10 @@ function renderMonthlyGroups(
 
 
         const myName =
-          myProfile?.nickname || "나";
+          getProfileDisplayName(myProfile, "나");
 
         const partnerName =
-          partnerProfile?.nickname || "상대방";
+          getProfileDisplayName(partnerProfile, "상대방");
 
 
         return `
@@ -10228,6 +10479,33 @@ weddingAnnualViewBtn?.addEventListener("click", openAnnualScreen);
 weddingSettingsBtn?.addEventListener("click", () => settingsBtn.click());
 weddingLogoutBtn?.addEventListener("click", logout);
 
+appBottomNavButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const viewName = button.dataset.appNav;
+
+    if (viewName === "monthly") {
+      showScreen(appScreen);
+      renderApp();
+      return;
+    }
+
+    if (viewName === "annual") {
+      openAnnualScreen();
+      return;
+    }
+
+    if (viewName === "wedding") {
+      openWeddingScreen();
+      return;
+    }
+
+    if (viewName === "settings") {
+      setAppBottomNavActive("settings");
+      openSettingsModal();
+    }
+  });
+});
+
 weddingAddExpenseBtn?.addEventListener("click", () => openWeddingRecordModal("expense"));
 weddingAddDepositBtn?.addEventListener("click", () => openWeddingRecordModal("deposit"));
 closeWeddingRecordModalBtn?.addEventListener("click", () => weddingRecordModal.classList.remove("show"));
@@ -10254,7 +10532,11 @@ saveWeddingRecordBtn?.addEventListener("click", async () => {
   const allocation = [...weddingAllocationButtons].find((button) => button.classList.contains("active"))?.dataset.weddingAllocation || "together";
   const isDeposit = weddingRecordMode === "deposit";
 
-  if (!date || amount <= 0 || !payerUid || (!isDeposit && (!category || !description))) {
+  const depositorUids =
+    [...weddingDepositorOptions.querySelectorAll("input:checked")]
+      .map((input) => input.value);
+
+  if (!date || amount <= 0 || (isDeposit && !depositorUids.length) || (!isDeposit && (!payerUid || !category || !description))) {
     alert(isDeposit ? "날짜, 금액, 입금자를 모두 입력해주세요." : "날짜, 내용, 금액, 항목을 모두 입력해주세요.");
     return;
   }
@@ -10269,7 +10551,8 @@ saveWeddingRecordBtn?.addEventListener("click", async () => {
     description,
     memo,
     allocation: isDeposit ? "" : allocation,
-    payerUid,
+    payerUid: isDeposit ? depositorUids[0] : payerUid,
+    depositorUids: isDeposit ? depositorUids : [],
     createdByUid: currentUser.uid,
     updatedAt: serverTimestamp()
   };
