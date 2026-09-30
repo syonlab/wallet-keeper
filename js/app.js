@@ -979,6 +979,30 @@ const groupExpenseDetailPeriod =
 const groupExpenseDetailTotal =
   $("group-expense-detail-total");
 
+
+const confirmationModal =
+  $("confirmation-modal");
+
+
+const confirmationTitle =
+  $("confirmation-title");
+
+
+const confirmationMessage =
+  $("confirmation-message");
+
+
+const confirmationCancelBtn =
+  $("confirmation-cancel-btn");
+
+
+const confirmationConfirmBtn =
+  $("confirmation-confirm-btn");
+
+
+let confirmationResolver =
+  null;
+
 const groupExpenseDetailList =
   $("group-expense-detail-list");
 
@@ -1696,6 +1720,8 @@ function showScreen(
 
     }
 
+    updateScrollTopButton();
+
   }
 
 }
@@ -1731,6 +1757,9 @@ function setAppBottomNavActive(viewName) {
 
 function closeAllModals() {
 
+  closeConfirmation(false);
+  setGroupDetailScrollLock(false);
+
   [
     expenseModal,
     budgetModal,
@@ -1757,6 +1786,68 @@ function closeAllModals() {
     );
 
 }
+
+
+function setGroupDetailScrollLock(isLocked) {
+
+  document.documentElement.classList.toggle(
+    "detail-modal-open",
+    isLocked
+  );
+
+  document.body.classList.toggle(
+    "detail-modal-open",
+    isLocked
+  );
+
+}
+
+
+function closeConfirmation(confirmed = false) {
+
+  confirmationModal?.classList.remove("show");
+
+  const resolve =
+    confirmationResolver;
+
+  confirmationResolver =
+    null;
+
+  resolve?.(confirmed);
+
+}
+
+
+function showDeleteConfirmation(message) {
+
+  if (!confirmationModal) {
+    return Promise.resolve(window.confirm(message));
+  }
+
+  if (confirmationResolver) {
+    closeConfirmation(false);
+  }
+
+  confirmationTitle.textContent =
+    "삭제하시겠습니까?";
+
+  confirmationMessage.textContent =
+    message || "삭제한 내용은 되돌릴 수 없어요.";
+
+  confirmationModal.classList.add("show");
+
+  return new Promise((resolve) => {
+    confirmationResolver = resolve;
+  });
+
+}
+
+
+confirmationCancelBtn?.addEventListener("click", () => closeConfirmation(false));
+confirmationConfirmBtn?.addEventListener("click", () => closeConfirmation(true));
+confirmationModal?.addEventListener("click", (event) => {
+  if (event.target === confirmationModal) closeConfirmation(false);
+});
 
 
 function parseMoney(
@@ -5845,31 +5936,38 @@ if (
 // 맨 위로 버튼
 // =====================================================
 
+function updateScrollTopButton() {
+
+  if (!scrollTopBtn) return;
+
+  const isAppMonthlyScreen =
+    (isNativeApp || isAppPreview) &&
+    appScreen &&
+    !appScreen.hidden;
+
+  const shouldShow =
+    isAppMonthlyScreen ||
+    (
+      !isNativeApp &&
+      !isAppPreview &&
+      window.scrollY > 500
+    );
+
+  scrollTopBtn.classList.toggle(
+    "show",
+    shouldShow
+  );
+
+}
+
+
 if (
   scrollTopBtn
 ) {
 
-  function updateScrollTopButton() {
-
-    if (
-      window.scrollY >
-      500
-    ) {
-
-      scrollTopBtn.classList.add(
-        "show"
-      );
-
-    }
-
-    else {
-
-      scrollTopBtn.classList.remove(
-        "show"
-      );
-
-    }
-
+  if (isNativeApp || isAppPreview) {
+    scrollTopBtn.textContent = "+";
+    scrollTopBtn.setAttribute("aria-label", "지출 추가");
   }
 
 
@@ -5886,6 +5984,11 @@ if (
   scrollTopBtn.addEventListener(
     "click",
     () => {
+
+      if (isNativeApp || isAppPreview) {
+        prepareExpenseModal();
+        return;
+      }
 
       window.scrollTo({
 
@@ -6940,7 +7043,7 @@ async function deleteExpense(
 
 
   const confirmed =
-    confirm(
+    await showDeleteConfirmation(
       `${formatWon(expense.amount)} 지출을 삭제할까요?`
     );
 
@@ -7035,7 +7138,8 @@ async function deleteExpense(
   expenseModal,
   budgetModal,
   categoryModal,
-  settingsModal
+  settingsModal,
+  groupExpenseDetailModal
 ]
   .filter(
     Boolean
@@ -7064,6 +7168,18 @@ async function deleteExpense(
 
               editingExpenseId =
                 null;
+
+            }
+
+            if (
+              modal ===
+              groupExpenseDetailModal
+            ) {
+
+              openedExpenseGroupDetail =
+                null;
+
+              setGroupDetailScrollLock(false);
 
             }
 
@@ -7403,8 +7519,8 @@ function renderMonthlyGroups(
             </div>
             <strong>${formatWon(used)}</strong>
             <div class="monthly-group-person-amounts">
-              <span>${escapeHtml(myName)} <b>${formatWon(myUsed)}</b></span>
-              <span>${escapeHtml(partnerName)} <b>${formatWon(partnerUsed)}</b></span>
+              <span class="current-user-amount">${escapeHtml(myName)} <b>${formatWon(myUsed)}</b></span>
+              <span class="partner-user-amount">${escapeHtml(partnerName)} <b>${formatWon(partnerUsed)}</b></span>
             </div>
             <div class="monthly-group-my-budget">
               <div class="progress-track"><div class="progress-bar" style="width:${myBudget ? Math.min(myPercent, 100) : 0}%"></div></div>
@@ -7460,6 +7576,7 @@ closeGroupExpenseDetailModalBtn?.addEventListener(
   "click",
   () => {
     openedExpenseGroupDetail = null;
+    setGroupDetailScrollLock(false);
     groupExpenseDetailModal?.classList.remove("show");
   }
 );
@@ -7473,6 +7590,9 @@ groupExpenseDetailList?.addEventListener(
       event.target.closest(".edit-group-expense-btn");
 
     if (editButton) {
+      openedExpenseGroupDetail = null;
+      setGroupDetailScrollLock(false);
+      groupExpenseDetailModal?.classList.remove("show");
       openEditExpense(editButton.dataset.id);
       return;
     }
@@ -7480,7 +7600,14 @@ groupExpenseDetailList?.addEventListener(
     const deleteButton =
       event.target.closest(".delete-group-expense-btn");
 
-    if (!deleteButton || !confirm("이 지출을 삭제할까요?")) {
+    if (!deleteButton) {
+      return;
+    }
+
+    const confirmed =
+      await showDeleteConfirmation("이 지출을 삭제할까요?");
+
+    if (!confirmed) {
       return;
     }
 
@@ -7986,7 +8113,11 @@ function openGroupExpenseDetail(groupKey) {
           const payer =
             getProfileByUid(record.payerUid);
           const payerName =
-            payer?.nickname || "기록한 사람";
+            getProfileDisplayName(payer, "기록한 사람");
+          const isMyExpense =
+            record.payerUid === currentUser?.uid;
+          const payerIcon =
+            payer?.icon || (isMyExpense ? "🩷" : "💙");
           const itemName =
             getPublicDescription(record) || "품목 미입력";
 
@@ -7997,7 +8128,10 @@ function openGroupExpenseDetail(groupKey) {
             <article class="transaction-item group-expense-detail-item">
               <div class="transaction-info">
                 <h3>${escapeHtml(itemName)}</h3>
-                <p class="transaction-meta">${escapeHtml(record.date || "")} · 결제자 ${escapeHtml(payerName)}</p>
+                <p class="transaction-meta">
+                  <span class="transaction-date-category">${escapeHtml(record.date || "")}</span>
+                  <span class="expense-payer-chip"><span class="expense-payer-icon">${escapeHtml(payerIcon)}</span><strong>${escapeHtml(payerName)}</strong></span>
+                </p>
               </div>
               <div class="transaction-right">
                 <strong class="transaction-amount">-${formatWon(record.amount)}</strong>
@@ -8014,6 +8148,7 @@ function openGroupExpenseDetail(groupKey) {
       : `<div class="empty-message">이번 달에 등록한 ${group.label} 내역이 없어요.</div>`;
 
   groupExpenseDetailModal.classList.add("show");
+  setGroupDetailScrollLock(true);
 
 }
 
@@ -10544,6 +10679,7 @@ appBottomNavButtons.forEach((button) => {
 
     if (viewName === "settings") {
       setAppBottomNavActive("settings");
+      scrollTopBtn?.classList.remove("show");
       openSettingsModal();
     }
   });
@@ -10616,7 +10752,7 @@ saveWeddingRecordBtn?.addEventListener("click", async () => {
   }
 });
 
-function handleWeddingRecordAction(event) {
+async function handleWeddingRecordAction(event) {
   const button = event.target.closest(".edit-wedding-record-btn, .delete-wedding-record-btn");
   if (!button) return;
   const record = expenses.find((item) => item.id === button.dataset.id);
@@ -10627,7 +10763,7 @@ function handleWeddingRecordAction(event) {
     return;
   }
 
-  if (!confirm("이 결혼 기록을 삭제할까요?")) return;
+  if (!await showDeleteConfirmation("이 결혼 기록을 삭제할까요?")) return;
   deleteDoc(doc(expensesCollectionRef(), record.id)).catch((error) => {
     console.error("결혼 기록 삭제 실패:", error);
     alert("결혼 기록을 삭제하지 못했어요.");
@@ -10927,7 +11063,13 @@ annualEntryList?.addEventListener("click", async (event) => {
   const button = event.target.closest(".delete-annual-entry-btn");
 
 
-  if (!button || !confirm("이 연간 기록을 삭제할까요?")) {
+  if (!button) {
+
+    return;
+
+  }
+
+  if (!await showDeleteConfirmation("이 연간 기록을 삭제할까요?")) {
 
     return;
 
@@ -11044,13 +11186,19 @@ addAssetBtn?.addEventListener("click", () => {
 });
 
 
-assetDetailList?.addEventListener("click", (event) => {
+assetDetailList?.addEventListener("click", async (event) => {
 
   const button =
     event.target.closest(".delete-asset-btn");
 
 
-  if (!button || !confirm("이 자산 항목을 삭제할까요?")) {
+  if (!button) {
+
+    return;
+
+  }
+
+  if (!await showDeleteConfirmation("이 자산 항목을 삭제할까요?")) {
 
     return;
 
@@ -11524,8 +11672,8 @@ async function deleteCategory(
   ) {
 
     const confirmed =
-      confirm(
-        `"${category.name}" 카테고리를 사용한 기존 지출이 있어요.\n그래도 카테고리 목록에서 삭제할까요?`
+      await showDeleteConfirmation(
+        `"${category.name}" 카테고리를 사용한 기존 지출이 있어요. 그래도 삭제할까요?`
       );
 
 
