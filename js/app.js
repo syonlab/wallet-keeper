@@ -7118,6 +7118,7 @@ async function deleteExpense(
 
 [
   amountInput,
+  weddingRecordAmount,
   sharedBudgetInput,
   myBudgetInput,
   partnerBudgetInput
