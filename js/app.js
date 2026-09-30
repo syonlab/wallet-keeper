@@ -10657,6 +10657,8 @@ appBottomNavButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const viewName = button.dataset.appNav;
 
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
     if (viewName !== "settings") {
       settingsModal?.classList.remove("show");
     }
@@ -11823,6 +11825,8 @@ function openSettingsModal() {
 
   renderAppLockSettings();
 
+  settingsModal.scrollTop = 0;
+
 
   settingsModal.classList.add(
     "show"
@@ -11959,6 +11963,7 @@ async function saveSettingsProfile() {
       icon;
 
 
+    showScreen(appScreen);
     renderApp();
 
 
