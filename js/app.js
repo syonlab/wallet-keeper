@@ -57,6 +57,21 @@ const nativeBiometric =
     : null;
 
 
+const nativeApp =
+  isNativeApp
+    ? window.Capacitor?.Plugins?.App ||
+      (
+        typeof window.Capacitor?.registerPlugin === "function"
+          ? window.Capacitor.registerPlugin("App")
+          : null
+      )
+    : null;
+
+
+const APP_HISTORY_STATE_KEY =
+  "wallet-keeper-view";
+
+
 const APP_LOCK_KEY =
   "wallet-keeper-app-lock-v1";
 
@@ -235,6 +250,10 @@ let editingExpenseId =
 
 
 let editingLegacyAnnualExpenseId =
+  null;
+
+
+let editingAnnualEntryId =
   null;
 
 
@@ -986,6 +1005,10 @@ const confirmationModal =
 
 const confirmationTitle =
   $("confirmation-title");
+
+
+const confirmationIcon =
+  $("confirmation-icon");
 
 
 const confirmationMessage =
@@ -1755,6 +1778,147 @@ function setAppBottomNavActive(viewName) {
 }
 
 
+function returnToMonthlyScreen({ fromHistory = false } = {}) {
+
+  detailUserUid = null;
+
+  showScreen(appScreen);
+  renderApp();
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  if (
+    !isNativeApp &&
+    !fromHistory &&
+    window.history.state?.[APP_HISTORY_STATE_KEY]?.screen === "person-detail"
+  ) {
+    window.history.back();
+  }
+
+}
+
+
+function handleBrowserBackNavigation(event) {
+
+  const viewState =
+    event.state?.[APP_HISTORY_STATE_KEY];
+
+  if (viewState?.screen === "person-detail" && viewState.uid) {
+    openPersonDetail(viewState.uid, { fromHistory: true });
+    return;
+  }
+
+  returnToMonthlyScreen({ fromHistory: true });
+
+}
+
+
+function prepareBrowserDetailHistory(uid) {
+
+  if (isNativeApp || !window.history?.pushState) return;
+
+  window.history.pushState(
+    {
+      ...(window.history.state || {}),
+      [APP_HISTORY_STATE_KEY]: {
+        screen: "person-detail",
+        uid
+      }
+    },
+    "",
+    window.location.href
+  );
+
+}
+
+
+function closeOpenOverlayForBack() {
+
+  if (confirmationModal?.classList.contains("show")) {
+    closeConfirmation(false);
+    return true;
+  }
+
+  if (groupExpenseDetailModal?.classList.contains("show")) {
+    openedExpenseGroupDetail = null;
+    setGroupDetailScrollLock(false);
+    groupExpenseDetailModal.classList.remove("show");
+    return true;
+  }
+
+  const openModal = [
+    expenseModal,
+    budgetModal,
+    categoryModal,
+    settingsModal,
+    annualEntryModal,
+    monthlyIncomeHistoryModal,
+    annualGoalModal,
+    assetDetailModal,
+    themeHelpModal,
+    weddingRecordModal
+  ].find((modal) => modal?.classList.contains("show"));
+
+  if (!openModal) return false;
+
+  openModal.classList.remove("show");
+  return true;
+
+}
+
+
+async function handleNativeBackButton() {
+
+  if (closeOpenOverlayForBack()) return;
+
+  if (!personDetailScreen?.hidden) {
+    returnToMonthlyScreen();
+    return;
+  }
+
+  const confirmed =
+    await showAppExitConfirmation();
+
+  if (confirmed) {
+    nativeApp?.exitApp?.();
+  }
+
+}
+
+
+function initializeBackNavigation() {
+
+  if (!isNativeApp && window.history?.replaceState) {
+    const viewState =
+      window.history.state?.[APP_HISTORY_STATE_KEY];
+
+    if (!viewState) {
+      window.history.replaceState(
+        {
+          ...(window.history.state || {}),
+          [APP_HISTORY_STATE_KEY]: {
+            screen: "monthly"
+          }
+        },
+        "",
+        window.location.href
+      );
+    }
+
+    window.addEventListener("popstate", handleBrowserBackNavigation);
+  }
+
+  nativeApp?.addListener?.("backButton", handleNativeBackButton)
+    .catch((error) => {
+      console.error("앱 뒤로가기 연결 실패:", error);
+    });
+
+}
+
+
 function closeAllModals() {
 
   closeConfirmation(false);
@@ -1818,7 +1982,12 @@ function closeConfirmation(confirmed = false) {
 }
 
 
-function showDeleteConfirmation(message) {
+function showConfirmation({
+  title,
+  message,
+  confirmLabel,
+  icon
+}) {
 
   if (!confirmationModal) {
     return Promise.resolve(window.confirm(message));
@@ -1829,15 +1998,47 @@ function showDeleteConfirmation(message) {
   }
 
   confirmationTitle.textContent =
-    "삭제하시겠습니까?";
+    title;
 
   confirmationMessage.textContent =
-    message || "삭제한 내용은 되돌릴 수 없어요.";
+    message;
+
+  if (confirmationIcon) {
+    confirmationIcon.textContent =
+      icon;
+  }
+
+  confirmationConfirmBtn.textContent =
+    confirmLabel;
 
   confirmationModal.classList.add("show");
 
   return new Promise((resolve) => {
     confirmationResolver = resolve;
+  });
+
+}
+
+
+function showDeleteConfirmation(message) {
+
+  return showConfirmation({
+    title: "삭제하시겠습니까?",
+    message: message || "삭제한 내용은 되돌릴 수 없어요.",
+    confirmLabel: "네, 삭제할게요",
+    icon: "🗑️"
+  });
+
+}
+
+
+function showAppExitConfirmation() {
+
+  return showConfirmation({
+    title: "앱을 종료하시겠습니까?",
+    message: "지금 보던 화면은 그대로 유지돼요.",
+    confirmLabel: "네",
+    icon: "👋"
   });
 
 }
@@ -7140,7 +7341,13 @@ async function deleteExpense(
   budgetModal,
   categoryModal,
   settingsModal,
-  groupExpenseDetailModal
+  groupExpenseDetailModal,
+  annualEntryModal,
+  monthlyIncomeHistoryModal,
+  annualGoalModal,
+  assetDetailModal,
+  themeHelpModal,
+  weddingRecordModal
 ]
   .filter(
     Boolean
@@ -7168,6 +7375,26 @@ async function deleteExpense(
             ) {
 
               editingExpenseId =
+                null;
+
+            }
+
+            if (
+              modal ===
+              annualEntryModal
+            ) {
+
+              editingAnnualEntryId =
+                null;
+
+            }
+
+            if (
+              modal ===
+              weddingRecordModal
+            ) {
+
+              editingWeddingRecordId =
                 null;
 
             }
@@ -8690,6 +8917,10 @@ function renderMonthlyIncomeList() {
               </div>
               <div class="transaction-right">
                 <strong class="transaction-amount annual-income">+${formatWon(entry.amount)}</strong>
+                <div class="transaction-actions">
+                  <button class="edit-monthly-income-btn" type="button" data-id="${escapeHtml(entry.id)}">수정</button>
+                  <button class="delete-monthly-income-btn" type="button" data-id="${escapeHtml(entry.id)}">삭제</button>
+                </div>
               </div>
             </div>
           `
@@ -8715,6 +8946,38 @@ closeMonthlyIncomeHistoryBtn?.addEventListener("click", () => {
 
   monthlyIncomeHistoryModal.classList.remove("show");
 
+});
+
+
+monthlyIncomeList?.addEventListener("click", async (event) => {
+  const editButton =
+    event.target.closest(".edit-monthly-income-btn");
+
+  if (editButton) {
+    monthlyIncomeHistoryModal.classList.remove("show");
+    openMonthlyIncomeEdit(editButton.dataset.id);
+    return;
+  }
+
+  const deleteButton =
+    event.target.closest(".delete-monthly-income-btn");
+
+  if (!deleteButton) return;
+
+  if (!await showDeleteConfirmation("이 수입 내역을 삭제할까요?")) {
+    return;
+  }
+
+  try {
+    await deleteDoc(
+      doc(annualEntriesCollectionRef(), deleteButton.dataset.id)
+    );
+  }
+
+  catch (error) {
+    console.error("수입 내역 삭제 실패:", error);
+    alert("수입 내역을 삭제하지 못했어요.");
+  }
 });
 
 
@@ -9326,7 +9589,8 @@ function renderExpenseCalendar(
 // =====================================================
 
 function openPersonDetail(
-  uid
+  uid,
+  { fromHistory = false } = {}
 ) {
 
   if (
@@ -9340,6 +9604,10 @@ function openPersonDetail(
 
   detailUserUid =
     uid;
+
+  if (!fromHistory) {
+    prepareBrowserDetailHistory(uid);
+  }
 
 
   renderPersonDetail();
@@ -9414,17 +9682,7 @@ partnerDetailBtn.addEventListener(
 detailBackBtn.addEventListener(
   "click",
   () => {
-
-    detailUserUid =
-      null;
-
-
-    showScreen(
-      appScreen
-    );
-
-
-    renderApp();
+    returnToMonthlyScreen();
 
   }
 );
@@ -10955,6 +11213,8 @@ saveAnnualStartAssetBtn?.addEventListener("click", async () => {
 
 annualEntryAddBtn?.addEventListener("click", () => {
 
+  editingAnnualEntryId = null;
+  saveAnnualEntryBtn.textContent = "저장하기";
   annualEntryModalTitle.textContent =
     "연간 기록 추가";
   annualEntryTypeGroup.hidden = false;
@@ -10976,6 +11236,7 @@ annualEntryAddBtn?.addEventListener("click", () => {
 
 function openMonthlyIncomeModal() {
 
+  editingAnnualEntryId = null;
   annualEntryModalTitle.textContent =
     "수입 추가";
   annualEntryTypeGroup.hidden = true;
@@ -10993,6 +11254,36 @@ function openMonthlyIncomeModal() {
     "예: 급여, 추가수당";
   annualEntryDescription.placeholder =
     "예: 추석상여";
+  saveAnnualEntryBtn.textContent = "저장하기";
+  annualEntryModal.classList.add("show");
+  annualEntryCategory.focus();
+
+}
+
+
+function openMonthlyIncomeEdit(entryId) {
+
+  const entry =
+    annualEntries.find(
+      (item) => item.id === entryId && item.type === "income"
+    );
+
+  if (!entry) {
+    alert("수입 내역을 찾을 수 없어요.");
+    return;
+  }
+
+  editingAnnualEntryId = entry.id;
+  annualEntryModalTitle.textContent = "수입 수정";
+  annualEntryTypeGroup.hidden = true;
+  annualEntryDate.value = entry.date || getDefaultDate();
+  annualEntryType.value = "income";
+  annualEntryCategory.value = entry.category || "";
+  annualEntryAmount.value = formatMoneyInput(entry.amount);
+  annualEntryDescription.value = entry.description || "";
+  annualEntryCategory.placeholder = "예: 급여, 추가수당";
+  annualEntryDescription.placeholder = "예: 추석상여";
+  saveAnnualEntryBtn.textContent = "수정하기";
   annualEntryModal.classList.add("show");
   annualEntryCategory.focus();
 
@@ -11007,6 +11298,7 @@ monthlyIncomeAddBtn?.addEventListener(
 
 closeAnnualEntryModalBtn?.addEventListener("click", () => {
 
+  editingAnnualEntryId = null;
   annualEntryModal.classList.remove("show");
 
 });
@@ -11031,20 +11323,36 @@ saveAnnualEntryBtn?.addEventListener("click", async () => {
 
     saveAnnualEntryBtn.disabled = true;
 
-    await setDoc(
-      doc(annualEntriesCollectionRef()),
-      {
-        recordKind: "annual-entry",
-        date,
-        year: Number(date.slice(0, 4)),
-        type: annualEntryType.value,
-        category,
-        amount,
-        description: annualEntryDescription.value.trim(),
-        createdAt: serverTimestamp()
-      }
-    );
+    const entryPayload = {
+      recordKind: "annual-entry",
+      date,
+      year: Number(date.slice(0, 4)),
+      type: annualEntryType.value,
+      category,
+      amount,
+      description: annualEntryDescription.value.trim(),
+      updatedAt: serverTimestamp()
+    };
 
+    if (editingAnnualEntryId) {
+      await updateDoc(
+        doc(annualEntriesCollectionRef(), editingAnnualEntryId),
+        entryPayload
+      );
+    }
+
+    else {
+      await setDoc(
+        doc(annualEntriesCollectionRef()),
+        {
+          ...entryPayload,
+          createdAt: serverTimestamp()
+        }
+      );
+    }
+
+    editingAnnualEntryId = null;
+    saveAnnualEntryBtn.textContent = "저장하기";
     annualEntryModal.classList.remove("show");
 
   } catch (error) {
@@ -12221,3 +12529,5 @@ updatePrivacyVisibility();
 renderCategoryOptions();
 
 updateMonthTitle();
+
+initializeBackNavigation();
