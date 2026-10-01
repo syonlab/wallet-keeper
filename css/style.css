@@ -4790,6 +4790,13 @@ body.detail-modal-open {
     overscroll-behavior: none;
 }
 
+/* 앱의 모든 일반 팝업이 열려 있는 동안에는 뒤의 화면을 움직이지 않아요. */
+html.app-modal-open,
+body.app-modal-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
 #group-expense-detail-modal {
     overscroll-behavior: contain;
     touch-action: pan-y;

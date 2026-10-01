@@ -1919,6 +1919,45 @@ function initializeBackNavigation() {
 }
 
 
+function syncAppModalScrollLock() {
+
+  if (!isNativeApp && !isAppPreview) return;
+
+  const hasOpenPopup =
+    [...document.querySelectorAll(".modal.show")]
+      .some((modal) => modal !== settingsModal);
+
+  document.documentElement.classList.toggle(
+    "app-modal-open",
+    hasOpenPopup
+  );
+
+  document.body.classList.toggle(
+    "app-modal-open",
+    hasOpenPopup
+  );
+
+}
+
+
+function initializeModalScrollLock() {
+
+  if (!isNativeApp && !isAppPreview) return;
+
+  const observer =
+    new MutationObserver(syncAppModalScrollLock);
+
+  observer.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class"]
+  });
+
+  syncAppModalScrollLock();
+
+}
+
+
 function closeAllModals() {
 
   closeConfirmation(false);
@@ -12531,3 +12570,5 @@ renderCategoryOptions();
 updateMonthTitle();
 
 initializeBackNavigation();
+
+initializeModalScrollLock();
