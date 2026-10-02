@@ -807,6 +807,10 @@ const monthlyIncomePeriod =
   $("monthly-income-period");
 
 
+const monthlyIncomeTotal =
+  $("monthly-income-total");
+
+
 const transactionList =
   $("transaction-list");
 
@@ -8943,6 +8947,19 @@ function renderMonthlyIncomeList() {
             String(a.date || "")
           )
       );
+
+
+  if (monthlyIncomeTotal) {
+
+    monthlyIncomeTotal.textContent =
+      formatWon(
+        incomes.reduce(
+          (total, entry) => total + Number(entry.amount || 0),
+          0
+        )
+      );
+
+  }
 
 
   monthlyIncomeList.innerHTML =
