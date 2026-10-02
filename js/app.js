@@ -2044,7 +2044,10 @@ function showConfirmation({
     title;
 
   confirmationMessage.textContent =
-    message;
+    message || "";
+
+  confirmationMessage.hidden =
+    !message;
 
   if (confirmationIcon) {
     confirmationIcon.textContent =
@@ -2079,7 +2082,7 @@ function showAppExitConfirmation() {
 
   return showConfirmation({
     title: "앱을 종료하시겠습니까?",
-    message: "지금 보던 화면은 그대로 유지돼요.",
+    message: "",
     confirmLabel: "네",
     icon: "👋"
   });
