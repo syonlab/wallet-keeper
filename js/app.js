@@ -7363,15 +7363,11 @@ async function deleteExpense(
 // 금액 입력 콤마
 // =====================================================
 
-[
-  amountInput,
-  weddingRecordAmount,
-  sharedBudgetInput,
-  myBudgetInput,
-  partnerBudgetInput
-]
-  .filter(
-    Boolean
+// 잠금 PIN을 제외한 숫자 입력칸은 모두 금액으로 사용하므로,
+// 새 입력칸이 추가되어도 입력하는 즉시 천 단위 쉼표를 표시해요.
+document
+  .querySelectorAll(
+    'input[inputmode="numeric"]:not(#app-lock-pin-input)'
   )
   .forEach(
     attachMoneyFormatter
@@ -11171,20 +11167,6 @@ saveAnnualGoalsBtn?.addEventListener("click", async () => {
 });
 
 
-[annualLivingBudgetInput, annualFixedBudgetInput, annualPreparedBudgetInput, annualSpecialBudgetInput].forEach(
-  (input) => {
-
-    input?.addEventListener("input", () => {
-
-      input.value =
-        formatMoneyInput(parseMoney(input.value));
-
-    });
-
-  }
-);
-
-
 function toggleAnnualFold(button, content) {
 
   const willOpen =
@@ -11615,22 +11597,6 @@ saveAssetsBtn?.addEventListener("click", async () => {
   }
 
 });
-
-
-[assetAmountInput, annualEntryAmount].forEach(
-  (input) => {
-
-    input?.addEventListener("input", () => {
-
-      input.value =
-        formatMoneyInput(
-          parseMoney(input.value)
-        );
-
-    });
-
-  }
-);
 
 
 // =====================================================
