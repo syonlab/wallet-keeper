@@ -9,11 +9,16 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   deleteDoc,
+  writeBatch,
   query,
   orderBy,
+  where,
+  limit,
+  documentId,
   onSnapshot,
   serverTimestamp,
   arrayUnion
@@ -160,8 +165,8 @@ const defaultCategories = [
   },
 
   {
-    name: "생활비",
-    emoji: "🏠",
+    name: "생필품",
+    emoji: "🧻",
     isDefault: true
   },
 
@@ -214,6 +219,10 @@ let privateDetails =
 
 let categories =
   [...defaultCategories];
+
+
+let necessitiesCategoryMigrationInProgress =
+  false;
 
 
 let monthlySettings = {
@@ -1456,6 +1465,8 @@ function openWeddingRecordModal(mode, record = null) {
   setWeddingAllocation(record?.allocation || "together");
   saveWeddingRecordBtn.textContent = record ? "수정하기" : "저장하기";
   weddingRecordModal.classList.add("show");
+  initializeEntryInputFlow();
+  requestAnimationFrame(() => weddingRecordDate.focus());
 }
 
 
@@ -2187,6 +2198,102 @@ function attachMoneyFormatter(
 }
 
 
+function configureSequentialInputFlow(modal, selectors) {
+
+  if (!modal) return;
+
+  const getFields = () =>
+    selectors
+      .flatMap((selector) =>
+        [...modal.querySelectorAll(selector)]
+      )
+      .filter((field) =>
+        !field.disabled &&
+        !field.hidden &&
+        !field.closest("[hidden]")
+      );
+
+  getFields().forEach((field, index, fields) => {
+    // 화면에 보이는 입력 순서와 키보드의 다음 순서를 맞춰요.
+    field.tabIndex = 10 + index;
+
+    if (field.matches('input[type="text"], textarea')) {
+      field.lang = "ko";
+    }
+
+    if (field.matches("input, select, textarea")) {
+      field.setAttribute(
+        "enterkeyhint",
+        index === fields.length - 1 ? "done" : "next"
+      );
+    }
+
+    if (field.dataset.sequentialFlow === "true") return;
+
+    field.dataset.sequentialFlow = "true";
+
+    field.addEventListener("keydown", (event) => {
+      if (
+        event.key !== "Enter" ||
+        event.isComposing ||
+        !field.matches("input, select, textarea")
+      ) {
+        return;
+      }
+
+      const fieldsNow = getFields();
+      const currentIndex = fieldsNow.indexOf(field);
+      const nextField = fieldsNow[currentIndex + 1];
+
+      if (!nextField) return;
+
+      event.preventDefault();
+      nextField.focus();
+    });
+  });
+
+}
+
+
+function initializeEntryInputFlow() {
+
+  configureSequentialInputFlow(expenseModal, [
+    "#expense-group",
+    "#expense-date",
+    "#expense-description",
+    "#expense-amount",
+    "#expense-category",
+    "[data-type]",
+    "#private-expense-toggle",
+    "#payer-me-btn",
+    "#payer-partner-btn",
+    "#save-expense"
+  ]);
+
+  configureSequentialInputFlow(weddingRecordModal, [
+    "#wedding-record-date",
+    "#wedding-record-description",
+    "#wedding-record-amount",
+    "#wedding-record-category",
+    "#wedding-record-memo",
+    "[data-wedding-allocation]",
+    "#wedding-depositor-options input",
+    "#wedding-record-payer",
+    "#save-wedding-record-btn"
+  ]);
+
+  configureSequentialInputFlow(annualEntryModal, [
+    "#annual-entry-date",
+    "#annual-entry-type",
+    "#annual-entry-category",
+    "#annual-entry-amount",
+    "#annual-entry-description",
+    "#save-annual-entry-btn"
+  ]);
+
+}
+
+
 function escapeHtml(
   text
 ) {
@@ -2490,6 +2597,41 @@ const monthlyGroups = [
   { key: "special", label: "특별지출", emoji: "✨", help: "여행, 선물, 자동차 수리처럼 갑자기 생기거나 큰 지출이에요." }
 
 ];
+
+
+const MONTHLY_GROUP_MY_ONLY_STORAGE_PREFIX =
+  "wallet-keeper-monthly-group-my-only";
+
+
+function getMonthlyGroupMyOnly(groupKey) {
+
+  if (!currentUser?.uid) return false;
+
+  try {
+    return window.localStorage.getItem(
+      `${MONTHLY_GROUP_MY_ONLY_STORAGE_PREFIX}:${currentUser.uid}:${groupKey}`
+    ) === "true";
+  } catch {
+    return false;
+  }
+
+}
+
+
+function setMonthlyGroupMyOnly(groupKey, enabled) {
+
+  if (!currentUser?.uid) return;
+
+  try {
+    window.localStorage.setItem(
+      `${MONTHLY_GROUP_MY_ONLY_STORAGE_PREFIX}:${currentUser.uid}:${groupKey}`,
+      String(enabled)
+    );
+  } catch (error) {
+    console.warn("내 지출 보기 설정을 저장하지 못했어요.", error);
+  }
+
+}
 
 
 function getExpenseGroup(
@@ -4687,11 +4829,10 @@ function updateExpenseFormForGroup() {
   }
 
   if (privateExpenseGroup && !isLiving) {
-    privateExpenseGroup.hidden = true;
     privateExpenseToggle.checked = false;
-  } else if (privateExpenseGroup) {
-    privateExpenseGroup.hidden = false;
   }
+
+  updatePrivacyVisibility();
 
 }
 
@@ -5488,6 +5629,127 @@ function subscribePartnerProfile() {
 // 지출 실시간 구독
 // =====================================================
 
+function normalizeNecessitiesCategories(categoryList) {
+
+  const seenNames =
+    new Set();
+
+  return categoryList.reduce((normalized, category) => {
+    const name =
+      category.name === "생활비"
+        ? "생필품"
+        : category.name;
+
+    if (seenNames.has(name)) return normalized;
+
+    seenNames.add(name);
+
+    normalized.push({
+      ...category,
+      name,
+      emoji: name === "생필품" ? "🧻" : category.emoji
+    });
+
+    return normalized;
+  }, []);
+
+}
+
+
+async function migrateLivingCategoryToNecessities() {
+
+  if (
+    necessitiesCategoryMigrationInProgress ||
+    !coupleId ||
+    !currentUser
+  ) {
+    return;
+  }
+
+  const legacyExpenseRecords =
+    expenses.filter(
+      (expense) => expense.category === "생활비"
+    );
+
+  const legacyAnnualExpenseRecords =
+    annualEntries.filter(
+      (entry) =>
+        entry.type === "expense" &&
+        entry.category === "생활비"
+    );
+
+  const normalizedCategories =
+    normalizeNecessitiesCategories(categories);
+
+  const categoriesNeedMigration =
+    JSON.stringify(normalizedCategories) !==
+    JSON.stringify(categories);
+
+  if (
+    !categoriesNeedMigration &&
+    !legacyExpenseRecords.length &&
+    !legacyAnnualExpenseRecords.length
+  ) {
+    return;
+  }
+
+  necessitiesCategoryMigrationInProgress =
+    true;
+
+  try {
+    if (categoriesNeedMigration) {
+      categories = normalizedCategories;
+
+      await setDoc(
+        categorySettingsDocRef(),
+        {
+          categories,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    const updateInBatches = async (records, collectionRef) => {
+      for (let index = 0; index < records.length; index += 450) {
+        const batch =
+          writeBatch(db);
+
+        records
+          .slice(index, index + 450)
+          .forEach((record) => {
+            batch.update(
+              doc(collectionRef(), record.id),
+              { category: "생필품" }
+            );
+          });
+
+        await batch.commit();
+      }
+    };
+
+    await updateInBatches(
+      legacyExpenseRecords,
+      expensesCollectionRef
+    );
+
+    await updateInBatches(
+      legacyAnnualExpenseRecords,
+      annualEntriesCollectionRef
+    );
+  } catch (error) {
+    console.error(
+      "생활비 카테고리를 생필품으로 바꾸지 못했어요.",
+      error
+    );
+  } finally {
+    necessitiesCategoryMigrationInProgress =
+      false;
+  }
+
+}
+
+
 function subscribeExpenses() {
 
   if (
@@ -5541,6 +5803,9 @@ function subscribeExpenses() {
           );
 
 
+        migrateLivingCategoryToNecessities();
+
+
         renderApp();
 
       },
@@ -5562,6 +5827,81 @@ function subscribeExpenses() {
 // =====================================================
 // 월별 예산 실시간 구독
 // =====================================================
+
+function getEmptyMonthlySettings() {
+
+  return {
+    sharedBudget: 0,
+    groupBudgets: {},
+    personalGroupBudgets: {},
+    personalBudgets: {}
+  };
+
+}
+
+
+function normalizeMonthlySettings(data = {}) {
+
+  return {
+    sharedBudget: Number(data.sharedBudget || 0),
+    groupBudgets: data.groupBudgets || {},
+    personalGroupBudgets: data.personalGroupBudgets || {},
+    personalBudgets: data.personalBudgets || {}
+  };
+
+}
+
+
+async function getPreviousMonthlySettings(monthKey) {
+
+  const previousSettingsQuery =
+    query(
+      collection(db, "couples", coupleId, "monthlySettings"),
+      where(documentId(), "<", monthKey),
+      orderBy(documentId(), "desc"),
+      limit(1)
+    );
+
+  const previousSnapshot =
+    await getDocs(previousSettingsQuery);
+
+  if (previousSnapshot.empty) return null;
+
+  const previousDocument =
+    previousSnapshot.docs[0];
+
+  if (monthKey !== getMonthKey()) return null;
+
+  return {
+    monthKey: previousDocument.id,
+    settings: normalizeMonthlySettings(previousDocument.data())
+  };
+
+}
+
+
+async function inheritPreviousMonthlySettings(monthKey) {
+
+  const previous =
+    await getPreviousMonthlySettings(monthKey);
+
+  if (!previous) return null;
+
+  // 새 달에 예산을 따로 설정하지 않아도 지난달 기준으로 바로 시작해요.
+  await setDoc(
+    doc(db, "couples", coupleId, "monthlySettings", monthKey),
+    {
+      ...previous.settings,
+      inheritedFrom: previous.monthKey,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }
+  );
+
+  return previous.settings;
+
+}
+
 
 function subscribeMonthlySettings() {
 
@@ -5588,57 +5928,39 @@ function subscribeMonthlySettings() {
 
       monthlySettingsDocRef(),
 
-      (snapshot) => {
+      async (snapshot) => {
+
+        const monthKey =
+          getMonthKey();
 
         if (
           snapshot.exists()
         ) {
 
-          const data =
-            snapshot.data();
-
-
-          monthlySettings = {
-
-            sharedBudget:
-              Number(
-                data.sharedBudget ||
-                0
-              ),
-
-            groupBudgets:
-              data.groupBudgets ||
-              {},
-
-            personalGroupBudgets:
-              data.personalGroupBudgets ||
-              {},
-
-            personalBudgets:
-              data.personalBudgets ||
-              {}
-
-          };
+          monthlySettings =
+            normalizeMonthlySettings(
+              snapshot.data()
+            );
 
         }
 
         else {
 
-          monthlySettings = {
+          try {
+            const inheritedSettings =
+              await inheritPreviousMonthlySettings(monthKey);
 
-            sharedBudget:
-              0,
+            if (monthKey !== getMonthKey()) return;
 
-            groupBudgets:
-              {},
+            monthlySettings =
+              inheritedSettings ||
+              getEmptyMonthlySettings();
 
-            personalGroupBudgets:
-              {},
-
-            personalBudgets:
-              {}
-
-          };
+          } catch (error) {
+            console.error("지난달 예산을 불러오지 못했어요.", error);
+            monthlySettings =
+              getEmptyMonthlySettings();
+          }
 
         }
 
@@ -5728,6 +6050,9 @@ function subscribeCategories() {
             [...defaultCategories];
 
         }
+
+
+        migrateLivingCategoryToNecessities();
 
 
         renderCategoryOptions();
@@ -5865,6 +6190,9 @@ function subscribeAnnualEntries() {
 
               })
             );
+
+
+        migrateLivingCategoryToNecessities();
 
 
         renderAnnualScreen();
@@ -6439,15 +6767,17 @@ function updatePrivacyVisibility() {
   const type =
     getSelectedExpenseType();
 
+  const isLivingExpense =
+    expenseGroupInput?.value === "living";
+
 
   privateExpenseGroup.hidden =
-    type !==
-    "alone";
+    !isLivingExpense ||
+    type !== "alone";
 
 
   if (
-    type !==
-      "alone"
+    privateExpenseGroup.hidden
     &&
     privateExpenseToggle
   ) {
@@ -7729,8 +8059,21 @@ function renderMonthlyGroups(
           );
 
 
+        const isMyOnly =
+          getMonthlyGroupMyOnly(group.key);
+
+
+        const visibleExpenses =
+          isMyOnly
+            ? groupExpenses.filter(
+                (expense) =>
+                  expense.payerUid === currentUser?.uid
+              )
+            : groupExpenses;
+
+
         const used =
-          groupExpenses
+          visibleExpenses
             .reduce(
               (sum, expense) =>
                 sum + Number(expense.amount || 0),
@@ -7786,12 +8129,21 @@ function renderMonthlyGroups(
           <article class="monthly-group-card">
             <div class="monthly-group-heading">
               <span class="monthly-group-label">${group.emoji} ${group.label}<button type="button" class="theme-help-btn" data-help="${group.help}" data-title="${group.label}" data-icon="${group.emoji}" aria-label="${group.label} 설명">?</button></span>
+              <label class="monthly-group-my-only-toggle" title="${group.label} 내 지출만 보기">
+                <span>내 지출만</span>
+                <input type="checkbox" class="monthly-group-my-only-input" data-group="${group.key}" ${isMyOnly ? "checked" : ""} aria-label="${group.label} 내 지출만 보기">
+                <i aria-hidden="true"></i>
+              </label>
             </div>
             <strong>${formatWon(used)}</strong>
-            <div class="monthly-group-person-amounts">
-              <span class="current-user-amount">${escapeHtml(myName)} <b>${formatWon(myUsed)}</b></span>
-              <span class="partner-user-amount">${escapeHtml(partnerName)} <b>${formatWon(partnerUsed)}</b></span>
-            </div>
+            ${isMyOnly ? `
+              <p class="monthly-group-filter-note">내 지출만 표시 중</p>
+            ` : `
+              <div class="monthly-group-person-amounts">
+                <span class="current-user-amount">${escapeHtml(myName)} <b>${formatWon(myUsed)}</b></span>
+                <span class="partner-user-amount">${escapeHtml(partnerName)} <b>${formatWon(partnerUsed)}</b></span>
+              </div>
+            `}
             <div class="monthly-group-my-budget">
               <div class="progress-track"><div class="progress-bar" style="width:${myBudget ? Math.min(myPercent, 100) : 0}%"></div></div>
               <span>${formatWon(myUsed)} / ${myBudget ? formatWon(myBudget) : "예산 미설정"}${myBudget ? ` · ${myPercent}%` : ""}</span>
@@ -7840,6 +8192,27 @@ monthlyGroupList?.addEventListener(
 
   }
 );
+
+
+monthlyGroupList?.addEventListener("change", (event) => {
+
+  const toggle =
+    event.target.closest(".monthly-group-my-only-input");
+
+  if (!toggle) return;
+
+  setMonthlyGroupMyOnly(
+    toggle.dataset.group,
+    toggle.checked
+  );
+
+  renderMonthlyGroups();
+
+  if (openedExpenseGroupDetail === toggle.dataset.group) {
+    openGroupExpenseDetail(toggle.dataset.group);
+  }
+
+});
 
 
 closeGroupExpenseDetailModalBtn?.addEventListener(
@@ -8358,9 +8731,17 @@ function openGroupExpenseDetail(groupKey) {
 
   openedExpenseGroupDetail = groupKey;
 
+  const isMyOnly =
+    getMonthlyGroupMyOnly(groupKey);
+
   const records =
     sortExpenseList(
-      getGroupExpensesForCurrentMonth(groupKey),
+      getGroupExpensesForCurrentMonth(groupKey)
+        .filter(
+          (record) =>
+            !isMyOnly ||
+            record.payerUid === currentUser?.uid
+        ),
       "date-desc"
     );
 
@@ -8375,7 +8756,7 @@ function openGroupExpenseDetail(groupKey) {
   groupExpenseDetailPeriod.textContent =
     `${selectedYear}년 ${selectedMonth}월`;
   groupExpenseDetailTotal.textContent =
-    `총 지출 ${formatWon(total)}`;
+    `${isMyOnly ? "내 지출" : "총 지출"} ${formatWon(total)}`;
 
   groupExpenseDetailList.innerHTML =
     records.length
@@ -8415,7 +8796,7 @@ function openGroupExpenseDetail(groupKey) {
             </article>
           `;
         }).join("")
-      : `<div class="empty-message">이번 달에 등록한 ${group.label} 내역이 없어요.</div>`;
+      : `<div class="empty-message">이번 달에 등록한 ${isMyOnly ? "내 " : ""}${group.label} 내역이 없어요.</div>`;
 
   groupExpenseDetailModal.classList.add("show");
   setGroupDetailScrollLock(true);
@@ -11270,7 +11651,7 @@ annualEntryAddBtn?.addEventListener("click", () => {
   annualEntryDescription.placeholder =
     "예: 부모님 용돈";
   annualEntryModal.classList.add("show");
-  annualEntryCategory.focus();
+  requestAnimationFrame(() => annualEntryDate.focus());
 
 });
 
@@ -11297,7 +11678,7 @@ function openMonthlyIncomeModal() {
     "예: 추석상여";
   saveAnnualEntryBtn.textContent = "저장하기";
   annualEntryModal.classList.add("show");
-  annualEntryCategory.focus();
+  requestAnimationFrame(() => annualEntryDate.focus());
 
 }
 
@@ -11326,7 +11707,7 @@ function openMonthlyIncomeEdit(entryId) {
   annualEntryDescription.placeholder = "예: 추석상여";
   saveAnnualEntryBtn.textContent = "수정하기";
   annualEntryModal.classList.add("show");
-  annualEntryCategory.focus();
+  requestAnimationFrame(() => annualEntryDate.focus());
 
 }
 
@@ -12558,3 +12939,5 @@ updateMonthTitle();
 initializeBackNavigation();
 
 initializeModalScrollLock();
+
+initializeEntryInputFlow();

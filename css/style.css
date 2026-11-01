@@ -3521,6 +3521,63 @@ body.app-mode .person-remaining strong {
     white-space: nowrap;
 }
 
+.monthly-group-my-only-toggle {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 5px;
+    color: #7c8695;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.monthly-group-my-only-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.monthly-group-my-only-toggle i {
+    position: relative;
+    display: block;
+    width: 28px;
+    height: 16px;
+    border-radius: 999px;
+    background: #dfe1e7;
+    transition: background-color 0.18s ease;
+}
+
+.monthly-group-my-only-toggle i::after {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(34, 43, 57, 0.2);
+    content: "";
+    transition: transform 0.18s ease;
+}
+
+.monthly-group-my-only-toggle input:checked + i {
+    background: #7554c4;
+}
+
+.monthly-group-my-only-toggle input:checked + i::after {
+    transform: translateX(12px);
+}
+
+.monthly-group-my-only-toggle:has(input:focus-visible) i {
+    outline: 2px solid #a992dc;
+    outline-offset: 2px;
+}
+
 .theme-help-btn {
     display: inline-flex;
     align-items: center;
@@ -3629,6 +3686,13 @@ body.app-mode .person-remaining strong {
     margin-left: 3px;
     color: #596679;
     font-size: 13px;
+    font-weight: 700;
+}
+
+.monthly-group-filter-note {
+    margin-top: 8px;
+    color: #7653b8;
+    font-size: 12px;
     font-weight: 700;
 }
 
